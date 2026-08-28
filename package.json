@@ -1,0 +1,14 @@
+{
+  "name": "futebol-varzea",
+  "version": "1.0.0",
+  "description": "FUT DE CRIA 021 - Jogo de futebol de várzea 3D",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "build": "echo 'No build needed'"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

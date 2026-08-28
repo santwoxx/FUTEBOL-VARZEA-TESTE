@@ -1,0 +1,17 @@
+# Configuracao de deploy no Render.com (Infrastructure as Code).
+# Com este arquivo no repositorio, o Render configura o servico sozinho:
+# basta apontar "New > Blueprint" para o repo.
+
+services:
+  - type: web
+    name: fut-de-cria-multiplayer
+    runtime: node
+    plan: free
+    region: oregon          # troque para o mais perto de voce se quiser
+    rootDir: multiplayer    # o projeto do servidor mora nesta subpasta
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: "20"

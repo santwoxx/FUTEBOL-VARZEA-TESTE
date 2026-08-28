@@ -47,15 +47,25 @@ export class Room {
   }
 
   // Distribui o novo jogador no time com menos gente
-  pickSlot() {
+  pickSlot(client) {
+    // Se o jogador ja tinha um boneco (reconectou), devolve ele
+    if (client.uid) {
+      for (const e of this.world.ents) {
+        if (e.uid === client.uid && e.role === "field" && e.isBot) return e;
+      }
+    }
     const count = [0, 0];
     for (const c of this.clients.values()) count[c.team]++;
     const team = count[0] <= count[1] ? 0 : 1;
-    // Encontra uma entidade de linha desse time que ainda esteja como bot
+    // Encontra uma entidade de linha desse time que ainda esteja como bot (preferencialmente sem dono)
+    for (const e of this.world.ents) {
+      if (e.team === team && e.role === "field" && e.isBot && !e.uid) return e;
+    }
+    // Fallback 1: qualquer entidade de linha do time (mesmo que fosse de outro jogador que caiu)
     for (const e of this.world.ents) {
       if (e.team === team && e.role === "field" && e.isBot) return e;
     }
-    // Fallback: qualquer entidade de linha livre
+    // Fallback 2: qualquer entidade de linha livre
     for (const e of this.world.ents) {
       if (e.role === "field" && e.isBot) return e;
     }
@@ -63,9 +73,20 @@ export class Room {
   }
 
   addClient(client) {
-    const ent = this.pickSlot();
+    // Evita o mesmo UID conectado duas vezes na mesma sala
+    if (client.uid) {
+      for (const existingClient of this.clients.values()) {
+        if (existingClient.uid === client.uid && existingClient.id !== client.id) {
+           this.removeClient(existingClient);
+           try { existingClient.ws.close(); } catch(e){}
+        }
+      }
+    }
+
+    const ent = this.pickSlot(client);
     if (!ent) return false;
     ent.isBot = false;
+    if (client.uid) ent.uid = client.uid;
     ent.name = client.name || "CRIA";
     ent.customConfig = client.customConfig || null;
     client.entId = ent.id;

@@ -484,9 +484,9 @@ canvas{display:block;width:100%;height:100%}
       <span class="navKeyBadge">E</span>
     </div>
 
-    <div class="lobbyProfileChip">
-      <span>⭐ NÍVEL 1</span>
-      <span style="color:#ffd700">021 CRIA</span>
+    <div class="lobbyProfileChip" id="btnAuth" style="cursor:pointer;transition:all 0.2s">
+      <span id="authAvatar" style="font-size:16px">👤</span>
+      <span style="color:#ffd700" id="authName">ENTRAR (GOOGLE)</span>
     </div>
   </div>
 
@@ -829,6 +829,84 @@ canvas{display:block;width:100%;height:100%}
 
 <script type="module">
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.179.1/build/three.module.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAKo89YJTv7zh_GkedkdpippdaAJEGXTII",
+  authDomain: "creative-footbal.firebaseapp.com",
+  projectId: "creative-footbal",
+  storageBucket: "creative-footbal.firebasestorage.app",
+  messagingSenderId: "104415793129",
+  appId: "1:104415793129:web:0efa9f6f6f294de8bd8578"
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const fbAuth = getAuth(firebaseApp);
+const fbDb = getFirestore(firebaseApp);
+window.firebaseUser = null;
+window.firebaseUid = null;
+
+const btnAuth = document.getElementById("btnAuth");
+const authName = document.getElementById("authName");
+const authAvatar = document.getElementById("authAvatar");
+
+btnAuth.addEventListener("click", () => {
+  if (window.firebaseUser) {
+    signOut(fbAuth);
+  } else {
+    const provider = new GoogleAuthProvider();
+    signInWithPopup(fbAuth, provider).catch(e => console.error(e));
+  }
+});
+
+onAuthStateChanged(fbAuth, async (user) => {
+  window.firebaseUser = user;
+  if (user) {
+    window.firebaseUid = user.uid;
+    authName.textContent = user.displayName ? user.displayName.toUpperCase() : "JOGADOR";
+    authName.style.color = "#8ef0c8"; // Neon green when logged in
+    authAvatar.innerHTML = user.photoURL ? `<img src="${user.photoURL}" style="width:20px;height:20px;border-radius:50%">` : "✅";
+    btnAuth.title = "Clique para Sair";
+    await loadFirebaseConfig();
+  } else {
+    window.firebaseUid = null;
+    authName.textContent = "ENTRAR (GOOGLE)";
+    authName.style.color = "#ffd700";
+    authAvatar.innerHTML = "👤";
+    btnAuth.title = "";
+    loadLocalConfig();
+  }
+});
+
+async function loadFirebaseConfig() {
+  if (!window.firebaseUid) return;
+  try {
+    const docRef = doc(fbDb, "users", window.firebaseUid);
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      if (data.customConfig) {
+        localStorage.setItem("fut_cria_custom_v1", JSON.stringify(data.customConfig));
+        applyPlayerCustomization();
+      }
+    }
+  } catch(e) { console.error("Error loading profile:", e); }
+}
+
+async function saveFirebaseConfig(cfg) {
+  if (!window.firebaseUid) return;
+  try {
+    const docRef = doc(fbDb, "users", window.firebaseUid);
+    await setDoc(docRef, { customConfig: cfg }, { merge: true });
+  } catch(e) { console.error("Error saving profile:", e); }
+}
+
+function loadLocalConfig() {
+  // Triggers visual refresh of local config
+  applyPlayerCustomization();
+}
 
 /* ═══════════════ ÁUDIO PROCEDURAL (WEB AUDIO API) ═══════════════ */
 class SoundEngine {
@@ -4827,6 +4905,7 @@ function applyPlayerCustomization(){
   
   try {
     localStorage.setItem("fut_cria_custom_v1", JSON.stringify(playerCustomConfig));
+    if (window.saveFirebaseConfig) window.saveFirebaseConfig(playerCustomConfig);
   } catch(e){}
 }
 
@@ -6088,7 +6167,7 @@ function mpConnect(){
 
   ws.onopen = () => {
     mp.connected = true;
-    mpSend(C2S.HELLO, { name, customConfig: playerCustomConfig });
+    mpSend(C2S.HELLO, { name, customConfig: playerCustomConfig, uid: window.firebaseUid });
     mpSetStatus("Conectado. Crie uma sala ou entre em uma aberta.");
     mpListRooms();
   };
@@ -6198,7 +6277,7 @@ function mpListRooms(){
 function mpCreateRoom(mode){
   const name = (document.querySelector("#mpName").value || "CRIA").slice(0,14);
   if(!mp.connected){ mpSetStatus("Conectando ao servidor primeiro...", "error"); mpConnect(); return; }
-  mpSend(C2S.HELLO, { name, customConfig: playerCustomConfig });
+  mpSend(C2S.HELLO, { name, customConfig: playerCustomConfig, uid: window.firebaseUid });
   mpSend(C2S.CREATE_ROOM, { mode });
   mpSetStatus(`Criando sala ${mode.toUpperCase()}...`);
 }
@@ -6206,7 +6285,7 @@ function mpCreateRoom(mode){
 function mpJoinRoom(id){
   const name = (document.querySelector("#mpName").value || "CRIA").slice(0,14);
   if(!mp.connected){ mpSetStatus("Conectando ao servidor primeiro...", "error"); mpConnect(); return; }
-  mpSend(C2S.HELLO, { name, customConfig: playerCustomConfig });
+  mpSend(C2S.HELLO, { name, customConfig: playerCustomConfig, uid: window.firebaseUid });
   mpSend(C2S.JOIN_ROOM, { id });
 }
 

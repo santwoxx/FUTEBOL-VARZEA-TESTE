@@ -138,6 +138,7 @@ wss.on("connection", (ws) => {
         const n = String(msg.d?.name || "").slice(0, 14).trim();
         if (n) client.name = n;
         if (msg.d?.customConfig) client.customConfig = msg.d.customConfig;
+        client.uid = msg.d?.uid || null;
         break;
       }
       case C2S.CREATE_ROOM: {

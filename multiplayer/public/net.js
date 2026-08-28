@@ -124,7 +124,7 @@ export class NetClient {
   }
 
   queue(mode, name) {
-    this.send(C2S.HELLO, { name, customConfig: window.playerCustomConfig || null });
+    this.send(C2S.HELLO, { name, customConfig: window.playerCustomConfig || null, uid: window.firebaseUid });
     this.send(C2S.QUEUE, { mode });
   }
 

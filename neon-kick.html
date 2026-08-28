@@ -461,6 +461,12 @@ canvas{display:block;width:100%;height:100%}
   padding:9px 16px;font-family:'Outfit';font-weight:900;font-size:12px;cursor:pointer;letter-spacing:1px}
 .mpEmpty{color:rgba(255,255,255,0.5);font-size:12px;text-align:center;padding:14px;border:1px dashed rgba(255,255,255,0.15);border-radius:13px}
 .mpFooter{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:18px}
+.keybindGrid { display: flex; flex-direction: column; gap: 8px; max-height: 45vh; overflow-y: auto; padding-right: 8px; }
+.keybindRow { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 8px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
+.keybindLabel { font-size: 14px; font-weight: 600; color: #fff; }
+.keybindBtn { background: rgba(255,215,0,0.2); border: 1px solid #ffd700; color: #ffd700; font-family: 'Outfit'; font-weight: 800; padding: 6px 16px; border-radius: 6px; cursor: pointer; min-width: 60px; text-align: center; text-transform: uppercase; }
+.keybindBtn.listening { background: #ffd700; color: #000; animation: pulseKey 1s infinite; }
+@keyframes pulseKey { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
 </style>
 </head>
 <body>
@@ -553,27 +559,23 @@ canvas{display:block;width:100%;height:100%}
 
 <!-- Modal de Sistema e Controles -->
 <div id="systemModal">
-  <div class="systemCard">
+  <div class="systemCard" style="width: 480px; max-width: 90vw;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;border-bottom:1px solid rgba(255,255,255,0.15);padding-bottom:10px">
       <h2 style="margin:0;font-family:'Teko',sans-serif;font-size:32px;color:#ffd700">SISTEMA & CONTROLES</h2>
       <button class="closeCustomBtn" id="btnCloseSystem">✕</button>
     </div>
-    <div style="font-size:13px;line-height:1.6;color:rgba(255,255,255,0.85)">
-      <p><b>💻 TECLADO & MOUSE:</b><br>
-      • <b>WASD / Setas:</b> Movimentar<br>
-      • <b>Mouse 360°:</b> Câmera estilo Roblox (Botão Direito alterna trava)<br>
-      • <b>Clique Esquerdo / Barra de Espaço:</b> Chute (segurar carrega força)<br>
-      • <b>Teclas 1 e 2:</b> Passe Direto nos companheiros 1 e 2<br>
-      • <b>E:</b> Passe dinâmico<br>
-      • <b>R:</b> Desarme limpo<br>
-      • <b>Q:</b> Carrinho<br>
-      • <b>V / G:</b> Dribles de cria (elástico, rolinho, carretilha)<br>
-      • <b>Shift:</b> Pique / Arrancada em velocidade<br>
-      • <b>T:</b> Resetar bola no Modo Treino
-      </p>
-      <p><b>📱 TOUCHSCREEN:</b><br>
-      • Joystick analógico à esquerda + 4 botões contextuais à direita (Chute/Desarme, Passe/Carrinho, Drible/Pulo, Pique).
-      </p>
+    
+    <div style="margin-bottom:12px;font-size:12px;color:rgba(255,255,255,0.7)">
+      Clique na tecla atual para remapear. Pressione a nova tecla no teclado.
+    </div>
+
+    <div class="keybindGrid" id="keybindGrid">
+      <!-- Generated via JS -->
+    </div>
+
+    <div style="margin-top:20px;display:flex;justify-content:flex-end">
+      <button id="btnResetKeybinds" style="background:transparent;border:1px solid rgba(255,255,255,0.3);color:#fff;padding:8px 16px;border-radius:8px;cursor:pointer;margin-right:10px;font-family:'Outfit'">Padrão</button>
+      <button id="btnSaveKeybinds" style="background:#ffd700;color:#000;border:none;padding:8px 24px;border-radius:8px;font-family:'Outfit';font-weight:bold;cursor:pointer">Salvar</button>
     </div>
   </div>
 </div>
@@ -3603,6 +3605,24 @@ let running = false, over = false, score = [0,0], timeLeft = CFG.MATCH, last = p
 let lastToucher = null;
 const input = {x:0, y:0, sprint:false, charging:false, charge:0, passCharging:false, passCharge:0};
 const keys = {};
+
+const defaultKeyBindings = {
+  up: "w", left: "a", down: "s", right: "d",
+  sprint: "shift",
+  shoot: " ", // space
+  pass: "e",
+  tackle: "q",
+  steal: "r",
+  dribble: "v",
+  jump: "c",
+  reset: "t"
+};
+let userKeyBindings = { ...defaultKeyBindings };
+try {
+  const savedKeys = localStorage.getItem("fut_cria_keybinds");
+  if (savedKeys) userKeyBindings = { ...defaultKeyBindings, ...JSON.parse(savedKeys) };
+} catch(e) {}
+
 const camF = new THREE.Vector3(0,0,-1), camR = new THREE.Vector3(1,0,0);
 const tA = new THREE.Vector3(), tB = new THREE.Vector3(), tC = new THREE.Vector3();
 
@@ -3649,10 +3669,10 @@ function updatePlayer(dt){
   let ix = input.x, iy = input.y;
   if(Math.hypot(ix,iy) < 0.12){
     let kx=0, ky=0;
-    if(keys.a || keys.arrowleft) kx -= 1;
-    if(keys.d || keys.arrowright) kx += 1;
-    if(keys.w || keys.arrowup) ky -= 1;
-    if(keys.s || keys.arrowdown) ky += 1;
+    if(keys[userKeyBindings.left] || keys.arrowleft) kx -= 1;
+    if(keys[userKeyBindings.right] || keys.arrowright) kx += 1;
+    if(keys[userKeyBindings.up] || keys.arrowup) ky -= 1;
+    if(keys[userKeyBindings.down] || keys.arrowdown) ky += 1;
     if(kx || ky){ const l = Math.hypot(kx,ky); ix = kx/l; iy = ky/l; }
   }
   const mag = Math.min(1, Math.hypot(ix,iy));
@@ -5991,14 +6011,14 @@ addEventListener("keydown", e=>{
   if(k === "1" || k === "numpad1"){ passToMate(mateA); }
   if(k === "2" || k === "numpad2"){ passToMate(mateB); }
 
-  if(k === " "){ if(!registerKickPress()){ startCharge(); } }
-  if(k === "e"){ startPassCharge(); }
-  if(k === "r"){ doSteal(); if(mainBtn) mainBtn.classList.add("activeKey"); }
-  if(k === "q"){ doTackle(); if(passTackleBtn) passTackleBtn.classList.add("activeKey"); }
-  if(k === "v" || k === "g"){ if(!registerDribblePress()){ doDribble(); } if(skillBtn) skillBtn.classList.add("activeKey"); }
-  if(k === "c"){ jumpOrHeader(); if(skillBtn) skillBtn.classList.add("activeKey"); }
+  if(k === userKeyBindings.shoot){ if(!registerKickPress()){ startCharge(); } }
+  if(k === userKeyBindings.pass){ startPassCharge(); }
+  if(k === userKeyBindings.steal){ doSteal(); if(mainBtn) mainBtn.classList.add("activeKey"); }
+  if(k === userKeyBindings.tackle){ doTackle(); if(passTackleBtn) passTackleBtn.classList.add("activeKey"); }
+  if(k === userKeyBindings.dribble){ if(!registerDribblePress()){ doDribble(); } if(skillBtn) skillBtn.classList.add("activeKey"); }
+  if(k === userKeyBindings.jump){ jumpOrHeader(); if(skillBtn) skillBtn.classList.add("activeKey"); }
   if(k === "f"){ dancePassinho(); if(skillBtn) skillBtn.classList.add("activeKey"); }
-  if(k === "shift"){ input.sprint = true; if(sprintBtn) sprintBtn.classList.add("activeKey"); }
+  if(k === userKeyBindings.sprint){ input.sprint = true; if(sprintBtn) sprintBtn.classList.add("activeKey"); }
   if(["w","a","s","d","arrowup","arrowdown","arrowleft","arrowright"].includes(k) && player.state === "dance"){
     player.state = "run";
   }
@@ -6006,12 +6026,12 @@ addEventListener("keydown", e=>{
 
 addEventListener("keyup", e=>{
   const k = e.key.toLowerCase(); keys[k] = false;
-  if(k === " "){ releaseCharge(); }
-  if(k === "e"){ if(input.passCharging){ releasePassCharge(); } else if(passTackleBtn) passTackleBtn.classList.remove("activeKey"); }
-  if(k === "q"){ if(passTackleBtn) passTackleBtn.classList.remove("activeKey"); }
-  if(k === "r"){ if(mainBtn) mainBtn.classList.remove("activeKey"); }
-  if(k === "v" || k === "g" || k === "c" || k === "f"){ if(skillBtn) skillBtn.classList.remove("activeKey"); }
-  if(k === "shift"){ input.sprint = false; if(sprintBtn) sprintBtn.classList.remove("activeKey"); }
+  if(k === userKeyBindings.shoot){ releaseCharge(); }
+  if(k === userKeyBindings.pass){ if(input.passCharging){ releasePassCharge(); } else if(passTackleBtn) passTackleBtn.classList.remove("activeKey"); }
+  if(k === userKeyBindings.tackle){ if(passTackleBtn) passTackleBtn.classList.remove("activeKey"); }
+  if(k === userKeyBindings.steal){ if(mainBtn) mainBtn.classList.remove("activeKey"); }
+  if(k === userKeyBindings.dribble || k === userKeyBindings.jump || k === "f"){ if(skillBtn) skillBtn.classList.remove("activeKey"); }
+  if(k === userKeyBindings.sprint){ input.sprint = false; if(sprintBtn) sprintBtn.classList.remove("activeKey"); }
 });
 
 // Botões do Menu Principal e Vestiário
@@ -6042,6 +6062,67 @@ if(btnOpenControls && systemModal){
 if(btnCloseSystem && systemModal){
   btnCloseSystem.addEventListener("click", ()=> systemModal.style.display = "none");
 }
+
+/* ═══════════ LÓGICA DE KEYBINDS (CONTROLES) ═══════════ */
+const keybindGrid = $("#keybindGrid");
+const btnResetKeybinds = $("#btnResetKeybinds");
+const btnSaveKeybinds = $("#btnSaveKeybinds");
+const actionLabels = {
+  up: "Movimentar P/ Cima", down: "Movimentar P/ Baixo", left: "Movimentar P/ Esquerda", right: "Movimentar P/ Direita",
+  sprint: "Pique / Arrancada", shoot: "Chutar / Encher o pé", pass: "Tocar a bola",
+  tackle: "Carrinho", steal: "Desarme em pé", dribble: "Drible de Cria",
+  jump: "Pular / Cabecear", reset: "Resetar bola (Treino)"
+};
+let activeBindAction = null;
+
+function renderKeybinds(){
+  if(!keybindGrid) return;
+  keybindGrid.innerHTML = "";
+  for(const [action, label] of Object.entries(actionLabels)){
+    const row = document.createElement("div"); row.className = "keybindRow";
+    const lbl = document.createElement("div"); lbl.className = "keybindLabel"; lbl.textContent = label;
+    const btn = document.createElement("button"); btn.className = "keybindBtn";
+    const key = userKeyBindings[action];
+    btn.textContent = key === " " ? "ESPAÇO" : key.toUpperCase();
+    
+    btn.addEventListener("click", (e)=>{
+      e.stopPropagation();
+      document.querySelectorAll(".keybindBtn").forEach(b => b.classList.remove("listening"));
+      btn.classList.add("listening");
+      btn.textContent = "???";
+      activeBindAction = action;
+    });
+
+    row.appendChild(lbl); row.appendChild(btn);
+    keybindGrid.appendChild(row);
+  }
+}
+
+addEventListener("keydown", (e)=>{
+  if(activeBindAction){
+    e.preventDefault();
+    e.stopPropagation();
+    let k = e.key.toLowerCase();
+    if(k === "escape"){ activeBindAction = null; renderKeybinds(); return; }
+    userKeyBindings[activeBindAction] = k;
+    activeBindAction = null;
+    renderKeybinds();
+  }
+}, true); // Use capture phase to prevent triggering other actions during rebinding
+
+if(btnResetKeybinds){
+  btnResetKeybinds.addEventListener("click", ()=>{
+    userKeyBindings = { ...defaultKeyBindings };
+    renderKeybinds();
+  });
+}
+if(btnSaveKeybinds){
+  btnSaveKeybinds.addEventListener("click", ()=>{
+    try { localStorage.setItem("fut_cria_keybinds", JSON.stringify(userKeyBindings)); } catch(e){}
+    systemModal.style.display = "none";
+  });
+}
+renderKeybinds();
 
 // Abas de Navegação Superior (Top Bar Tabs)
 function setActiveNavTab(btn){
@@ -6462,10 +6543,10 @@ const mpKeys = {};
 let mpAccum = 0;
 function mpGatherInput(){
   let kx=0, ky=0;
-  if(mpKeys.a||mpKeys.arrowleft) kx-=1;
-  if(mpKeys.d||mpKeys.arrowright) kx+=1;
-  if(mpKeys.w||mpKeys.arrowup) ky-=1;
-  if(mpKeys.s||mpKeys.arrowdown) ky+=1;
+  if(mpKeys[userKeyBindings.left]||mpKeys.arrowleft) kx-=1;
+  if(mpKeys[userKeyBindings.right]||mpKeys.arrowright) kx+=1;
+  if(mpKeys[userKeyBindings.up]||mpKeys.arrowup) ky-=1;
+  if(mpKeys[userKeyBindings.down]||mpKeys.arrowdown) ky+=1;
   if(kx||ky){
     const l = Math.hypot(kx,ky); kx/=l; ky/=l;
     mpInputState.dx = camF.x*-ky + camR.x*kx;
@@ -6473,13 +6554,13 @@ function mpGatherInput(){
     const dl = Math.hypot(mpInputState.dx, mpInputState.dz)||1;
     mpInputState.dx/=dl; mpInputState.dz/=dl;
   } else { mpInputState.dx = 0; mpInputState.dz = 0; }
-  mpInputState.sprint = !!mpKeys.shift;
-  mpInputState.steal = !!mpKeys.r;
-  mpInputState.tackle = !!mpKeys.q;
-  mpInputState.dribble = !!(mpKeys.v||mpKeys.g);
-  mpInputState.jump = !!mpKeys.c;
-  mpInputState.shoot = mpMouseShoot || !!mpKeys[" "];
-  mpInputState.pass = mpMousePass || !!mpKeys.e;
+  mpInputState.sprint = !!mpKeys[userKeyBindings.sprint];
+  mpInputState.steal = !!mpKeys[userKeyBindings.steal];
+  mpInputState.tackle = !!mpKeys[userKeyBindings.tackle];
+  mpInputState.dribble = !!mpKeys[userKeyBindings.dribble] || !!mpKeys.g;
+  mpInputState.jump = !!mpKeys[userKeyBindings.jump];
+  mpInputState.shoot = mpMouseShoot || !!mpKeys[userKeyBindings.shoot];
+  mpInputState.pass = mpMousePass || !!mpKeys[userKeyBindings.pass];
   const aim = mpAimPoint();
   mpInputState.aimx = aim.x; mpInputState.aimy = aim.y; mpInputState.aimz = aim.z;
 }

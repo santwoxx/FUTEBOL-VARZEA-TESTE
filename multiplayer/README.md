@@ -1,4 +1,4 @@
-# FUT DE CRIA 021 — Multiplayer (1v1 · 2v2 · 3v3 · 4v4)
+# CREATIVE FOOTBALL — Multiplayer (1v1 · 2v2 · 3v3 · 4v4)
 
 Multiplayer online com **servidor autoritativo**: a física, as regras e o placar
 são decididos no servidor. O navegador só manda comandos e desenha o resultado.

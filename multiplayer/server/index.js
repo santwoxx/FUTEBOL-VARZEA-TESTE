@@ -253,6 +253,6 @@ setInterval(() => {
 }, 30000);
 
 server.listen(PORT, () => {
-  console.log(`FUT DE CRIA — servidor multiplayer rodando na porta ${PORT}`);
+  console.log(`CREATIVE FOOTBALL — servidor multiplayer rodando na porta ${PORT}`);
   console.log(`Abra http://localhost:${PORT} para jogar.`);
 });

@@ -1,7 +1,7 @@
 {
   "name": "fut-de-cria-multiplayer",
   "version": "1.0.0",
-  "description": "Servidor autoritativo de multiplayer (1v1 ate 4v4) para FUT DE CRIA 021",
+  "description": "Servidor autoritativo de multiplayer (1v1 ate 4v4) para CREATIVE FOOTBALL",
   "type": "module",
   "main": "server/index.js",
   "scripts": {

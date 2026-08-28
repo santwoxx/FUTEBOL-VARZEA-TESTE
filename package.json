@@ -1,7 +1,7 @@
 {
   "name": "futebol-varzea",
   "version": "1.0.0",
-  "description": "FUT DE CRIA 021 - Jogo de futebol de várzea 3D",
+  "description": "CREATIVE FOOTBALL - Jogo de futebol de várzea 3D",
   "type": "module",
   "main": "server.js",
   "scripts": {

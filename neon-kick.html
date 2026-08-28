@@ -5129,8 +5129,8 @@ function openCustomizerStudio(){
   ballVel.set(0, 0, 0);
 
   // Câmera perfeitamente enquadrada de frente para o jogador
-  camera.position.set(-0.85, 1.25, 2.75);
-  camera.lookAt(-0.85, 1.20, 0);
+  camera.position.set(-1.25, 1.55, 3.8);
+  camera.lookAt(-1.25, 1.35, 0);
 }
 
 function closeCustomizerStudio(){
@@ -5403,11 +5403,11 @@ function loop(now){
   } else if(gameMode === "customizer"){
     shake = 0;
     // Exibição ao vivo do personagem de frente no Vestiário 3D
-    player.root.position.set(-0.85, 0, 0);
+    player.root.position.set(-1.25, 0, 0);
     player.vel.set(0, 0, 0);
     player.yaw = Math.PI + customizerRot;
-    camera.position.set(-0.85, 1.25, 2.75);
-    camera.lookAt(-0.85, 1.20, 0);
+    camera.position.set(-1.25, 1.55, 3.8);
+    camera.lookAt(-1.25, 1.35, 0);
     animateHumanoid(player, dt, false);
   } else if(gameMode === "menu"){
     shake = 0;

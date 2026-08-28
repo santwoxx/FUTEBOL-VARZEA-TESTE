@@ -461,6 +461,12 @@ function applyInput(w, e, input, dt) {
   if (pressed("tackle")) doTackle(w, e);
   if (pressed("dribble")) { e.lastDribT = w.tick; doDribbleMove(w, e); }
   if (pressed("jump")) doJumpOrHeader(w, e);
+  if (pressed("dance")) {
+    if (Math.hypot(e.vx, e.vz) < 0.4 && e.act <= 0 && e.y < 0.08) {
+      e.state = STATE.DANCE; e.act = 0.9; e.cool = 0.9;
+      if (w.ownerId === e.id) { w.ball.vx = 0; w.ball.vz = 0; w.ownerId = 0; }
+    }
+  }
 
   e.prev = { ...input };
 

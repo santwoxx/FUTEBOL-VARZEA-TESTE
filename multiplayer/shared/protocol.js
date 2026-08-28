@@ -56,6 +56,7 @@ export function makeInput() {
     steal: false,
     dribble: false,
     jump: false,
+    dance: false,
     aimx: 0, aimy: 1, aimz: 0   // ponto de mira no mundo (crosshair)
   };
 }

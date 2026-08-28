@@ -3613,8 +3613,9 @@ const defaultKeyBindings = {
   pass: "e",
   tackle: "q",
   steal: "r",
-  dribble: "v",
+  dribble: "f",
   jump: "c",
+  dance: "v",
   reset: "t"
 };
 let userKeyBindings = { ...defaultKeyBindings };
@@ -6017,7 +6018,7 @@ addEventListener("keydown", e=>{
   if(k === userKeyBindings.tackle){ doTackle(); if(passTackleBtn) passTackleBtn.classList.add("activeKey"); }
   if(k === userKeyBindings.dribble){ if(!registerDribblePress()){ doDribble(); } if(skillBtn) skillBtn.classList.add("activeKey"); }
   if(k === userKeyBindings.jump){ jumpOrHeader(); if(skillBtn) skillBtn.classList.add("activeKey"); }
-  if(k === "f"){ dancePassinho(); if(skillBtn) skillBtn.classList.add("activeKey"); }
+  if(k === userKeyBindings.dance){ dancePassinho(); if(skillBtn) skillBtn.classList.add("activeKey"); }
   if(k === userKeyBindings.sprint){ input.sprint = true; if(sprintBtn) sprintBtn.classList.add("activeKey"); }
   if(["w","a","s","d","arrowup","arrowdown","arrowleft","arrowright"].includes(k) && player.state === "dance"){
     player.state = "run";
@@ -6030,7 +6031,7 @@ addEventListener("keyup", e=>{
   if(k === userKeyBindings.pass){ if(input.passCharging){ releasePassCharge(); } else if(passTackleBtn) passTackleBtn.classList.remove("activeKey"); }
   if(k === userKeyBindings.tackle){ if(passTackleBtn) passTackleBtn.classList.remove("activeKey"); }
   if(k === userKeyBindings.steal){ if(mainBtn) mainBtn.classList.remove("activeKey"); }
-  if(k === userKeyBindings.dribble || k === userKeyBindings.jump || k === "f"){ if(skillBtn) skillBtn.classList.remove("activeKey"); }
+  if(k === userKeyBindings.dribble || k === userKeyBindings.jump || k === userKeyBindings.dance){ if(skillBtn) skillBtn.classList.remove("activeKey"); }
   if(k === userKeyBindings.sprint){ input.sprint = false; if(sprintBtn) sprintBtn.classList.remove("activeKey"); }
 });
 
@@ -6071,7 +6072,7 @@ const actionLabels = {
   up: "Movimentar P/ Cima", down: "Movimentar P/ Baixo", left: "Movimentar P/ Esquerda", right: "Movimentar P/ Direita",
   sprint: "Pique / Arrancada", shoot: "Chutar / Encher o pé", pass: "Tocar a bola",
   tackle: "Carrinho", steal: "Desarme em pé", dribble: "Drible de Cria",
-  jump: "Pular / Cabecear", reset: "Resetar bola (Treino)"
+  jump: "Pular / Cabecear", dance: "Dancinha / Emoji", reset: "Resetar bola (Treino)"
 };
 let activeBindAction = null;
 
@@ -6573,6 +6574,7 @@ function mpGatherInput(){
   mpInputState.tackle = !!mpKeys[userKeyBindings.tackle];
   mpInputState.dribble = !!mpKeys[userKeyBindings.dribble] || !!mpKeys.g;
   mpInputState.jump = !!mpKeys[userKeyBindings.jump];
+  mpInputState.dance = !!mpKeys[userKeyBindings.dance];
   mpInputState.shoot = mpMouseShoot || !!mpKeys[userKeyBindings.shoot];
   mpInputState.pass = mpMousePass || !!mpKeys[userKeyBindings.pass];
   const aim = mpAimPoint();

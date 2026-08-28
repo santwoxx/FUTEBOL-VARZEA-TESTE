@@ -7,6 +7,24 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Teko:wght@600;700&display=swap" rel="stylesheet">
+
+<!-- Endereço do backend (Render). Script clássico: roda antes do módulo do jogo. -->
+<script src="config.js"></script>
+<script>
+  // Wake-up do plano free do Render: o serviço hiberna após ~15min parado e leva
+  // 30-50s para acordar. Batendo aqui no load, ele acorda enquanto o jogador
+  // ainda está no menu/vestiário — quando clicar em ONLINE, já está de pé.
+  (function () {
+    if (!window.CF_CONFIG || CF_CONFIG.isLocal()) return;
+    window.CF_BACKEND_AWAKE = false;
+    const t0 = performance.now();
+    fetch(CF_CONFIG.httpUrl() + "/health", { cache: "no-store" })
+      .then(r => r.ok && (window.CF_BACKEND_AWAKE = true))
+      .catch(() => {})
+      .finally(() => console.log(`[backend] acordou em ${Math.round(performance.now() - t0)}ms`));
+  })();
+</script>
+
 <style>
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#0c070e;font-family:'Outfit',system-ui,sans-serif;touch-action:none;-webkit-user-select:none;user-select:none;color:#fff}
@@ -597,7 +615,7 @@ canvas{display:block;width:100%;height:100%}
     <div class="mpField">
       <label>ENDEREÇO DO SERVIDOR (WEBSOCKET)</label>
       <input class="mpInput" id="mpServer" spellcheck="false" autocomplete="off"
-             placeholder="wss://seu-servidor.onrender.com">
+             placeholder="wss://futebol-varzea-teste.onrender.com">
     </div>
 
     <div class="mpSectionTitle">CRIAR SALA — ESCOLHA O MODO</div>
@@ -859,7 +877,15 @@ btnAuth.addEventListener("click", () => {
     signOut(fbAuth);
   } else {
     const provider = new GoogleAuthProvider();
-    signInWithPopup(fbAuth, provider).catch(e => console.error(e));
+    signInWithPopup(fbAuth, provider).catch(e => {
+      console.error(e);
+      // Erro nº1 depois de trocar de domínio (Render → Vercel): o Firebase só
+      // aceita popup de domínios que estão na allowlist do projeto.
+      if (e?.code === "auth/unauthorized-domain") {
+        alert(`Login bloqueado: o domínio "${location.hostname}" não está autorizado no Firebase.\n\n` +
+              `Console do Firebase > Authentication > Settings > Authorized domains > Add domain`);
+      }
+    });
   }
 });
 
@@ -6166,7 +6192,7 @@ document.addEventListener("visibilitychange", ()=>{ last = performance.now(); })
 
 /* ═══════════════════════ MULTIPLAYER ONLINE — INTEGRAÇÃO WEBSOCKET ═══════════════════════ */
 
-// Protocolo (espelha multiplayer/shared/protocol.js — JSON {t, d})
+// Protocolo (espelha server/shared/protocol.js — JSON {t, d})
 const C2S = { HELLO:"hello", QUEUE:"queue", LEAVE:"leave", INPUT:"input", PING:"ping",
               CREATE_ROOM:"create_room", JOIN_ROOM:"join_room", GET_ROOMS:"get_rooms" };
 const S2C = { WELCOME:"welcome", QUEUED:"queued", ROOM_CREATED:"room_created", ROOM_LIST:"room_list",
@@ -6203,6 +6229,7 @@ const mp = {
 };
 
 const MP_INTERP = 0.10, MP_MAX_SNAP = 24, MP_ACC_NUM = 1/30;
+const MP_MAX_RETRIES = 12;   // ~48s de tentativas: cobre o cold start do Render free
 
 function mpSetStatus(text, cls){
   const el = document.querySelector("#mpStatus");
@@ -6214,9 +6241,13 @@ function mpSend(type, data){
   if(mp.ws && mp.ws.readyState === WebSocket.OPEN) mp.ws.send(JSON.stringify({t:type, d:data}));
 }
 
+// O frontend (Vercel) e o backend (Render) vivem em domínios diferentes, então
+// o endereço vem do config.js — não mais de location.host.
 function mpDefaultServerUrl(){
-  const proto = location.protocol === "https:" ? "wss:" : "ws:";
-  return `${proto}//${location.host}`;
+  return window.CF_CONFIG ? CF_CONFIG.wsUrl() : `ws://${location.hostname}:8080`;
+}
+function mpBackendHttp(){
+  return window.CF_CONFIG ? CF_CONFIG.httpUrl() : `http://${location.hostname}:8080`;
 }
 
 function openMultiplayerLobby(){
@@ -6242,19 +6273,43 @@ function mpConnect(){
   mpSetStatus("Conectando...");
 
   if(mp.ws){ try{ mp.ws.close(); }catch(e){} mp.ws = null; }
+  clearTimeout(mp.wakeTimer);
 
   let ws;
   try { ws = new WebSocket(url); } catch(e){ mpSetStatus("URL inválida.", "error"); return; }
   mp.ws = ws;
 
+  // O plano free do Render hiberna. Enquanto ele acorda, o handshake do
+  // WebSocket falha na hora — então avisamos o jogador e tentamos de novo em
+  // vez de mostrar "servidor fora do ar" para um servidor que só está subindo.
+  mp.wakeTimer = setTimeout(() => {
+    if(!mp.connected) mpSetStatus("Acordando o servidor (plano free, ~40s)...", "");
+  }, 2500);
+
   ws.onopen = () => {
     mp.connected = true;
+    mp.retries = 0;
+    clearTimeout(mp.wakeTimer);
     mpSend(C2S.HELLO, { name, customConfig: playerCustomConfig, uid: window.firebaseUid });
     mpSetStatus("Conectado. Crie uma sala ou entre em uma aberta.");
     mpListRooms();
   };
-  ws.onclose = () => { mp.connected = false; mpSetStatus("Conexão encerrada.", "error"); };
-  ws.onerror = () => { mpSetStatus("Falha ao conectar. Servidor no ar?", "error"); };
+  ws.onclose = () => {
+    clearTimeout(mp.wakeTimer);
+    const wasConnected = mp.connected;
+    mp.connected = false;
+    if(ws !== mp.ws) return;                       // socket antigo, ignora
+    if(wasConnected){ mpSetStatus("Conexão encerrada.", "error"); return; }
+    // Nunca chegou a abrir: provavelmente cold start. Tenta de novo.
+    if((mp.retries = (mp.retries || 0) + 1) <= MP_MAX_RETRIES){
+      mpSetStatus(`Acordando o servidor... (tentativa ${mp.retries}/${MP_MAX_RETRIES})`, "");
+      mp.wakeTimer = setTimeout(() => { if(mp.ws === ws) mpConnect(); }, 4000);
+    } else {
+      mp.retries = 0;
+      mpSetStatus("Servidor não respondeu. Tente de novo em instantes.", "error");
+    }
+  };
+  ws.onerror = () => { /* o onclose logo em seguida cuida do retry */ };
   ws.onmessage = (ev) => mpHandle(JSON.parse(ev.data));
 }
 
@@ -6349,8 +6404,8 @@ function mpRenderRooms(list){
 
 function mpListRooms(){
   mpSend(C2S.GET_ROOMS, {});
-  // Fallback HTTP para quando o socket ainda não está pronto
-  fetch(`/rooms`).then(r => r.json()).then(list => {
+  // Fallback HTTP (cross-origin agora) para quando o socket ainda não está pronto
+  fetch(`${mpBackendHttp()}/rooms`).then(r => r.json()).then(list => {
     if(mp.connected) return;   // o socket já mandou a lista oficial
     mpRenderRooms(list || []);
   }).catch(()=>{});
@@ -6372,6 +6427,8 @@ function mpJoinRoom(id){
 }
 
 function mpLeave(){
+  clearTimeout(mp.wakeTimer);          // cancela retry de cold start pendente
+  mp.retries = 0;
   if(mp.ws && mp.ws.readyState === WebSocket.OPEN){ mpSend(C2S.LEAVE, {}); try{ mp.ws.close(); }catch(e){} }
   mp.ws = null; mp.connected = false;
   mpClearRoster();

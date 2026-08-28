@@ -1,0 +1,22 @@
+# Deploy do BACKEND no Render (Infrastructure as Code).
+# O frontend NAO vive aqui — ele vai para a Vercel (pasta ./frontend).
+#
+# Para aplicar: Render > New > Blueprint > aponte para este repositorio.
+
+services:
+  - type: web
+    name: futebol-varzea-teste     # mantem a URL atual: futebol-varzea-teste.onrender.com
+    runtime: node
+    plan: free
+    region: oregon                 # veja a nota sobre latencia no README
+    rootDir: server
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      # Trave o backend nos dominios do frontend depois do primeiro deploy da
+      # Vercel. Sem isso, qualquer site consegue abrir salas no seu servidor.
+      - key: ALLOWED_ORIGINS
+        sync: false

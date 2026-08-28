@@ -5,7 +5,7 @@
 // (Node) e no cliente (browser, para predicao local). Toda a fisica de bola,
 // movimentacao, posse, chute, passe e desarme vive aqui.
 //
-// Os numeros foram portados do jogo single-player (neon-kick.html) para que a
+// Os numeros foram portados do jogo single-player (frontend/index.html) para que a
 // sensacao de jogo seja a mesma.
 
 import { CFG, HW, HH, GHW, FORMATIONS, STATE } from "./constants.js";
@@ -20,7 +20,7 @@ function angleLerp(a, b, t) {
   return a + d * t;
 }
 
-// Carrinho (slide tackle) — espelha o objeto TACKLE de neon-kick.html.
+// Carrinho (slide tackle) — espelha o objeto TACKLE de frontend/index.html.
 // Deslize longo: o contato e checado a cada tick enquanto o corpo esta no chao.
 const TACKLE = {
   duration:  0.85,  // duracao da acao (s)

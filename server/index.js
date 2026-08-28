@@ -1,105 +1,98 @@
-// Servidor HTTP (arquivos estaticos do cliente) + WebSocket (partidas).
-// Um unico processo Node serve o jogo e roda as simulacoes — e o que permite
-// hospedar tudo num servico gratuito como o Render.
+// Backend do CREATIVE FOOTBALL: API HTTP mínima + WebSocket das partidas.
+//
+// Este processo NÃO serve mais o jogo — o frontend estático vive na Vercel
+// (pasta ../frontend). Aqui ficam apenas:
+//   GET /health  → keep-alive / wake-up do plano free do Render
+//   GET /rooms   → lista de salas abertas (fallback do lobby)
+//   WebSocket    → salas autoritativas (30 ticks/s, 20 snapshots/s)
 
 import http from "node:http";
-import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { WebSocketServer } from "ws";
 
-import { MODES } from "../shared/constants.js";
-import { C2S, S2C, encode, decode } from "../shared/protocol.js";
+import { MODES } from "./shared/constants.js";
+import { C2S, S2C, encode, decode } from "./shared/protocol.js";
 import { Room } from "./room.js";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(__dirname, "..");
-const PUBLIC = path.join(ROOT, "public");
-const SHARED = path.join(ROOT, "shared");
 const PORT = process.env.PORT || 8080;
 
-// ───────────────────────────── HTTP estatico ────────────────────────────────
+// Origens autorizadas a falar com este backend. Em produção, defina
+// ALLOWED_ORIGINS no Render com os domínios da Vercel separados por vírgula:
+//   https://creative-football.vercel.app,https://seu-dominio.com
+// Sem a variável definida, libera geral (útil em dev e em preview deploys).
+const ALLOWED_ORIGINS = (process.env.ALLOWED_ORIGINS || "")
+  .split(",").map(s => s.trim()).filter(Boolean);
 
-const MIME = {
-  ".html": "text/html; charset=utf-8",
-  ".js": "text/javascript; charset=utf-8",
-  ".css": "text/css; charset=utf-8",
-  ".json": "application/json; charset=utf-8",
-  ".png": "image/png",
-  ".jpg": "image/jpeg",
-  ".svg": "image/svg+xml",
-  ".ico": "image/x-icon"
-};
-
-function safeJoin(base, target) {
-  const p = path.normalize(path.join(base, target));
-  if (!p.startsWith(base)) return null;   // bloqueia path traversal (../../etc)
-  return p;
+function originAllowed(origin) {
+  if (!ALLOWED_ORIGINS.length) return true;       // sem allowlist = liberado
+  if (!origin) return true;                        // curl, apps nativos, health checks
+  return ALLOWED_ORIGINS.includes(origin);
 }
 
-const server = http.createServer((req, res) => {
-  const url = new URL(req.url, `http://${req.headers.host}`);
-  let pathname = decodeURIComponent(url.pathname);
+// Ecoa a origem em vez de "*": mantém a porta aberta para credenciais no futuro
+// (o LiveKit token endpoint vai precisar) sem reescrever o CORS depois.
+function corsHeaders(origin) {
+  return {
+    "Access-Control-Allow-Origin": originAllowed(origin) ? (origin || "*") : "null",
+    "Vary": "Origin",
+    "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Max-Age": "86400"
+  };
+}
 
+// ───────────────────────────────── API HTTP ─────────────────────────────────
+
+const server = http.createServer((req, res) => {
+  const origin = req.headers.origin;
+  const cors = corsHeaders(origin);
+
+  if (req.method === "OPTIONS") {
+    res.writeHead(204, cors);
+    res.end();
+    return;
+  }
+
+  let pathname;
+  try {
+    pathname = new URL(req.url, `http://${req.headers.host}`).pathname;
+  } catch (e) {
+    pathname = req.url;
+  }
+
+  // Wake-up do free tier: o frontend bate aqui assim que a página abre, então
+  // o Render acorda enquanto o jogador ainda está no menu.
   if (pathname === "/health") {
-    res.writeHead(200, { "Content-Type": "application/json" });
-    res.end(JSON.stringify({ ok: true, rooms: rooms.size, players: clients.size }));
+    res.writeHead(200, { ...cors, "Content-Type": "application/json", "Cache-Control": "no-store" });
+    res.end(JSON.stringify({ ok: true, rooms: rooms.size, players: clients.size, uptime: Math.round(process.uptime()) }));
     return;
   }
 
   if (pathname === "/rooms") {
     const list = [];
     for (const r of rooms.values()) {
-      // Lista apenas salas abertas que ainda nao comecaram
-      if (!r.started) list.push(r.publicInfo());
+      if (!r.started && !r.private) list.push(r.publicInfo());
     }
-    res.writeHead(200, { "Content-Type": "application/json", "Cache-Control": "no-store" });
+    res.writeHead(200, { ...cors, "Content-Type": "application/json", "Cache-Control": "no-store" });
     res.end(JSON.stringify(list));
     return;
   }
 
-  if (pathname === "/") pathname = "/index.html";
-
-  // /shared/* vem da pasta compartilhada; o resto vem de /public
-  let filePath;
-  if (pathname.startsWith("/shared/")) {
-    filePath = safeJoin(SHARED, pathname.slice("/shared/".length));
-  } else {
-    filePath = safeJoin(PUBLIC, pathname);
-  }
-
-  if (!filePath) {
-    res.writeHead(403); res.end("Forbidden"); return;
-  }
-
-  fs.readFile(filePath, (err, data) => {
-    if (err) {
-      res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
-      res.end("404 — arquivo nao encontrado");
-      return;
-    }
-    const ext = path.extname(filePath).toLowerCase();
-    res.writeHead(200, { "Content-Type": MIME[ext] || "application/octet-stream" });
-    res.end(data);
-  });
+  res.writeHead(404, { ...cors, "Content-Type": "application/json" });
+  res.end(JSON.stringify({ error: "not_found", hint: "backend só expõe /health, /rooms e o WebSocket" }));
 });
 
 // ──────────────────────────── WebSocket / salas ─────────────────────────────
 
-const wss = new WebSocketServer({ server });
+// Agora que o frontend mora em outro dominio, o WebSocket deixa de ser
+// same-origin: sem esta checagem qualquer site poderia abrir salas no seu
+// servidor. Só vale quando ALLOWED_ORIGINS está definida.
+const wss = new WebSocketServer({
+  server,
+  verifyClient: ({ origin }) => originAllowed(origin)
+});
 const rooms = new Map();      // roomId -> Room
 const clients = new Map();    // clientId -> client
 let nextClientId = 1;
-
-function findOrCreateRoom(mode) {
-  // Procura uma sala do mesmo modo que ainda nao encheu e nao comecou
-  for (const r of rooms.values()) {
-    if (r.mode === mode && !r.isFull && !r.private) return r;
-  }
-  const room = new Room(mode, { onEmpty: (r) => rooms.delete(r.id) });
-  rooms.set(room.id, room);
-  return room;
-}
 
 function findRoomById(id) {
   return rooms.get(Number(id)) || null;
@@ -145,23 +138,8 @@ wss.on("connection", (ws) => {
       case C2S.HELLO: {
         const n = String(msg.d?.name || "").slice(0, 14).trim();
         if (n) client.name = n;
-        break;
-      }
-      case C2S.QUEUE: {
-        const mode = msg.d?.mode;
-        if (!MODES[mode]) {
-          client.send(S2C.ERROR, { message: "Modo invalido" });
-          return;
-        }
-        if (client.room) client.room.removeClient(client);
-        const room = findOrCreateRoom(mode);
-        if (!room.addClient(client)) {
-          client.send(S2C.ERROR, { message: "Sala cheia, tente de novo" });
-          return;
-        }
-        client.send(S2C.QUEUED, {
-          mode, players: room.playerCount, capacity: room.capacity
-        });
+        if (msg.d?.customConfig) client.customConfig = msg.d.customConfig;
+        client.uid = msg.d?.uid || null;
         break;
       }
       case C2S.CREATE_ROOM: {
@@ -215,6 +193,24 @@ wss.on("connection", (ws) => {
         client.send(S2C.ROOM_LIST, { rooms: list });
         break;
       }
+      case C2S.QUEUE: {
+        const mode = msg.d?.mode;
+        if (!MODES[mode]) {
+          client.send(S2C.ERROR, { message: "Modo invalido" });
+          return;
+        }
+        if (client.room) client.room.removeClient(client);
+        // Fila: entra na Sala publica deste modo (auto-matchmaking)
+        const room = findOpenOrCreate(mode);
+        if (!room.addClient(client)) {
+          client.send(S2C.ERROR, { message: "Sala cheia, tente de novo" });
+          return;
+        }
+        client.send(S2C.QUEUED, {
+          mode, players: room.playerCount, capacity: room.capacity
+        });
+        break;
+      }
       case C2S.INPUT: {
         if (client.room) client.room.setInput(client, msg.d || {});
         break;
@@ -243,6 +239,15 @@ wss.on("connection", (ws) => {
   });
 });
 
+function findOpenOrCreate(mode) {
+  for (const r of rooms.values()) {
+    if (r.mode === mode && !r.isFull && !r.private) return r;
+  }
+  const room = new Room(mode, { onEmpty: (r) => rooms.delete(r.id) });
+  rooms.set(room.id, room);
+  return room;
+}
+
 // Mata conexoes zumbis (importante em hospedagem gratuita, que derruba sockets)
 setInterval(() => {
   for (const c of clients.values()) {
@@ -253,6 +258,9 @@ setInterval(() => {
 }, 30000);
 
 server.listen(PORT, () => {
-  console.log(`CREATIVE FOOTBALL — servidor multiplayer rodando na porta ${PORT}`);
-  console.log(`Abra http://localhost:${PORT} para jogar.`);
+  console.log(`CREATIVE FOOTBALL — backend na porta ${PORT}`);
+  console.log(`WebSocket: ws://localhost:${PORT}  ·  Health: http://localhost:${PORT}/health`);
+  console.log(ALLOWED_ORIGINS.length
+    ? `CORS restrito a: ${ALLOWED_ORIGINS.join(", ")}`
+    : `CORS liberado (defina ALLOWED_ORIGINS em producao)`);
 });

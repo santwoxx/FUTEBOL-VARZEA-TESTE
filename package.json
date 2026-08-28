@@ -1,14 +1,13 @@
 {
-  "name": "futebol-varzea",
+  "name": "creative-football",
   "version": "1.0.0",
-  "description": "CREATIVE FOOTBALL - Jogo de futebol de várzea 3D",
+  "private": true,
+  "description": "CREATIVE FOOTBALL — frontend (Vercel) + backend (Render). Este package.json serve apenas ao desenvolvimento local.",
   "type": "module",
-  "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "build": "echo 'No build needed'"
-  },
-  "dependencies": {
-    "ws": "^8.18.0"
+    "dev": "node tools/dev.js",
+    "dev:server": "node --watch server/index.js",
+    "dev:web": "node tools/serve-static.js",
+    "postinstall": "npm --prefix server install"
   }
 }

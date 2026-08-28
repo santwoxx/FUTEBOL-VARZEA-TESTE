@@ -1,9 +1,9 @@
 // Uma sala = uma partida. Roda a simulacao autoritativa em tick fixo e envia
 // snapshots para os clientes conectados.
 
-import { CFG, MODES, STATE } from "../shared/constants.js";
-import { createWorld, step, serialize, getEnt, resetPositions } from "../shared/sim.js";
-import { S2C, encode } from "../shared/protocol.js";
+import { CFG, MODES, STATE } from "./shared/constants.js";
+import { createWorld, step, serialize, getEnt, resetPositions } from "./shared/sim.js";
+import { S2C, encode } from "./shared/protocol.js";
 
 let nextRoomId = 1;
 

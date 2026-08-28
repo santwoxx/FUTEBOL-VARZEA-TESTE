@@ -1,5 +1,5 @@
 // Constantes compartilhadas entre servidor (Node) e cliente (browser).
-// Os numeros de campo/bola sao os mesmos do jogo single-player (neon-kick.html)
+// Os numeros de campo/bola sao os mesmos do jogo single-player (frontend/index.html)
 // para que o multiplayer tenha exatamente a mesma sensacao de jogo.
 
 export const CFG = {

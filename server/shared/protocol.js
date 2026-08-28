@@ -10,7 +10,8 @@ export const C2S = {
   PING: "ping",
   CREATE_ROOM: "create_room",  // criar uma sala com modo especifico (e opcional privada)
   JOIN_ROOM: "join_room",      // entrar numa sala por ID (e codigo, se privada)
-  GET_ROOMS: "get_rooms"       // pedir a lista de salas abertas
+  GET_ROOMS: "get_rooms",      // pedir a lista de salas abertas
+  VOICE_TOKEN: "voice_token"   // pedir credencial para entrar na voz do time
 };
 
 export const S2C = {
@@ -25,6 +26,7 @@ export const S2C = {
   MATCH_END: "end",       // fim de partida com placar final
   PLAYER_LEFT: "left",    // alguem desconectou (virou bot)
   PONG: "pong",
+  VOICE_TOKEN: "voice_token",    // credencial de voz (ou {error} se indisponivel)
   ERROR: "error"
 };
 

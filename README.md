@@ -39,6 +39,8 @@ sair do plano free.
 | `server/shared/sim.js` | Física e regras (autoritativo no servidor). |
 | `server/shared/constants.js` | Dimensões do campo, modos, formações. |
 | `server/shared/protocol.js` | Formato das mensagens. |
+| `server/voice.js` | Assina os tokens da voz do time (LiveKit). |
+| `server/env.js` | Lê `server/.env` em dev. Em produção não faz nada. |
 | `tools/` | Scripts de desenvolvimento local (não vão para produção). |
 
 Autenticação e perfil do jogador são **client-side puro**: Firebase Auth +
@@ -112,13 +114,15 @@ vírgula — inclua os previews da Vercel se for testar por lá.
 
 Não há build: é HTML estático.
 
-### Depois do primeiro deploy — 2 passos obrigatórios
+### Depois do primeiro deploy — 3 passos obrigatórios
 
 1. **Firebase.** Console do Firebase → *Authentication* → *Settings* →
    *Authorized domains* → adicione o domínio da Vercel. Sem isso o login com
    Google quebra com `auth/unauthorized-domain` (o jogo mostra um alerta
    explicando).
 2. **`ALLOWED_ORIGINS` no Render** com o domínio final da Vercel.
+3. **Credenciais do LiveKit no Render**, se quiser a voz in-game — veja
+   [VoIP](#voip--voz-do-time) abaixo. Sem elas o jogo funciona igual, só sem voz.
 
 Se o backend mudar de endereço, o único lugar a editar é a constante `PROD` em
 [`frontend/config.js`](frontend/config.js).
@@ -186,10 +190,74 @@ Medidos nos testes locais:
 - **CPU:** ~0,03% de um núcleo por partida.
 - **Conversão de chutes:** ~23% viram gol (cantos ~39%, meio ~15%).
 
+## VoIP — voz do time
+
+Voz entre jogadores do **mesmo time**, durante a partida, via
+[LiveKit Cloud](https://livekit.io).
+
+- **`T`** — segure para falar (push-to-talk).
+- **`M`** — trava o microfone aberto. Aperte de novo para destravar.
+- Trocar de aba corta a transmissão, mesmo com o mic travado.
+- **Só a partir do 2v2.** No 1v1 os dois jogadores caem em times opostos, então
+  não existe companheiro para ouvir e o HUD de voz nem aparece.
+
+> **Para testar:** o servidor equilibra os times na ordem de entrada — 1º e 3º a
+> entrar ficam no time 0, 2º e 4º no time 1. Com duas abas você sempre cai em
+> times opostos e não se escuta. Abra **quatro** abas num 2v2 (ou três, e espere
+> os 12s do preenchimento com bots) e fale entre a 1ª e a 3ª.
+
+### Por que o token sai do servidor de jogo
+
+O `server/` é o único lugar que sabe em qual sala e em qual time você está.
+Ele assina um JWT com a sala de voz já escrita dentro
+(`cf-<sala>-t<time>`) — sala e time saem do estado do WebSocket, **nunca** do
+que o cliente pediu. Como o LiveKit isola salas entre si, não existe cliente
+modificado que escute o time adversário.
+
+A mídia não passa pelo Render: quem carrega o áudio é o SFU do LiveKit. O
+backend só emite credencial.
+
+### Configurar
+
+No [LiveKit Cloud](https://cloud.livekit.io): *Settings → Keys → Create Key*.
+Depois, no Render (*Environment*) — ou em `server/.env` para rodar local,
+copiando de [`server/.env.example`](server/.env.example):
+
+```
+LIVEKIT_URL=wss://<projeto>.livekit.cloud
+LIVEKIT_API_KEY=API...
+LIVEKIT_API_SECRET=<segredo>
+```
+
+Sem as três variáveis o VoIP fica desligado e o resto do jogo continua
+idêntico — nenhum erro na tela, o HUD de voz simplesmente não aparece.
+Para conferir se chegaram, `GET /health` responde `"voice": true`.
+
+O `API_SECRET` nunca vai para o repositório: no `render.yaml` as três estão
+como `sync: false` (o valor vive só no painel) e `server/.env` está no
+`.gitignore`.
+
+### Detalhes de implementação
+
+- **Permissão do microfone é pedida no lobby**, não na partida. Durante o jogo
+  o mouse está travado (pointer lock) e a caixa de permissão do navegador
+  arrancaria o jogador do controle bem na hora em que ele quis falar.
+- **O SDK (~1,3 MB) só baixa quando a primeira partida começa.** Quem nunca
+  joga online não paga esse download.
+- **O microfone é publicado uma vez e depois só muta/desmuta.** Publicar a cada
+  aperto do `T` renegociaria a conexão no meio da jogada.
+- Você entra na partida ouvindo o time, mas **mudo**.
+
+### Custo
+
+Voz consome minutos de participante no plano free do LiveKit. Um 4v4 de 3
+minutos gasta ~24 minutos de participante (8 jogadores × 3 min). Acompanhe em
+*Billing* no painel.
+
+---
+
 ## Próximo passo
 
-VoIP in-game com **LiveKit** — voz entre jogadores da mesma sala. O endpoint
-que assina o token JWT vai no `server/` (não numa function da Vercel), porque
-é o servidor de jogo que sabe quem está em qual sala, em qual time e em qual
-posição no campo. A mídia não passa pelo Render: quem carrega é o SFU do
-LiveKit Cloud.
+Voz espacial: ouvir mais alto quem está perto de você no campo. O LiveKit
+entrega as faixas separadas por participante, então dá para ligar cada uma a um
+`PannerNode` do Web Audio usando a posição que o snapshot já traz.

@@ -1,3 +1,4 @@
 node_modules/
 _srv*.out
 _srv*.err
+.env

@@ -20,3 +20,11 @@ services:
       # Vercel. Sem isso, qualquer site consegue abrir salas no seu servidor.
       - key: ALLOWED_ORIGINS
         sync: false
+      # VoIP (LiveKit Cloud). sync: false = o valor vive no painel do Render,
+      # nunca neste arquivo — o API_SECRET nao pode ir para o repositorio.
+      - key: LIVEKIT_URL
+        sync: false
+      - key: LIVEKIT_API_KEY
+        sync: false
+      - key: LIVEKIT_API_SECRET
+        sync: false

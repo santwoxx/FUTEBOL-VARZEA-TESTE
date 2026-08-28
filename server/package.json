@@ -8,6 +8,11 @@
     "start": "node server.js",
     "dev": "node --watch server.js"
   },
-  "engines": { "node": "22.x" },
-  "dependencies": { "ws": "^8.18.0" }
+  "engines": {
+    "node": "22.x"
+  },
+  "dependencies": {
+    "livekit-server-sdk": "^2.18.0",
+    "ws": "^8.18.0"
+  }
 }

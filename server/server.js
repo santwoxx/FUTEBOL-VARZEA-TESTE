@@ -9,9 +9,12 @@
 import http from "node:http";
 import { WebSocketServer } from "ws";
 
+import "./env.js";                 // le server/.env em dev (no-op em producao)
+
 import { MODES } from "./shared/constants.js";
 import { C2S, S2C, encode, decode } from "./shared/protocol.js";
 import { Room } from "./room.js";
+import { voiceConfig, voiceToken } from "./voice.js";
 
 const PORT = process.env.PORT || 8080;
 
@@ -72,6 +75,7 @@ const server = http.createServer((req, res) => {
       service: "creative-football-backend",   // o jogo em si vive na Vercel
       rooms: rooms.size,
       players: clients.size,
+      voice: voiceConfig().enabled,
       uptime: Math.round(process.uptime())
     }));
     return;
@@ -229,6 +233,39 @@ wss.on("connection", (ws) => {
         if (client.room) client.room.removeClient(client);
         break;
       }
+      case C2S.VOICE_TOKEN: {
+        // Sala e time saem do estado do servidor, NUNCA do que o cliente pediu:
+        // e isso que impede alguem de forjar um token para a voz de outra
+        // partida (ou do time adversario) so mexendo no JSON.
+        if (!client.room || !client.entId) {
+          client.send(S2C.VOICE_TOKEN, { error: "not_in_room" });
+          return;
+        }
+        // No 1v1 cada jogador fica num time, entao voz de time nao tem com quem
+        // falar. Melhor nao mostrar HUD nenhum do que mostrar "aperte T" para
+        // quem esta sozinho no time.
+        if (client.room.teamSize < 2) {
+          client.send(S2C.VOICE_TOKEN, { error: "solo" });
+          return;
+        }
+        // Assinar um JWT e barato, mas nao a ponto de aceitar spam do cliente.
+        const now = Date.now();
+        if (client.lastVoiceToken && now - client.lastVoiceToken < 3000) return;
+        client.lastVoiceToken = now;
+
+        voiceToken({
+          roomId: client.room.id,
+          team: client.team,
+          entId: client.entId,
+          name: client.name
+        }).then((v) => {
+          client.send(S2C.VOICE_TOKEN, v || { error: "voice_disabled" });
+        }).catch((err) => {
+          console.error("voice token:", err.message);
+          client.send(S2C.VOICE_TOKEN, { error: "token_failed" });
+        });
+        break;
+      }
       case C2S.PING: {
         client.send(S2C.PONG, { t: msg.d?.t });
         break;
@@ -270,6 +307,10 @@ setInterval(() => {
 server.listen(PORT, () => {
   console.log(`CREATIVE FOOTBALL — backend na porta ${PORT}`);
   console.log(`WebSocket: ws://localhost:${PORT}  ·  Health: http://localhost:${PORT}/health`);
+  const v = voiceConfig();
+  console.log(v.enabled
+    ? `VoIP LiveKit ativo: ${v.url}`
+    : `VoIP desligado (defina LIVEKIT_URL, LIVEKIT_API_KEY e LIVEKIT_API_SECRET)`);
   console.log(ALLOWED_ORIGINS.length
     ? `CORS restrito a: ${ALLOWED_ORIGINS.join(", ")}`
     : `CORS liberado (defina ALLOWED_ORIGINS em producao)`);

@@ -52,6 +52,15 @@ canvas{display:block;width:100%;height:100%}
 
 #score{font-family:'Teko',sans-serif;font-weight:700;font-size:36px;line-height:1;letter-spacing:2px;color:#ffd700;text-shadow:0 2px 12px rgba(255,215,0,0.6);min-width:76px;text-align:center}
 #clock{font-weight:800;font-size:13px;color:#ffaa44;background:rgba(255,140,0,0.18);padding:4px 10px;border-radius:14px;border:1px solid rgba(255,140,0,0.35);font-variant-numeric:tabular-nums}
+/* Voz do time (LiveKit). Fica abaixo do placar, no mesmo idioma visual do HUD. */
+#voiceHud{display:none;align-items:center;gap:8px;background:linear-gradient(135deg,rgba(22,12,30,0.94),rgba(10,8,16,0.96));border:1.5px solid rgba(255,140,0,0.35);border-radius:20px;padding:4px 14px;box-shadow:0 8px 26px rgba(0,0,0,0.6);backdrop-filter:blur(12px);font-size:11px;font-weight:800;letter-spacing:1px;color:#ffaa44;text-transform:uppercase;white-space:nowrap;max-width:92vw;overflow:hidden}
+#voiceHud.live{border-color:rgba(92,255,143,0.7);color:#7dff9e;box-shadow:0 8px 26px rgba(0,0,0,0.6),0 0 18px rgba(92,255,143,0.3)}
+#voiceHud.warn{border-color:rgba(255,90,90,0.6);color:#ff9b9b}
+#voiceDot{width:8px;height:8px;border-radius:50%;background:#7a5a3a;flex:none}
+#voiceHud.live #voiceDot{background:#5cff8f;box-shadow:0 0 10px rgba(92,255,143,0.9);animation:voicePulse 1s ease-in-out infinite}
+#voiceHud.warn #voiceDot{background:#ff5a5a;box-shadow:0 0 8px rgba(255,90,90,0.8)}
+@keyframes voicePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.5)}}
+#voicePeers{color:#ffd700;font-weight:700;letter-spacing:0.4px;text-transform:none;overflow:hidden;text-overflow:ellipsis}
 #eventBanner{font-size:10px;font-weight:800;letter-spacing:2px;color:#ffd700;text-transform:uppercase;opacity:0.9;text-shadow:0 1px 6px #000}
 
 /* ═══════════ MINIMAPA ═══════════ */
@@ -377,10 +386,12 @@ canvas{display:block;width:100%;height:100%}
 
 .choiceGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
 .choiceBtn{
-  padding:10px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);
+  padding:10px 8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);
   border-radius:12px;color:#fff;font-family:'Outfit',sans-serif;font-weight:800;font-size:12px;cursor:pointer;
+  transition:all .15s ease;display:flex;align-items:center;justify-content:center;text-align:center;gap:4px;
 }
-.choiceBtn.selected{background:rgba(255,215,0,0.22);border-color:#ffd700;color:#ffd700}
+.choiceBtn:hover{background:rgba(255,255,255,0.12);border-color:rgba(255,215,0,0.5);transform:translateY(-1px)}
+.choiceBtn.selected{background:rgba(255,215,0,0.22);border-color:#ffd700;color:#ffd700;box-shadow:0 0 12px rgba(255,215,0,0.3)}
 
 .sliderRow{display:flex;align-items:center;gap:12px}
 .sliderRow input[type="range"]{flex:1;accent-color:#ffd700}
@@ -459,6 +470,12 @@ canvas{display:block;width:100%;height:100%}
 .mpBtnBack{background:rgba(255,255,255,0.1);color:#fff;border:1px solid rgba(255,255,255,0.2);border-radius:14px;
   padding:12px;font-family:'Outfit';font-weight:900;font-size:13px;cursor:pointer;letter-spacing:1px}
 .mpBtnBack:hover{background:rgba(255,255,255,0.16)}
+.mpBtnMic{width:100%;background:rgba(255,255,255,0.08);color:#ffd0a0;border:1.5px solid rgba(255,140,0,0.35)}
+.mpBtnMic:hover{background:rgba(255,140,0,0.14)}
+.mpBtnMic.ok{background:rgba(92,255,143,0.12);border-color:rgba(92,255,143,0.5);color:#7dff9e;cursor:default}
+.mpBtnMic.bad{background:rgba(255,68,85,0.1);border-color:rgba(255,68,85,0.4);color:#ff9b9b}
+.mpMicHint{font-size:11px;line-height:1.5;color:rgba(255,255,255,0.45)}
+.mpMicHint b{color:#ffd700}
 #mpStatus{
   margin-top:14px;padding:11px 14px;border-radius:12px;text-align:center;
   font-size:13px;font-weight:800;letter-spacing:.5px;min-height:20px;
@@ -618,6 +635,15 @@ canvas{display:block;width:100%;height:100%}
              placeholder="wss://futebol-varzea-teste.onrender.com">
     </div>
 
+    <div class="mpField">
+      <label>Voz do time</label>
+      <button class="mpBtn mpBtnMic" id="mpBtnMic">🎙️ LIBERAR MICROFONE</button>
+      <div class="mpMicHint" id="mpMicHint">
+        Na partida, segure <b>T</b> para falar com seu time e aperte <b>M</b> para travar o
+        microfone aberto. Libere aqui e o navegador não vai te interromper no meio do jogo.
+      </div>
+    </div>
+
     <div class="mpSectionTitle">CRIAR SALA — ESCOLHA O MODO</div>
     <div class="mpModeRow">
       <button class="mpModeBtn selected" data-mpmode="1v1">1v1<small>MANO</small></button>
@@ -677,6 +703,23 @@ canvas{display:block;width:100%;height:100%}
         <div class="swatchesRow" id="skinToneSwatches"></div>
       </div>
       <div class="customSection">
+        <label>Acessórios, Cabeças & Máscaras</label>
+        <div class="choiceGrid" id="accessoryChoices">
+          <button class="choiceBtn selected" data-acc="0">Nenhum</button>
+          <button class="choiceBtn" data-acc="4">💀 Máscara Caveira</button>
+          <button class="choiceBtn" data-acc="5">🥷 Balaclava Ghost</button>
+          <button class="choiceBtn" data-acc="1">Máscara Ninja</button>
+          <button class="choiceBtn" data-acc="2">Máscara Zorro</button>
+          <button class="choiceBtn" data-acc="3">🕶️ Óculos Juliet</button>
+          <button class="choiceBtn" data-acc="6">👑 Coroa da Várzea</button>
+          <button class="choiceBtn" data-acc="7">🧢 Boné Aba Reta</button>
+          <button class="choiceBtn" data-acc="8">🎧 Fone / Headset</button>
+          <button class="choiceBtn" data-acc="9">🥋 Faixa de Cria</button>
+          <button class="choiceBtn" data-acc="10">🥽 Visor Cyberpunk</button>
+          <button class="choiceBtn" data-acc="11">🥸 Bigode Clássico</button>
+        </div>
+      </div>
+      <div class="customSection">
         <label>Corte de Cabelo</label>
         <div class="choiceGrid" id="hairStyleChoices">
           <button class="choiceBtn selected" data-hair="fade">Degradê / Fade</button>
@@ -685,6 +728,10 @@ canvas{display:block;width:100%;height:100%}
           <button class="choiceBtn" data-hair="mohawk">Moicano</button>
           <button class="choiceBtn" data-hair="bald">Calvo / Careca</button>
           <button class="choiceBtn" data-hair="ponytail">Rabo de Cavalo</button>
+          <button class="choiceBtn" data-hair="dreads">Dreads / Tranças</button>
+          <button class="choiceBtn" data-hair="curly">Cacheado / Ninho</button>
+          <button class="choiceBtn" data-hair="spiky">Espetado Cria</button>
+          <button class="choiceBtn" data-hair="braids">Tranças Nagô</button>
         </div>
       </div>
       <div class="customSection">
@@ -698,15 +745,6 @@ canvas{display:block;width:100%;height:100%}
           <button class="choiceBtn" data-face="angular">Angular / Marcado</button>
           <button class="choiceBtn" data-face="round">Redondo</button>
           <button class="choiceBtn" data-face="jaw">Maxilar Forte</button>
-        </div>
-      </div>
-      <div class="customSection">
-        <label>Acessórios / Máscaras</label>
-        <div class="choiceGrid" id="accessoryChoices">
-          <button class="choiceBtn selected" data-acc="0">Nenhum</button>
-          <button class="choiceBtn" data-acc="1">Máscara Ninja</button>
-          <button class="choiceBtn" data-acc="2">Máscara Zorro</button>
-          <button class="choiceBtn" data-acc="3">Óculos Escuros</button>
         </div>
       </div>
     </div>
@@ -724,6 +762,10 @@ canvas{display:block;width:100%;height:100%}
           <button class="choiceBtn" data-style="stripes">Listras Fla</button>
           <button class="choiceBtn" data-style="sash">Faixa Vasco</button>
           <button class="choiceBtn" data-style="gradient">Degradê RJ</button>
+          <button class="choiceBtn" data-style="checkered">Quadriculado</button>
+          <button class="choiceBtn" data-style="halves">Meio a Meio</button>
+          <button class="choiceBtn" data-style="hoops">Listras Horiz.</button>
+          <button class="choiceBtn" data-style="camo">Camuflado Urb.</button>
         </div>
       </div>
       <div class="customSection">
@@ -804,6 +846,11 @@ canvas{display:block;width:100%;height:100%}
       <div id="score">0 — 0</div>
       <div class="teamBadge badgeVas"><span>VASCO</span><span class="teamDot"></span></div>
       <div id="clock">02:00</div>
+    </div>
+    <div id="voiceHud">
+      <span id="voiceDot"></span>
+      <span id="voiceLabel">VOZ DO TIME</span>
+      <span id="voicePeers"></span>
     </div>
   </div>
 
@@ -2323,16 +2370,17 @@ const hairFadeTexture = makeHairFadeTexture();
 const hairMat = new THREE.MeshStandardMaterial({map:hairFadeTexture, roughness:0.82});
 const wristbandMat = new THREE.MeshStandardMaterial({color:0xffffff, normalMap:fabricNormalMap, roughness:0.75});
 
-const skinTones = [0xb07550, 0x864f30, 0xd49673, 0x543018, 0xc0815a];
-const skinTonesHex = ["#b07550", "#864f30", "#d49673", "#543018", "#c0815a", "#ffe0bd", "#2c1810"];
+const skinTones = [0xb07550, 0x864f30, 0xd49673, 0x543018, 0xc0815a, 0xe2e8f0, 0xd4af37];
+const skinTonesHex = ["#b07550", "#864f30", "#d49673", "#543018", "#c0815a", "#ffe0bd", "#2c1810", "#e2e8f0", "#d4af37", "#1a0f0a"];
 
 const defaultCustomConfig = {
   skinColor: "#864f30",
-  hairStyle: "fade", // "fade", "buzz", "blackpower", "mohawk", "bald", "ponytail"
+  hairStyle: "fade", // "fade", "buzz", "blackpower", "mohawk", "bald", "ponytail", "dreads", "curly", "spiky", "braids"
   hairColor: "#18181b",
   faceShape: "oval", // "oval", "angular", "round", "jaw"
+  accessory: 0, // 0=None, 1=Ninja, 2=Zorro, 3=Juliet, 4=Skull (Caveira), 5=Ghost, 6=Crown, 7=Cap, 8=Headset, 9=Headband, 10=CyberVisor, 11=Mustache
   jerseyColor: "#18181b",
-  jerseyStyle: "solid", // "solid", "stripes", "sash", "gradient"
+  jerseyStyle: "solid", // "solid", "stripes", "sash", "gradient", "checkered", "halves", "hoops", "camo"
   jerseySecColor: "#ef4444",
   shortsColor: "#f4f4f5",
   sockColor: "#18181b",
@@ -2358,6 +2406,11 @@ function makeCustomJerseyTexture(color1, color2, style="solid"){
   g.fillStyle = color1; g.fillRect(0,0,256,256);
   if(style === "stripes"){
     g.fillStyle = color2;
+    for(let x=0; x<256; x+=64){
+      g.fillRect(x, 0, 32, 256);
+    }
+  } else if(style === "hoops"){
+    g.fillStyle = color2;
     for(let y=0; y<256; y+=64){
       g.fillRect(0, y, 256, 32);
     }
@@ -2372,6 +2425,28 @@ function makeCustomJerseyTexture(color1, color2, style="solid"){
     grad.addColorStop(1, color2);
     g.fillStyle = grad;
     g.fillRect(0, 0, 256, 256);
+  } else if(style === "checkered"){
+    g.fillStyle = color2;
+    const sz = 32;
+    for(let y=0; y<256; y+=sz){
+      for(let x=0; x<256; x+=sz){
+        if(((x/sz) + (y/sz)) % 2 === 0){
+          g.fillRect(x, y, sz, sz);
+        }
+      }
+    }
+  } else if(style === "halves"){
+    g.fillStyle = color2;
+    g.fillRect(128, 0, 128, 256);
+  } else if(style === "camo"){
+    g.fillStyle = color2;
+    for(let i=0; i<40; i++){
+      const rx = ((i * 47) % 240);
+      const ry = ((i * 73) % 240);
+      const rw = 28 + ((i * 11) % 28);
+      const rh = 20 + ((i * 17) % 24);
+      g.fillRect(rx, ry, rw, rh);
+    }
   }
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
@@ -2426,6 +2501,13 @@ function createHumanoidCria(team, role, skinIdx=0, foot=1, customConfig=null){
   const redCleatMat   = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.40, metalness: 0.15, flatShading: true });
   const cyanCleatMat  = new THREE.MeshStandardMaterial({ color: 0x06b6d4, roughness: 0.40, metalness: 0.15, flatShading: true });
   const darkSoleMat   = new THREE.MeshStandardMaterial({ color: 0x09090b, roughness: 0.80, flatShading: true });
+  const goldMat       = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.25, metalness: 0.85, flatShading: true });
+  const silverMat     = new THREE.MeshStandardMaterial({ color: 0xd4d4d8, roughness: 0.20, metalness: 0.85, flatShading: true });
+  const rubyMat       = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.15, metalness: 0.30, flatShading: true });
+  const emeraldMat    = new THREE.MeshStandardMaterial({ color: 0x10b981, roughness: 0.15, metalness: 0.30, flatShading: true });
+  const boneMat       = new THREE.MeshStandardMaterial({ color: 0xf4f4f5, roughness: 0.55, flatShading: true });
+  const lensRubyMat   = new THREE.MeshStandardMaterial({ color: 0xff3b30, roughness: 0.10, metalness: 0.90, flatShading: true });
+  const cyanNeonMat   = new THREE.MeshStandardMaterial({ color: 0x00f0ff, roughness: 0.20, emissive: 0x00a2c7, emissiveIntensity: 0.7, flatShading: true });
 
   const keeperGreenMat  = new THREE.MeshStandardMaterial({ color: 0x10b981, roughness: 0.65, flatShading: true });
   const keeperYellowMat = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.65, flatShading: true });
@@ -2523,6 +2605,7 @@ function createHumanoidCria(team, role, skinIdx=0, foot=1, customConfig=null){
 
   // Cabelo / Penteados
   const hairGroup = new THREE.Group();
+  hairGroup.name = "HairGroup";
   head.add(hairGroup);
 
   function rebuildHairMeshes(style){
@@ -2557,6 +2640,74 @@ function createHumanoidCria(team, role, skinIdx=0, foot=1, customConfig=null){
       pony.rotation.x = -0.70;
       pony.castShadow = true;
       hairGroup.add(pony);
+    } else if(style === "dreads"){
+      const hairCap = new THREE.Mesh(new THREE.SphereGeometry(0.19, 7, 5, 0, Math.PI*2, 0, Math.PI*0.46), hairLowPolyMat);
+      hairCap.position.set(0, 0.07, -0.01);
+      hairCap.scale.set(0.96, 1.10, 1.04);
+      hairGroup.add(hairCap);
+      const dreadOffsets = [
+        [-0.14, 0.02, 0.04, 0.2, 0, 0.4],
+        [-0.15, -0.02, -0.04, 0.1, 0, 0.3],
+        [-0.12, -0.04, -0.12, -0.2, 0, 0.2],
+        [0.14, 0.02, 0.04, 0.2, 0, -0.4],
+        [0.15, -0.02, -0.04, 0.1, 0, -0.3],
+        [0.12, -0.04, -0.12, -0.2, 0, -0.2],
+        [0, -0.05, -0.16, -0.4, 0, 0],
+        [-0.06, -0.06, -0.15, -0.35, 0, 0.1],
+        [0.06, -0.06, -0.15, -0.35, 0, -0.1]
+      ];
+      dreadOffsets.forEach(([dx, dy, dz, rx, ry, rz]) => {
+        const dr = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.03, 0.22, 5), hairLowPolyMat);
+        dr.position.set(dx, dy, dz);
+        dr.rotation.set(rx, ry, rz);
+        dr.castShadow = true;
+        hairGroup.add(dr);
+      });
+    } else if(style === "curly"){
+      const baseCap = new THREE.Mesh(new THREE.SphereGeometry(0.192, 8, 6), hairLowPolyMat);
+      baseCap.position.set(0, 0.08, -0.01);
+      baseCap.scale.set(1.02, 1.12, 1.05);
+      hairGroup.add(baseCap);
+      const curlPos = [
+        [0, 0.19, 0.04, 0.07], [-0.08, 0.17, 0.08, 0.065], [0.08, 0.17, 0.08, 0.065],
+        [-0.13, 0.12, 0.02, 0.06], [0.13, 0.12, 0.02, 0.06], [0, 0.18, -0.08, 0.075],
+        [-0.09, 0.14, -0.10, 0.065], [0.09, 0.14, -0.10, 0.065], [-0.14, 0.05, -0.06, 0.055], [0.14, 0.05, -0.06, 0.055]
+      ];
+      curlPos.forEach(([cx, cy, cz, cr]) => {
+        const sp = new THREE.Mesh(new THREE.SphereGeometry(cr, 6, 5), hairLowPolyMat);
+        sp.position.set(cx, cy, cz);
+        hairGroup.add(sp);
+      });
+    } else if(style === "spiky"){
+      const spikeCap = new THREE.Mesh(new THREE.SphereGeometry(0.188, 7, 5, 0, Math.PI*2, 0, Math.PI*0.44), hairLowPolyMat);
+      spikeCap.position.set(0, 0.06, -0.01);
+      hairGroup.add(spikeCap);
+      const spikes = [
+        [0, 0.20, 0.02, 0.045, 0.16, 0.2, 0, 0],
+        [-0.07, 0.19, 0.05, 0.04, 0.14, 0.25, 0, 0.2],
+        [0.07, 0.19, 0.05, 0.04, 0.14, 0.25, 0, -0.2],
+        [-0.08, 0.18, -0.05, 0.04, 0.13, -0.2, 0, 0.2],
+        [0.08, 0.18, -0.05, 0.04, 0.13, -0.2, 0, -0.2],
+        [0, 0.18, -0.10, 0.04, 0.13, -0.3, 0, 0]
+      ];
+      spikes.forEach(([sx, sy, sz, r, h, rx, ry, rz]) => {
+        const sp = new THREE.Mesh(new THREE.ConeGeometry(r, h, 4), hairLowPolyMat);
+        sp.position.set(sx, sy, sz);
+        sp.rotation.set(rx, ry, rz);
+        sp.castShadow = true;
+        hairGroup.add(sp);
+      });
+    } else if(style === "braids"){
+      const braidsCap = new THREE.Mesh(new THREE.SphereGeometry(0.188, 7, 5, 0, Math.PI*2, 0, Math.PI*0.48), hairLowPolyMat);
+      braidsCap.position.set(0, 0.06, -0.01);
+      braidsCap.scale.set(0.95, 1.08, 1.02);
+      hairGroup.add(braidsCap);
+      [-0.10, -0.04, 0.04, 0.10].forEach(bx => {
+        const br = new THREE.Mesh(new THREE.BoxGeometry(0.032, 0.03, 0.32), hairLowPolyMat);
+        br.position.set(bx, 0.13, -0.02);
+        br.rotation.x = -0.25;
+        hairGroup.add(br);
+      });
     } else { // "fade" default
       const hairCap = new THREE.Mesh(new THREE.SphereGeometry(0.19, 7, 5, 0, Math.PI*2, 0, Math.PI*0.46), hairLowPolyMat);
       hairCap.position.set(0, 0.07, -0.01);
@@ -2566,20 +2717,223 @@ function createHumanoidCria(team, role, skinIdx=0, foot=1, customConfig=null){
   }
   rebuildHairMeshes(cfg ? cfg.hairStyle : (role === "player" ? "fade" : "buzz"));
 
-  const accessory = cfg ? cfg.accessory : 0;
-  if (accessory === 1) { // Ninja Mask
-    const mask = new THREE.Mesh(new THREE.CylinderGeometry(0.185, 0.17, 0.18, 8), solidBlackMat);
-    mask.position.set(0, -0.05, 0);
-    head.add(mask);
-  } else if (accessory === 2) { // Zorro Mask
-    const zorro = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.08, 0.15), solidBlackMat);
-    zorro.position.set(0, 0.06, 0.12);
-    head.add(zorro);
-  } else if (accessory === 3) { // Glasses
-    const frame = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.06, 0.02), solidBlackMat);
-    frame.position.set(0, 0.06, 0.18);
-    head.add(frame);
+  // ════════════ ACESSÓRIOS, MÁSCARAS & CABEÇAS ESPECIAIS ════════════
+  const accessoryGroup = new THREE.Group();
+  accessoryGroup.name = "AccessoryGroup";
+  head.add(accessoryGroup);
+
+  function rebuildAccessoryMeshes(accId){
+    while(accessoryGroup.children.length > 0) accessoryGroup.remove(accessoryGroup.children[0]);
+    const acc = parseInt(accId) || 0;
+    if(acc === 0) return;
+
+    if(acc === 1){ // Máscara Ninja
+      const mask = new THREE.Mesh(new THREE.CylinderGeometry(0.185, 0.17, 0.18, 8), solidBlackMat);
+      mask.position.set(0, -0.05, 0);
+      accessoryGroup.add(mask);
+    } else if(acc === 2){ // Máscara Zorro
+      const zorro = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.08, 0.15), solidBlackMat);
+      zorro.position.set(0, 0.06, 0.12);
+      accessoryGroup.add(zorro);
+    } else if(acc === 3){ // Óculos Juliet / Escuros
+      const frame = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.05, 0.04), silverMat);
+      frame.position.set(0, 0.06, 0.16);
+      accessoryGroup.add(frame);
+      const lensL = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.06, 0.02), lensRubyMat);
+      lensL.position.set(-0.08, 0.055, 0.18);
+      accessoryGroup.add(lensL);
+      const lensR = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.06, 0.02), lensRubyMat);
+      lensR.position.set(0.08, 0.055, 0.18);
+      accessoryGroup.add(lensR);
+    } else if(acc === 4){ // 💀 MÁSCARA DA CAVEIRA (Pixel Skull 3D - Fiel à referência)
+      const skullGrp = new THREE.Group();
+      
+      // 1. Calota do Crânio Superior
+      const cranium = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.22, 0.35), boneMat);
+      cranium.position.set(0, 0.08, 0.01);
+      cranium.castShadow = true;
+      skullGrp.add(cranium);
+
+      const forehead = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.16, 0.08), boneMat);
+      forehead.position.set(0, 0.08, 0.165);
+      skullGrp.add(forehead);
+
+      const brow = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.05, 0.06), boneMat);
+      brow.position.set(0, 0.07, 0.18);
+      skullGrp.add(brow);
+
+      // 2. Cavidades Oculares Pretas e Profundas (Pixel Eyes)
+      const eyeL = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.09, 0.04), solidBlackMat);
+      eyeL.position.set(-0.085, 0.01, 0.185);
+      skullGrp.add(eyeL);
+
+      const eyeR = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.09, 0.04), solidBlackMat);
+      eyeR.position.set(0.085, 0.01, 0.185);
+      skullGrp.add(eyeR);
+
+      // 3. Cavidade Nasal Angular (Pixel Nose)
+      const nose = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.05, 0.03), solidBlackMat);
+      nose.position.set(0, -0.045, 0.19);
+      skullGrp.add(nose);
+
+      // 4. Maçãs do Rosto Salientes (Zygomatic)
+      const cheekL = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.08, 0.08), boneMat);
+      cheekL.position.set(-0.16, -0.02, 0.14);
+      skullGrp.add(cheekL);
+
+      const cheekR = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.08, 0.08), boneMat);
+      cheekR.position.set(0.16, -0.02, 0.14);
+      skullGrp.add(cheekR);
+
+      // 5. Maxilar e Arcada Dentária Pixelada 3D
+      const maxilla = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.06, 0.06), boneMat);
+      maxilla.position.set(0, -0.09, 0.17);
+      skullGrp.add(maxilla);
+
+      const toothBack = new THREE.Mesh(new THREE.BoxGeometry(0.20, 0.055, 0.02), solidBlackMat);
+      toothBack.position.set(0, -0.135, 0.155);
+      skullGrp.add(toothBack);
+
+      [-0.07, -0.022, 0.022, 0.07].forEach(tx => {
+        const tooth = new THREE.Mesh(new THREE.BoxGeometry(0.038, 0.05, 0.04), boneMat);
+        tooth.position.set(tx, -0.135, 0.168);
+        skullGrp.add(tooth);
+      });
+
+      const jawBase = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.035, 0.08), boneMat);
+      jawBase.position.set(0, -0.165, 0.14);
+      skullGrp.add(jawBase);
+
+      accessoryGroup.add(skullGrp);
+    } else if(acc === 5){ // 🥷 Balaclava Ghost (Caveira Tática)
+      const ghostGrp = new THREE.Group();
+      const hood = new THREE.Mesh(new THREE.SphereGeometry(0.198, 8, 7), solidBlackMat);
+      hood.position.set(0, 0.02, 0);
+      ghostGrp.add(hood);
+
+      const neckWrap = new THREE.Mesh(new THREE.CylinderGeometry(0.14, 0.16, 0.16, 8), solidBlackMat);
+      neckWrap.position.set(0, -0.10, 0);
+      ghostGrp.add(neckWrap);
+
+      const jawPrint = new THREE.Mesh(new THREE.BoxGeometry(0.19, 0.12, 0.03), boneMat);
+      jawPrint.position.set(0, -0.06, 0.185);
+      ghostGrp.add(jawPrint);
+
+      const noseCut = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.045, 0.04), solidBlackMat);
+      noseCut.position.set(0, -0.035, 0.19);
+      ghostGrp.add(noseCut);
+
+      [-0.045, 0, 0.045].forEach(sx => {
+        const slit = new THREE.Mesh(new THREE.BoxGeometry(0.016, 0.06, 0.04), solidBlackMat);
+        slit.position.set(sx, -0.09, 0.19);
+        ghostGrp.add(slit);
+      });
+
+      accessoryGroup.add(ghostGrp);
+    } else if(acc === 6){ // 👑 Coroa da Várzea
+      const crownGrp = new THREE.Group();
+      const crownRing = new THREE.Mesh(new THREE.CylinderGeometry(0.195, 0.20, 0.06, 10, 1, true), goldMat);
+      crownRing.position.set(0, 0.18, 0);
+      crownGrp.add(crownRing);
+
+      const numPoints = 6;
+      for(let i=0; i<numPoints; i++){
+        const ang = (i / numPoints) * Math.PI * 2;
+        const px = Math.cos(ang) * 0.195;
+        const pz = Math.sin(ang) * 0.195;
+        const peak = new THREE.Mesh(new THREE.ConeGeometry(0.04, 0.10, 4), goldMat);
+        peak.position.set(px, 0.24, pz);
+        crownGrp.add(peak);
+        if(i % 2 === 0){
+          const gem = new THREE.Mesh(new THREE.SphereGeometry(0.022, 5, 5), i === 0 ? rubyMat : emeraldMat);
+          gem.position.set(px * 1.05, 0.20, pz * 1.05);
+          crownGrp.add(gem);
+        }
+      }
+      accessoryGroup.add(crownGrp);
+    } else if(acc === 7){ // 🧢 Boné Snapback Aba Reta
+      const capGrp = new THREE.Group();
+      const dome = new THREE.Mesh(new THREE.SphereGeometry(0.195, 8, 6, 0, Math.PI*2, 0, Math.PI*0.52), solidBlackMat);
+      dome.position.set(0, 0.07, -0.01);
+      dome.scale.set(0.98, 1.10, 1.02);
+      capGrp.add(dome);
+
+      const brim = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.02, 0.20), solidBlackMat);
+      brim.position.set(0, 0.06, -0.21);
+      brim.rotation.x = -0.10;
+      capGrp.add(brim);
+
+      const topBtn = new THREE.Mesh(new THREE.SphereGeometry(0.025, 5, 5), goldMat);
+      topBtn.position.set(0, 0.20, -0.01);
+      capGrp.add(topBtn);
+
+      accessoryGroup.add(capGrp);
+    } else if(acc === 8){ // 🎧 Headset Gamer / Fone de Cria
+      const foneGrp = new THREE.Group();
+      const band = new THREE.Mesh(new THREE.TorusGeometry(0.205, 0.022, 6, 12, Math.PI), solidBlackMat);
+      band.position.set(0, 0.05, 0);
+      band.rotation.z = Math.PI;
+      foneGrp.add(band);
+
+      [-1, 1].forEach(side => {
+        const ear = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.075, 0.06, 8), solidBlackMat);
+        ear.position.set(side * 0.20, 0.04, 0);
+        ear.rotation.z = Math.PI / 2;
+        foneGrp.add(ear);
+
+        const neonRing = new THREE.Mesh(new THREE.TorusGeometry(0.065, 0.01, 5, 8), cyanNeonMat);
+        neonRing.position.set(side * 0.232, 0.04, 0);
+        neonRing.rotation.y = Math.PI / 2;
+        foneGrp.add(neonRing);
+      });
+      accessoryGroup.add(foneGrp);
+    } else if(acc === 9){ // 🥋 Faixa de Cabeça "CRIA"
+      const bandGrp = new THREE.Group();
+      const headband = new THREE.Mesh(new THREE.CylinderGeometry(0.198, 0.198, 0.065, 8), solidWhiteMat);
+      headband.position.set(0, 0.08, 0);
+      bandGrp.add(headband);
+
+      const emblem = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.04, 0.02), rubyMat);
+      emblem.position.set(0, 0.08, 0.195);
+      bandGrp.add(emblem);
+
+      const knot1 = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.16, 0.015), solidWhiteMat);
+      knot1.position.set(0.03, 0.01, -0.21);
+      knot1.rotation.set(-0.25, 0, 0.2);
+      bandGrp.add(knot1);
+
+      const knot2 = new THREE.Mesh(new THREE.BoxGeometry(0.035, 0.14, 0.015), solidWhiteMat);
+      knot2.position.set(-0.03, 0.02, -0.21);
+      knot2.rotation.set(-0.25, 0, -0.2);
+      bandGrp.add(knot2);
+
+      accessoryGroup.add(bandGrp);
+    } else if(acc === 10){ // 🥽 Visor Cyberpunk
+      const visorGrp = new THREE.Group();
+      const glass = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.065, 0.06), cyanNeonMat);
+      glass.position.set(0, 0.05, 0.165);
+      visorGrp.add(glass);
+
+      [-0.18, 0.18].forEach(vx => {
+        const leg = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.025, 0.24), silverMat);
+        leg.position.set(vx, 0.05, 0.05);
+        visorGrp.add(leg);
+      });
+      accessoryGroup.add(visorGrp);
+    } else if(acc === 11){ // 🥸 Bigode & Cavanhaque
+      const mustGrp = new THREE.Group();
+      const mustache = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.035, 0.04), hairLowPolyMat);
+      mustache.position.set(0, -0.06, 0.18);
+      mustGrp.add(mustache);
+
+      const goatee = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.06, 0.04), hairLowPolyMat);
+      goatee.position.set(0, -0.145, 0.16);
+      mustGrp.add(goatee);
+
+      accessoryGroup.add(mustGrp);
+    }
   }
+  rebuildAccessoryMeshes(cfg ? cfg.accessory : 0);
 
 
   // 5. Braços
@@ -2748,6 +3102,8 @@ function createHumanoidCria(team, role, skinIdx=0, foot=1, customConfig=null){
     headMesh,
     hairGroup,
     rebuildHairMeshes,
+    accessoryGroup,
+    rebuildAccessoryMeshes,
     skinMat,
     hairLowPolyMat,
     jerseyMat,
@@ -4883,6 +5239,10 @@ function applyPlayerCustomization(){
   if(player.rebuildHairMeshes){
     player.rebuildHairMeshes(cfg.hairStyle);
   }
+  // 2.1 Acessórios, Máscaras e Cabeças Especiais
+  if(player.rebuildAccessoryMeshes){
+    player.rebuildAccessoryMeshes(cfg.accessory);
+  }
   // 3. Formato do rosto
   if(player.headMesh){
     if(cfg.faceShape === "angular") player.headMesh.scale.set(0.98, 1.10, 0.94);
@@ -5068,25 +5428,25 @@ function setupCustomizerUI(){
   buildSwatches("skinToneSwatches", skinTonesHex, playerCustomConfig.skinColor, val => playerCustomConfig.skinColor = val);
 
   // 2. Cores de Cabelo
-  const hairColorsHex = ["#18181b", "#f4f4f5", "#5a3825", "#d4a054", "#8b3224", "#ff2d87", "#00b4d8", "#10b981"];
+  const hairColorsHex = ["#18181b", "#f4f4f5", "#5a3825", "#d4a054", "#8b3224", "#ff2d87", "#00b4d8", "#10b981", "#fbbf24", "#ef4444", "#a855f7"];
   buildSwatches("hairColorSwatches", hairColorsHex, playerCustomConfig.hairColor, val => playerCustomConfig.hairColor = val);
 
   // 3. Camisa Principal
-  const jerseyColorsHex = ["#18181b", "#ef4444", "#f4f4f5", "#3b82f6", "#10b981", "#facc15", "#8b5cf6", "#06b6d4"];
+  const jerseyColorsHex = ["#18181b", "#ef4444", "#f4f4f5", "#3b82f6", "#10b981", "#facc15", "#8b5cf6", "#06b6d4", "#ff6b00", "#14b8a6"];
   buildSwatches("jerseyColorSwatches", jerseyColorsHex, playerCustomConfig.jerseyColor, val => playerCustomConfig.jerseyColor = val);
 
   // 4. Detalhes da Camisa
   buildSwatches("jerseySecSwatches", jerseyColorsHex, playerCustomConfig.jerseySecColor, val => playerCustomConfig.jerseySecColor = val);
 
   // 5. Shorts
-  const shortsColorsHex = ["#f4f4f5", "#18181b", "#ef4444", "#3b82f6", "#10b981", "#ffd700"];
+  const shortsColorsHex = ["#f4f4f5", "#18181b", "#ef4444", "#3b82f6", "#10b981", "#ffd700", "#06b6d4"];
   buildSwatches("shortsColorSwatches", shortsColorsHex, playerCustomConfig.shortsColor, val => playerCustomConfig.shortsColor = val);
 
   // 6. Meião
   buildSwatches("sockColorSwatches", shortsColorsHex, playerCustomConfig.sockColor, val => playerCustomConfig.sockColor = val);
 
   // 7. Chuteiras
-  const cleatColorsHex = ["#ef4444", "#06b6d4", "#eab308", "#ffd700", "#18181b", "#f4f4f5", "#ec4899", "#10b981"];
+  const cleatColorsHex = ["#ef4444", "#06b6d4", "#eab308", "#ffd700", "#18181b", "#f4f4f5", "#ec4899", "#10b981", "#a855f7"];
   buildSwatches("cleatColorSwatches", cleatColorsHex, playerCustomConfig.cleatColor, val => playerCustomConfig.cleatColor = val);
 
   // Choice Buttons Setup
@@ -5143,11 +5503,14 @@ function setupCustomizerUI(){
   if(btnRand){
     btnRand.addEventListener("click", ()=>{
       playerCustomConfig.skinColor = skinTonesHex[Math.floor(Math.random()*skinTonesHex.length)];
-      playerCustomConfig.hairStyle = ["fade", "buzz", "blackpower", "mohawk", "bald", "ponytail"][Math.floor(Math.random()*6)];
+      const hairStyles = ["fade", "buzz", "blackpower", "mohawk", "bald", "ponytail", "dreads", "curly", "spiky", "braids"];
+      playerCustomConfig.hairStyle = hairStyles[Math.floor(Math.random()*hairStyles.length)];
       playerCustomConfig.hairColor = hairColorsHex[Math.floor(Math.random()*hairColorsHex.length)];
       playerCustomConfig.faceShape = ["oval", "angular", "round", "jaw"][Math.floor(Math.random()*4)];
+      playerCustomConfig.accessory = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11][Math.floor(Math.random()*12)];
       playerCustomConfig.jerseyColor = jerseyColorsHex[Math.floor(Math.random()*jerseyColorsHex.length)];
-      playerCustomConfig.jerseyStyle = ["solid", "stripes", "sash", "gradient"][Math.floor(Math.random()*4)];
+      const jerseyStyles = ["solid", "stripes", "sash", "gradient", "checkered", "halves", "hoops", "camo"];
+      playerCustomConfig.jerseyStyle = jerseyStyles[Math.floor(Math.random()*jerseyStyles.length)];
       playerCustomConfig.jerseySecColor = jerseyColorsHex[Math.floor(Math.random()*jerseyColorsHex.length)];
       playerCustomConfig.shortsColor = shortsColorsHex[Math.floor(Math.random()*shortsColorsHex.length)];
       playerCustomConfig.sockColor = shortsColorsHex[Math.floor(Math.random()*shortsColorsHex.length)];
@@ -6194,10 +6557,12 @@ document.addEventListener("visibilitychange", ()=>{ last = performance.now(); })
 
 // Protocolo (espelha server/shared/protocol.js — JSON {t, d})
 const C2S = { HELLO:"hello", QUEUE:"queue", LEAVE:"leave", INPUT:"input", PING:"ping",
-              CREATE_ROOM:"create_room", JOIN_ROOM:"join_room", GET_ROOMS:"get_rooms" };
+              CREATE_ROOM:"create_room", JOIN_ROOM:"join_room", GET_ROOMS:"get_rooms",
+              VOICE_TOKEN:"voice_token" };
 const S2C = { WELCOME:"welcome", QUEUED:"queued", ROOM_CREATED:"room_created", ROOM_LIST:"room_list",
               ROOM_JOINED:"room_joined", MATCH_START:"start", SNAPSHOT:"snap", GOAL:"goal",
-              MATCH_END:"end", PLAYER_LEFT:"left", PONG:"pong", ERROR:"error" };
+              MATCH_END:"end", PLAYER_LEFT:"left", PONG:"pong", VOICE_TOKEN:"voice_token",
+              ERROR:"error" };
 
 // Mapeia o estado numérico do servidor (shared/constants.js STATE) p/ string de animação do jogo
 const MP_STATE_NAME = [
@@ -6257,6 +6622,7 @@ function openMultiplayerLobby(){
   $("#multiplayerLobby").classList.add("show");
   const srv = document.querySelector("#mpServer");
   if(srv && !srv.value){ srv.value = mpDefaultServerUrl(); }
+  voiceRefreshMicButton();
   mpConnect();
 }
 
@@ -6361,6 +6727,9 @@ function mpHandle(msg){
     case S2C.PONG:
       if(msg.d && msg.d.t) mp.ping = Date.now() - msg.d.t;
       break;
+    case S2C.VOICE_TOKEN:
+      voiceConnect(msg.d);
+      break;
     case S2C.ERROR:
       mpSetStatus("Erro: " + (msg.d && msg.d.message ? msg.d.message : "desconhecido"), "error");
       break;
@@ -6431,6 +6800,7 @@ function mpLeave(){
   mp.retries = 0;
   if(mp.ws && mp.ws.readyState === WebSocket.OPEN){ mpSend(C2S.LEAVE, {}); try{ mp.ws.close(); }catch(e){} }
   mp.ws = null; mp.connected = false;
+  voiceStop();
   mpClearRoster();
   mp.running = false;
 }
@@ -6452,7 +6822,7 @@ function mpBuildRoster(d){
   (d.roster || []).forEach((r, i) => {
     const foot = r.foot === -1 ? -1 : 1;
     const role = r.role === "keeper" ? "keeper" : "field";
-    const ch = createHumanoidCria(r.team, role, i, foot);
+    const ch = createHumanoidCria(r.team, role, i, foot, r.customConfig || null);
     ch.entId = r.id;
     ch.isMe = r.id === mp.entId;
     ch.mpName = r.name || "BOT";
@@ -6481,9 +6851,15 @@ function mpBuildRoster(d){
   mpAccum = 0;
   startMouseControl();
   last = performance.now();
+
+  // Voz do time: pede a credencial agora que o servidor ja sabe em qual sala e
+  // em qual time voce caiu. Se o VoIP estiver desligado no backend, a resposta
+  // vem vazia e o HUD nem aparece.
+  voiceRequestToken();
 }
 
 function mpEndMatch(){
+  voiceStop();
   mpClearRoster();
   running = false; over = true; gameMode = "menu"; shake = 0;
   stopMouseControl();
@@ -6751,15 +7127,268 @@ function mpUpdate(dt){
   $("#clock").textContent = `${String(Math.floor(t/60)).padStart(2,"0")}:${String(t%60).padStart(2,"0")}`;
 }
 
+/* ═══════════════════════ VOZ DO TIME — LiveKit ═══════════════════════ */
+// Uma sala de voz por time. O token vem do backend, que é quem sabe em qual
+// partida e em qual time você está — o jogo nunca vê a API key, recebe o JWT
+// já assinado e com a sala escrita dentro. Por isso não dá para "entrar na voz
+// do adversário" mexendo no cliente.
+//
+// O SDK tem ~1,3 MB, então só é baixado quando a primeira partida começa: quem
+// nunca joga online não paga esse download.
+//
+// Fluxo: partida começa → pede o token → conecta já ouvindo os companheiros.
+// O microfone só é pedido ao navegador quando você aperta T pela primeira vez,
+// e não no meio do saque — assim a permissão aparece porque VOCÊ quis falar.
+
+const VOICE_SDK_URL = "https://cdn.jsdelivr.net/npm/livekit-client@2.22.1/dist/livekit-client.esm.mjs";
+const VOICE_PTT_KEY   = "t";   // segure para falar
+const VOICE_LATCH_KEY = "m";   // trava o microfone aberto
+
+const voice = {
+  lib: null, room: null, pub: null,
+  connecting: false, micPending: false,
+  open: false,        // transmitindo neste instante
+  ptt: false,         // tecla de falar pressionada
+  latched: false,     // microfone travado aberto pelo M
+  speaking: [],       // nomes de quem está falando agora
+  blocked: false,     // navegador segurou o áudio esperando um clique
+  status: ""          // mensagem de problema, quando houver
+};
+
+function voiceUpdateHud(){
+  const el = document.querySelector("#voiceHud");
+  if(!el) return;
+  if(!voice.room && !voice.connecting && !voice.status){ el.style.display = "none"; return; }
+
+  el.style.display = "flex";
+  el.classList.toggle("live", voice.open && !voice.status);
+  el.classList.toggle("warn", !!voice.status);
+
+  const label = document.querySelector("#voiceLabel");
+  const peers = document.querySelector("#voicePeers");
+  let text;
+  if(voice.status)          text = voice.status;
+  else if(voice.connecting) text = "Conectando voz...";
+  else if(voice.blocked)    text = "Clique para ouvir o time";
+  else if(voice.open)       text = voice.latched ? "Mic aberto · M desliga" : "Falando";
+  else                      text = "T falar · M trava";
+  if(label) label.textContent = text;
+  if(peers) peers.textContent = voice.speaking.length ? "🔊 " + voice.speaking.join(", ") : "";
+}
+
+// Pedido feito pelo WebSocket da partida (e não por HTTP) porque a própria
+// conexão já é a credencial: o servidor sabe quem é este socket.
+function voiceRequestToken(){
+  if(voice.room || voice.connecting) return;
+  mpSend(C2S.VOICE_TOKEN, {});
+}
+
+async function voiceConnect(d){
+  if(voice.room || voice.connecting) return;
+  if(!d || d.error || !d.url || !d.token){
+    // VoIP desligado no servidor: some da tela em vez de mostrar erro para
+    // quem nem sabe que existe voz.
+    // "voice_disabled" = servidor sem LiveKit; "solo" = 1v1, sem companheiro.
+    // Nos dois casos o HUD some em vez de anunciar um problema que nao e do jogador.
+    const mudo = !d || !d.error || d.error === "voice_disabled" || d.error === "solo";
+    voice.status = mudo ? "" : "Voz indisponível";
+    voiceUpdateHud();
+    return;
+  }
+
+  voice.connecting = true; voice.status = "";
+  voiceUpdateHud();
+
+  try{
+    if(!voice.lib) voice.lib = await import(VOICE_SDK_URL);
+    const LK = voice.lib;
+
+    const room = new LK.Room({
+      audioCaptureDefaults: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+    });
+    voice.room = room;
+
+    room.on(LK.RoomEvent.TrackSubscribed, (track, pub, participant) => {
+      if(track.kind !== LK.Track.Kind.Audio) return;
+      const el = track.attach();
+      el.dataset.voice = participant.identity;
+      el.autoplay = true;
+      document.body.appendChild(el);
+    });
+    room.on(LK.RoomEvent.TrackUnsubscribed, (track) => {
+      track.detach().forEach(el => el.remove());
+    });
+    room.on(LK.RoomEvent.ActiveSpeakersChanged, (speakers) => {
+      const me = room.localParticipant.identity;
+      voice.speaking = speakers.filter(p => p.identity !== me).map(p => p.name || p.identity);
+      voiceUpdateHud();
+    });
+    // Alguns navegadores só liberam áudio depois de um clique na página.
+    room.on(LK.RoomEvent.AudioPlaybackStatusChanged, () => {
+      voice.blocked = !room.canPlaybackAudio;
+      voiceUpdateHud();
+    });
+    room.on(LK.RoomEvent.Disconnected, () => { if(voice.room === room) voiceStop(); });
+
+    await room.connect(d.url, d.token);
+    voice.connecting = false;
+    voice.blocked = !room.canPlaybackAudio;
+    voiceUpdateHud();
+  }catch(err){
+    voice.connecting = false;
+    voice.status = "Voz indisponível";
+    const room = voice.room; voice.room = null;
+    if(room){ try{ room.disconnect(); }catch(e){} }
+    voiceUpdateHud();
+    console.warn("voz:", err && err.message ? err.message : err);
+  }
+}
+
+// Publica o microfone na primeira vez que o jogador aperta a tecla de falar.
+// Publicar uma vez só (em vez de a cada aperto) faz o T responder na hora, sem
+// renegociar a conexão no meio da jogada.
+async function voiceEnsureMic(){
+  if(voice.pub || voice.micPending || !voice.room || !voice.lib) return;
+  voice.micPending = true;
+  try{
+    await voice.room.localParticipant.setMicrophoneEnabled(true);
+    voice.pub = voice.room.localParticipant.getTrackPublication(voice.lib.Track.Source.Microphone);
+    await voiceSyncMic();
+  }catch(err){
+    const denied = err && (err.name === "NotAllowedError" || /denied|permission/i.test(err.message || ""));
+    voice.status = denied ? "Microfone bloqueado no navegador" : "Sem microfone";
+    voice.open = false;
+  }finally{
+    voice.micPending = false;
+    voiceUpdateHud();
+  }
+}
+
+// Fonte única da verdade: o estado do publish sempre persegue voice.open, então
+// apertar e soltar rápido nunca deixa o microfone preso aberto.
+async function voiceSyncMic(){
+  const pub = voice.pub;
+  if(!pub) return;
+  try{
+    if(voice.open && pub.isMuted) await pub.unmute();
+    else if(!voice.open && !pub.isMuted) await pub.mute();
+  }catch(e){ /* troca de estado no meio de outra: o próximo sync corrige */ }
+}
+
+function voiceSetTransmitting(on){
+  if(!voice.room || voice.status) return;
+  if(voice.open === on && voice.pub) return;
+  voice.open = on;
+  voiceUpdateHud();
+  if(on) voiceEnsureMic().then(voiceSyncMic);
+  else voiceSyncMic();
+}
+
+function voiceStop(){
+  const room = voice.room;
+  voice.room = null; voice.pub = null;      // voice.lib fica: o SDK ja baixado e reusado
+  voice.connecting = false; voice.micPending = false;
+  voice.open = false; voice.ptt = false; voice.latched = false;
+  voice.speaking = []; voice.blocked = false; voice.status = "";
+  if(room){ try{ room.disconnect(); }catch(e){} }
+  document.querySelectorAll("audio[data-voice]").forEach(el => el.remove());
+  voiceUpdateHud();
+}
+
+// Pedir o microfone no lobby, e não no meio da partida, é de propósito: durante
+// o jogo o mouse está travado na tela (pointer lock) e a caixa de permissão do
+// navegador arrancaria o jogador do controle bem na hora em que ele quis falar.
+// Aqui a permissão fica guardada pelo navegador e o T já sai falando.
+function voiceSetMicButton(state, text){
+  const btn = document.querySelector("#mpBtnMic");
+  if(!btn) return;
+  btn.classList.remove("ok", "bad");
+  if(state) btn.classList.add(state);
+  btn.disabled = state === "ok";
+  btn.textContent = text;
+}
+
+async function voicePrewarmMic(){
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    voiceSetMicButton("bad", "NAVEGADOR SEM SUPORTE A VOZ");
+    return;
+  }
+  voiceSetMicButton(null, "PEDINDO PERMISSÃO...");
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    // Só queríamos a permissão: o LiveKit abre o microfone de novo na partida.
+    stream.getTracks().forEach(t => t.stop());
+    voiceSetMicButton("ok", "🎙️ MICROFONE LIBERADO");
+  }catch(err){
+    const denied = err && (err.name === "NotAllowedError" || err.name === "SecurityError");
+    voiceSetMicButton("bad", denied ? "PERMISSÃO NEGADA — LIBERE NO CADEADO 🔒" : "NENHUM MICROFONE ENCONTRADO");
+  }
+}
+
+// Se o navegador já lembra da permissão, o botão nasce verde.
+async function voiceRefreshMicButton(){
+  voiceSetMicButton(null, "🎙️ LIBERAR MICROFONE");
+  try{
+    const st = await navigator.permissions.query({ name: "microphone" });
+    if(st.state === "granted") voiceSetMicButton("ok", "🎙️ MICROFONE LIBERADO");
+    else if(st.state === "denied") voiceSetMicButton("bad", "PERMISSÃO NEGADA — LIBERE NO CADEADO 🔒");
+  }catch(e){
+    // Firefox não expõe "microphone" no Permissions API: deixa o botão neutro.
+  }
+}
+
+// Destrava o áudio quando o navegador exige um gesto do usuário.
+addEventListener("click", () => {
+  if(voice.room && voice.blocked){ voice.room.startAudio().catch(()=>{}); }
+});
+
+
 // Eventos de movimento da câmera multiplayer reutilizam o mousemove global.
 // O chute/passe por mouse já é roteado no handler global de mousedown/mouseup.
+
+function voiceTypingInField(e){
+  const t = e.target;
+  return !!t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable);
+}
 
 addEventListener("keydown", (e)=>{
   const k = e.key.toLowerCase();
   mpKeys[k] = true;
+
+  // Voz: T fala enquanto segurado, M trava o microfone aberto. Nenhuma das duas
+  // e usada pelo jogo, entao nao brigam com os controles.
+  if(!voice.room || e.repeat || voiceTypingInField(e)) return;
+  if(k === VOICE_PTT_KEY){
+    voice.ptt = true;
+    voiceSetTransmitting(true);
+  } else if(k === VOICE_LATCH_KEY){
+    voice.latched = !voice.latched;
+    voiceSetTransmitting(voice.latched || voice.ptt);
+  }
 });
-addEventListener("keyup", (e)=>{ mpKeys[e.key.toLowerCase()] = false; });
-addEventListener("blur", ()=>{ for(const k in mpKeys) mpKeys[k] = false; mpMouseShoot = mpMousePass = false; });
+
+addEventListener("keyup", (e)=>{
+  const k = e.key.toLowerCase();
+  mpKeys[k] = false;
+  if(k === VOICE_PTT_KEY && voice.ptt){
+    voice.ptt = false;
+    if(!voice.latched) voiceSetTransmitting(false);
+  }
+});
+
+addEventListener("blur", ()=>{
+  for(const k in mpKeys) mpKeys[k] = false;
+  mpMouseShoot = mpMousePass = false;
+  // Corta a transmissao ao sair da aba mesmo com o mic travado: ninguem quer
+  // continuar transmitindo o quarto depois de trocar de janela. O M continua
+  // travado e volta a valer quando a aba recebe foco de novo.
+  voice.ptt = false;
+  voiceSetTransmitting(false);
+});
+
+addEventListener("focus", ()=>{
+  if(voice.latched) voiceSetTransmitting(true);
+});
 
 // ───── Wiring do modal ─────
 const mpBtnClose = document.querySelector("#mpBtnClose");
@@ -6771,6 +7400,8 @@ if(mpBtnCreate) mpBtnCreate.addEventListener("click", ()=>{
   const sel = document.querySelector(".mpModeBtn.selected");
   mpCreateRoom(sel ? sel.dataset.mpmode : "1v1");
 });
+const mpBtnMic = document.querySelector("#mpBtnMic");
+if(mpBtnMic) mpBtnMic.addEventListener("click", voicePrewarmMic);
 const mpBtnRefresh = document.querySelector("#mpBtnRefresh");
 if(mpBtnRefresh) mpBtnRefresh.addEventListener("click", ()=>{
   if(!mp.connected) mpConnect();

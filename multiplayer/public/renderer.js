@@ -304,19 +304,19 @@ export function createHumanoid(team, role, skinIdx = 0, foot = 1, cfg = null) {
   const chest = new THREE.Group();
   chest.position.set(0, 0.18, 0);
   spine.add(chest);
-  const chestMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.31, 0.24, 0.40, 8), jerseyMat);
-  chestMesh.position.y = 0.16; chestMesh.scale.set(1.04, 1, 0.78); chestMesh.castShadow = true;
+  const chestMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.28, 0.22, 0.42, 8), jerseyMat);
+  chestMesh.position.y = 0.17; chestMesh.scale.set(1.04, 1, 0.75); chestMesh.castShadow = true;
   chest.add(chestMesh);
 
   const neck = new THREE.Group();
-  neck.position.set(0, 0.38, 0);
+  neck.position.set(0, 0.39, 0);
   chest.add(neck);
-  const neckMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.105, 0.16, 6), skinMat);
-  neckMesh.position.y = 0.05; neckMesh.castShadow = true;
+  const neckMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.065, 0.080, 0.18, 6), skinMat);
+  neckMesh.position.y = 0.06; neckMesh.castShadow = true;
   neck.add(neckMesh);
 
   const head = new THREE.Group();
-  head.position.set(0, 0.15, 0);
+  head.position.set(0, 0.17, 0);
   neck.add(head);
 
   const headMesh = new THREE.Mesh(new THREE.SphereGeometry(0.18, 8, 6), skinMat);
@@ -378,7 +378,7 @@ export function createHumanoid(team, role, skinIdx = 0, foot = 1, cfg = null) {
     const shoulder = new THREE.Group();
     shoulder.position.set(side * 0.26, 0.28, 0);
     chest.add(shoulder);
-    const deltoid = new THREE.Mesh(new THREE.CylinderGeometry(0.095, 0.08, 0.12, 6), jerseyMat);
+    const deltoid = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.07, 0.12, 6), jerseyMat);
     deltoid.position.set(0, -0.02, 0); deltoid.rotation.z = side * 0.25; deltoid.castShadow = true;
     shoulder.add(deltoid);
 
@@ -386,21 +386,21 @@ export function createHumanoid(team, role, skinIdx = 0, foot = 1, cfg = null) {
     upperArm.position.set(side * 0.05, -0.04, 0);
     upperArm.rotation.z = side * -0.22;
     shoulder.add(upperArm);
-    const ua = new THREE.Mesh(new THREE.CylinderGeometry(0.076, 0.065, 0.26, 6), skinMat);
-    ua.position.y = -0.13; ua.castShadow = true;
+    const ua = new THREE.Mesh(new THREE.CylinderGeometry(0.062, 0.052, 0.30, 6), skinMat);
+    ua.position.y = -0.15; ua.castShadow = true;
     upperArm.add(ua);
 
     const lowerArm = new THREE.Group();
-    lowerArm.position.set(0, -0.26, 0);
+    lowerArm.position.set(0, -0.30, 0);
     upperArm.add(lowerArm);
-    const elbow = new THREE.Mesh(new THREE.SphereGeometry(0.06, 5, 5), skinMat);
+    const elbow = new THREE.Mesh(new THREE.SphereGeometry(0.05, 5, 5), skinMat);
     elbow.castShadow = true; lowerArm.add(elbow);
-    const fa = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.046, 0.24, 6), skinMat);
-    fa.position.y = -0.13; fa.castShadow = true;
+    const fa = new THREE.Mesh(new THREE.CylinderGeometry(0.050, 0.038, 0.28, 6), skinMat);
+    fa.position.y = -0.14; fa.castShadow = true;
     lowerArm.add(fa);
 
     const hand = new THREE.Group();
-    hand.position.set(0, -0.28, 0);
+    hand.position.set(0, -0.30, 0);
     lowerArm.add(hand);
     const palm = new THREE.Mesh(new THREE.BoxGeometry(0.065, 0.075, 0.032), skinMat);
     palm.position.y = -0.035; palm.castShadow = true;
@@ -414,25 +414,25 @@ export function createHumanoid(team, role, skinIdx = 0, foot = 1, cfg = null) {
     upperLeg.position.set(side * 0.14, -0.06, 0);
     upperLeg.rotation.z = side * -0.04;
     hips.add(upperLeg);
-    const thigh = new THREE.Mesh(new THREE.CylinderGeometry(0.135, 0.115, 0.28, 6), shortsMat);
-    thigh.position.y = -0.14; thigh.castShadow = true;
+    const thigh = new THREE.Mesh(new THREE.CylinderGeometry(0.125, 0.105, 0.32, 6), shortsMat);
+    thigh.position.y = -0.16; thigh.castShadow = true;
     upperLeg.add(thigh);
-    const thighSkin = new THREE.Mesh(new THREE.CylinderGeometry(0.10, 0.082, 0.18, 6), skinMat);
-    thighSkin.position.y = -0.30; thighSkin.castShadow = true;
+    const thighSkin = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.075, 0.20, 6), skinMat);
+    thighSkin.position.y = -0.34; thighSkin.castShadow = true;
     upperLeg.add(thighSkin);
 
     const lowerLeg = new THREE.Group();
-    lowerLeg.position.set(0, -0.40, 0);
+    lowerLeg.position.set(0, -0.46, 0);
     upperLeg.add(lowerLeg);
-    const patella = new THREE.Mesh(new THREE.BoxGeometry(0.075, 0.075, 0.07), skinMat);
+    const patella = new THREE.Mesh(new THREE.BoxGeometry(0.065, 0.065, 0.065), skinMat);
     patella.position.z = 0.025; patella.castShadow = true;
     lowerLeg.add(patella);
-    const calf = new THREE.Mesh(new THREE.CylinderGeometry(0.088, 0.055, 0.44, 6), sockMat);
-    calf.position.y = -0.22; calf.castShadow = true;
+    const calf = new THREE.Mesh(new THREE.CylinderGeometry(0.078, 0.050, 0.48, 6), sockMat);
+    calf.position.y = -0.24; calf.castShadow = true;
     lowerLeg.add(calf);
 
     const foot = new THREE.Group();
-    foot.position.set(0, -0.44, 0);
+    foot.position.set(0, -0.48, 0);
     lowerLeg.add(foot);
     const cleat = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.10, 0.30), cleatMat);
     cleat.position.set(0, 0.05, 0.08); cleat.castShadow = true;

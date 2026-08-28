@@ -890,7 +890,7 @@ export function serialize(w) {
     t: Math.ceil(w.timeLeft),
     o: w.ownerId,
     f: w.kickoffFreeze > 0 ? 1 : 0,
-    b: [r2(w.ball.x), r2(w.ball.y), r2(w.ball.z)],
+    b: [r2(w.ball.x), r2(w.ball.y), r2(w.ball.z), r2(w.ball.vx), r2(w.ball.vy), r2(w.ball.vz)],
     // [id, x, y, z, yaw, state, vx, vz, charge]
     // vx/vz sao necessarios para a reconciliacao da predicao no cliente
     e: w.ents.map((e) => [

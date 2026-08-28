@@ -18,6 +18,11 @@ import { voiceConfig, voiceToken } from "./voice.js";
 
 const PORT = process.env.PORT || 8080;
 
+// Teto de snapshots represados por cliente antes de comecar a descartar.
+// ~16 KB e da ordem de 15 snapshots (menos de 1s de jogo): passou disso, a
+// conexao nao esta dando conta e insistir so piora.
+const SNAPSHOT_BACKLOG_MAX = 16 * 1024;
+
 // Origens autorizadas a falar com este backend. Em produção, defina
 // ALLOWED_ORIGINS no Render com os domínios da Vercel separados por vírgula:
 //   https://creative-football.vercel.app,https://seu-dominio.com
@@ -135,10 +140,23 @@ wss.on("connection", (ws) => {
     team: 0,
     lastSeq: 0,
     alive: true,
+    dropped: 0,          // snapshots pulados por congestionamento
     send(type, data) {
       if (ws.readyState === ws.OPEN) {
         try { ws.send(encode(type, data)); } catch (e) { /* socket caindo */ }
       }
+    },
+    // Snapshot ja vem serializado (a sala monta um texto so para todo mundo).
+    //
+    // Se o socket deste cliente ja esta entupido, enfileirar mais snapshot so
+    // aumenta o atraso dele: o pacote que chegaria depois de 2s ja nasce
+    // velho. Pular e esperar o proximo — que carrega o estado mais novo — faz
+    // quem esta com a rede ruim voltar ao presente em vez de assistir ao
+    // passado em camera lenta.
+    sendRaw(text) {
+      if (ws.readyState !== ws.OPEN) return;
+      if (ws.bufferedAmount > SNAPSHOT_BACKLOG_MAX) { this.dropped++; return; }
+      try { ws.send(text); } catch (e) { /* socket caindo */ }
     }
   };
   clients.set(client.id, client);

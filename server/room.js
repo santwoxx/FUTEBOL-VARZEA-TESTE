@@ -7,6 +7,10 @@ import { S2C, encode } from "./shared/protocol.js";
 
 let nextRoomId = 1;
 
+// Pedacos fixos do envelope do snapshot, montados uma vez so.
+const SNAP_HEAD = `{"t":"${S2C.SNAPSHOT}","d":`;
+const SNAP_ACK = `,"ack":`;
+
 export class Room {
   constructor(mode, opts = {}) {
     this.id = nextRoomId++;
@@ -178,11 +182,14 @@ export class Room {
     this.snapCounter += CFG.SNAP_HZ;
     if (this.snapCounter >= CFG.TICK_HZ) {
       this.snapCounter -= CFG.TICK_HZ;
-      const snap = serialize(this.world);
+      // O estado e o mesmo para todo mundo; so o ack (ultimo input processado)
+      // muda por cliente. Serializar uma vez e concatenar o ack evita repetir
+      // o JSON.stringify do mundo inteiro por jogador — num 4v4 eram 8
+      // serializacoes identicas 20x/s.
+      const body = JSON.stringify(serialize(this.world));
+      const head = SNAP_HEAD + body.slice(0, -1) + SNAP_ACK;
       for (const c of this.clients.values()) {
-        // Cada cliente recebe o ultimo input processado dele, para reconciliacao
-        snap.ack = c.lastSeq || 0;
-        c.send(S2C.SNAPSHOT, snap);
+        c.sendRaw(head + (c.lastSeq || 0) + "}}");
       }
     }
   }

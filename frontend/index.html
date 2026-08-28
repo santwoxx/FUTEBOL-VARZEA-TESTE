@@ -60,6 +60,25 @@ canvas{display:block;width:100%;height:100%}
 #voiceHud.live #voiceDot{background:#5cff8f;box-shadow:0 0 10px rgba(92,255,143,0.9);animation:voicePulse 1s ease-in-out infinite}
 #voiceHud.warn #voiceDot{background:#ff5a5a;box-shadow:0 0 8px rgba(255,90,90,0.8)}
 @keyframes voicePulse{0%,100%{transform:scale(1)}50%{transform:scale(1.5)}}
+/* Botao de mutar da partida. Fica no canto que o multiplayer deixa livre (o
+   grid de toque e o joystick sao escondidos no online). Com o mouse travado
+   pela mira ele nao e clicavel — por isso a tecla existe e aparece escrita nele. */
+#voiceBtn{
+  position:absolute;right:max(16px,env(safe-area-inset-right));
+  bottom:calc(20px + env(safe-area-inset-bottom));
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  width:76px;height:76px;border-radius:24px;border:1.5px solid rgba(255,140,0,0.45);
+  background:linear-gradient(135deg,rgba(30,16,40,0.94),rgba(12,9,18,0.96));
+  box-shadow:0 8px 25px rgba(0,0,0,0.65);backdrop-filter:blur(10px);
+  color:#ffaa44;font-family:"Outfit",sans-serif;cursor:pointer;pointer-events:auto;
+  user-select:none;-webkit-user-select:none;touch-action:manipulation;z-index:6;
+  transition:transform .1s,border-color .2s,box-shadow .2s,color .2s;
+}
+#voiceBtn:active{transform:scale(0.94)}
+#voiceBtn.live{border-color:rgba(92,255,143,0.75);color:#7dff9e;box-shadow:0 8px 25px rgba(0,0,0,0.65),0 0 22px rgba(92,255,143,0.35)}
+#voiceBtn.muted{border-color:rgba(255,90,90,0.6);color:#ff9b9b}
+.voiceBtnIcon{font-size:26px;line-height:1}
+.voiceBtnLabel{font-size:9px;font-weight:900;letter-spacing:1.2px;text-transform:uppercase}
 #voicePeers{color:#ffd700;font-weight:700;letter-spacing:0.4px;text-transform:none;overflow:hidden;text-overflow:ellipsis}
 #eventBanner{font-size:10px;font-weight:800;letter-spacing:2px;color:#ffd700;text-transform:uppercase;opacity:0.9;text-shadow:0 1px 6px #000}
 
@@ -347,42 +366,59 @@ canvas{display:block;width:100%;height:100%}
 
 /* ═══════════ ESTÚDIO DE CUSTOMIZAÇÃO 3D (VESTIÁRIO) ═══════════ */
 #customizerModal{
-  position:fixed;inset:0;background:transparent;display:none;z-index:20;
+  position:fixed;inset:0;background:rgba(0,0,0,0.40);display:none;z-index:20;
   color:#fff;align-items:stretch;justify-content:flex-end;pointer-events:none;
 }
 .customizerSidebar{
-  width:min(95vw,400px);height:100%;background:linear-gradient(180deg,rgba(20,13,28,0.75),rgba(10,6,15,0.80));
-  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  width:min(94vw,430px);height:100%;background:linear-gradient(180deg,rgba(20,13,28,0.88),rgba(10,6,15,0.95));
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
   border-left:1.5px solid rgba(255,215,0,0.35);padding:20px 18px;display:flex;flex-direction:column;
-  box-shadow:-10px 0 50px rgba(0,0,0,0.9);overflow-y:auto;pointer-events:auto;
+  box-shadow:-10px 0 60px rgba(0,0,0,0.95);overflow-y:auto;pointer-events:auto;
+  scrollbar-width:thin;scrollbar-color:rgba(255,215,0,0.3) transparent;
 }
-.customHeader{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.12);padding-bottom:12px;margin-bottom:14px}
-.customHeader h2{margin:0;font-family:'Teko',sans-serif;font-size:32px;letter-spacing:1.5px;color:#ffd700}
-.closeCustomBtn{background:rgba(255,255,255,0.1);border:0;color:#fff;width:34px;height:34px;border-radius:50%;cursor:pointer;font-weight:900}
+.customizerSidebar::-webkit-scrollbar{width:6px}
+.customizerSidebar::-webkit-scrollbar-thumb{background:rgba(255,215,0,0.3);border-radius:6px}
 
-.customTabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:14px;scrollbar-width:none}
-.customTabBtn{
-  padding:8px 12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);
-  border-radius:10px;color:rgba(255,255,255,0.7);font-family:'Outfit',sans-serif;font-weight:800;
-  font-size:11.5px;white-space:nowrap;cursor:pointer;transition:all .15s;
+.customHeader{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.12);padding-bottom:12px;margin-bottom:14px}
+.customHeader h2{margin:0;font-family:'Teko',sans-serif;font-size:32px;letter-spacing:1.5px;color:#ffd700;display:flex;align-items:center;gap:8px}
+.closeCustomBtn{
+  background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:#fff;
+  width:36px;height:36px;border-radius:50%;cursor:pointer;font-weight:900;font-size:16px;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;
 }
+.closeCustomBtn:hover{background:rgba(255,59,48,0.4);border-color:#ef4444;color:#fff;transform:scale(1.08)}
+
+.customTabs{
+  display:flex;gap:6px;overflow-x:auto;padding-bottom:8px;margin-bottom:14px;
+  scrollbar-width:thin;scrollbar-color:rgba(255,215,0,0.4) transparent;
+  -webkit-overflow-scrolling:touch;
+}
+.customTabs::-webkit-scrollbar{height:4px}
+.customTabs::-webkit-scrollbar-thumb{background:rgba(255,215,0,0.4);border-radius:4px}
+.customTabBtn{
+  padding:9px 13px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);
+  border-radius:10px;color:rgba(255,255,255,0.8);font-family:'Outfit',sans-serif;font-weight:800;
+  font-size:12px;white-space:nowrap;cursor:pointer;transition:all .15s;flex-shrink:0;
+}
+.customTabBtn:hover{background:rgba(255,255,255,0.14);color:#fff;border-color:rgba(255,215,0,0.4)}
 .customTabBtn.active{
   background:linear-gradient(135deg,#ffd700,#ff8800);color:#0a0500;border-color:transparent;
-  box-shadow:0 4px 14px rgba(255,170,0,0.4);
+  box-shadow:0 4px 14px rgba(255,170,0,0.4);font-weight:900;
 }
 
 .tabPanel{display:none;flex-direction:column;gap:14px}
 .tabPanel.active{display:flex}
 
-.customSection{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);padding:12px 14px;border-radius:14px}
-.customSection label{display:block;font-size:12px;font-weight:900;letter-spacing:1px;color:#ffd700;margin-bottom:8px;text-transform:uppercase}
+.customSection{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);padding:14px;border-radius:16px}
+.customSection label{display:block;font-size:11.5px;font-weight:900;letter-spacing:1px;color:#ffd700;margin-bottom:10px;text-transform:uppercase}
 
 .swatchesRow{display:flex;gap:8px;flex-wrap:wrap}
 .swatch{
   width:32px;height:32px;border-radius:50%;border:2px solid rgba(255,255,255,0.3);cursor:pointer;
-  transition:transform .12s,border-color .12s;box-shadow:0 2px 8px rgba(0,0,0,0.5);
+  transition:transform .15s,border-color .15s,box-shadow .15s;box-shadow:0 2px 8px rgba(0,0,0,0.5);
 }
-.swatch.selected{transform:scale(1.2);border-color:#ffd700;box-shadow:0 0 12px #ffd700}
+.swatch:hover{transform:scale(1.15);border-color:#ffd700}
+.swatch.selected{transform:scale(1.22);border-color:#ffd700;box-shadow:0 0 14px #ffd700}
 
 .choiceGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
 .choiceBtn{
@@ -407,11 +443,32 @@ canvas{display:block;width:100%;height:100%}
 .saveBtn{
   flex:1;padding:14px;background:linear-gradient(135deg,#00f0b8,#008f6b);border:0;border-radius:14px;
   color:#041a14;font-family:'Outfit',sans-serif;font-weight:900;font-size:15px;cursor:pointer;
-  box-shadow:0 6px 20px rgba(0,240,180,0.4);
+  box-shadow:0 6px 20px rgba(0,240,180,0.4);transition:all .15s;
 }
+.saveBtn:hover{transform:translateY(-1px);box-shadow:0 8px 24px rgba(0,240,180,0.6)}
 .randomBtn{
   padding:14px 18px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.25);border-radius:14px;
-  color:#fff;font-family:'Outfit',sans-serif;font-weight:900;cursor:pointer;
+  color:#fff;font-family:'Outfit',sans-serif;font-weight:900;cursor:pointer;transition:all .15s;
+}
+.randomBtn:hover{background:rgba(255,255,255,0.18);border-color:#ffd700}
+
+@media (max-width: 768px) {
+  #customizerModal{
+    justify-content:center;
+    align-items:flex-end;
+  }
+  .customizerSidebar{
+    width:100vw;
+    max-height:60vh;
+    border-left:0;
+    border-top:2px solid rgba(255,215,0,0.45);
+    border-radius:24px 24px 0 0;
+    padding:16px 14px;
+    box-shadow:0 -10px 40px rgba(0,0,0,0.85);
+  }
+  .customHeader h2{font-size:26px}
+  .choiceGrid{grid-template-columns:repeat(2,1fr);gap:6px}
+  .choiceBtn{padding:8px 6px;font-size:11px}
 }
 
 /* ═══════════ MODAL DE LOBBY MULTIPLAYER ONLINE (GLASSMORPHISM) ═══════════ */
@@ -496,6 +553,17 @@ canvas{display:block;width:100%;height:100%}
   padding:9px 16px;font-family:'Outfit';font-weight:900;font-size:12px;cursor:pointer;letter-spacing:1px}
 .mpEmpty{color:rgba(255,255,255,0.5);font-size:12px;text-align:center;padding:14px;border:1px dashed rgba(255,255,255,0.15);border-radius:13px}
 .mpFooter{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:18px}
+.voiceModeRow { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:10px 0 8px; }
+.voiceModeBtn {
+  padding:11px 8px; border-radius:12px; cursor:pointer; font-family:"Outfit",sans-serif;
+  font-weight:900; font-size:12px; letter-spacing:.6px; text-transform:uppercase;
+  border:1.5px solid rgba(255,255,255,0.18); background:rgba(255,255,255,0.06); color:rgba(255,255,255,0.7);
+  transition:border-color .2s, background .2s, color .2s;
+}
+.voiceModeBtn:hover { background:rgba(255,255,255,0.1) }
+.voiceModeBtn.selected { border-color:rgba(0,240,184,0.7); background:rgba(0,240,184,0.12); color:#8ef0c8 }
+#voiceModeHint { font-size:11px; line-height:1.5; color:rgba(255,255,255,0.5) }
+#voiceModeHint b { color:#ffd700 }
 .keybindGrid { display: flex; flex-direction: column; gap: 8px; max-height: 45vh; overflow-y: auto; padding-right: 8px; }
 .keybindRow { display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.05); padding: 8px 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); }
 .keybindLabel { font-size: 14px; font-weight: 600; color: #fff; }
@@ -606,6 +674,18 @@ canvas{display:block;width:100%;height:100%}
 
     <div class="keybindGrid" id="keybindGrid">
       <!-- Generated via JS -->
+    </div>
+
+    <div style="margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.12)">
+      <div style="font-family:'Teko',sans-serif;font-size:22px;color:#ffd700;letter-spacing:1px">VOZ DO TIME</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.7);margin-top:2px">
+        Como o microfone se comporta nas partidas online.
+      </div>
+      <div class="voiceModeRow">
+        <button class="voiceModeBtn" data-voicemode="ptt" type="button">Apertar para falar</button>
+        <button class="voiceModeBtn" data-voicemode="open" type="button">Sempre aberto</button>
+      </div>
+      <div id="voiceModeHint"></div>
     </div>
 
     <div style="margin-top:20px;display:flex;justify-content:flex-end">
@@ -863,6 +943,11 @@ canvas{display:block;width:100%;height:100%}
     <div id="crosshairRing"></div>
     <div id="crosshairDot"></div>
   </div>
+
+  <button id="voiceBtn" type="button" title="Mutar / desmutar o microfone">
+    <span class="voiceBtnIcon">🎙️</span>
+    <span class="voiceBtnLabel">B</span>
+  </button>
 
   <div id="powerWrap"><div id="power"></div></div>
   <div id="joy"><div id="knob"></div></div>
@@ -2725,6 +2810,11 @@ function createHumanoidCria(team, role, skinIdx=0, foot=1, customConfig=null){
   function rebuildAccessoryMeshes(accId){
     while(accessoryGroup.children.length > 0) accessoryGroup.remove(accessoryGroup.children[0]);
     const acc = parseInt(accId) || 0;
+
+    // Quando for Caveira (acc === 4), a cabeça e o cabelo do modelo base são 100% substituídos pelo crânio
+    headMesh.visible = (acc !== 4);
+    hairGroup.visible = (acc !== 4 && acc !== 5);
+
     if(acc === 0) return;
 
     if(acc === 1){ // Máscara Ninja
@@ -2745,64 +2835,73 @@ function createHumanoidCria(team, role, skinIdx=0, foot=1, customConfig=null){
       const lensR = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.06, 0.02), lensRubyMat);
       lensR.position.set(0.08, 0.055, 0.18);
       accessoryGroup.add(lensR);
-    } else if(acc === 4){ // 💀 MÁSCARA DA CAVEIRA (Pixel Skull 3D - Fiel à referência)
+    } else if(acc === 4){ // 💀 CABEÇA / MÁSCARA DA CAVEIRA (Pixel Skull 3D - Substitui a cabeça por completo)
       const skullGrp = new THREE.Group();
       
-      // 1. Calota do Crânio Superior
-      const cranium = new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.22, 0.35), boneMat);
-      cranium.position.set(0, 0.08, 0.01);
-      cranium.castShadow = true;
-      skullGrp.add(cranium);
+      // 1. Calota Craniana Esférica Low-Poly (Cranium Base)
+      const craniumDome = new THREE.Mesh(new THREE.SphereGeometry(0.185, 8, 7), boneMat);
+      craniumDome.position.set(0, 0.02, -0.01);
+      craniumDome.castShadow = true;
+      skullGrp.add(craniumDome);
 
-      const forehead = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.16, 0.08), boneMat);
-      forehead.position.set(0, 0.08, 0.165);
+      // 2. Testa e Têmporas Angulares Pixel-Art
+      const forehead = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.16, 0.14), boneMat);
+      forehead.position.set(0, 0.04, 0.08);
+      forehead.castShadow = true;
       skullGrp.add(forehead);
 
-      const brow = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.05, 0.06), boneMat);
-      brow.position.set(0, 0.07, 0.18);
+      const brow = new THREE.Mesh(new THREE.BoxGeometry(0.30, 0.04, 0.06), boneMat);
+      brow.position.set(0, 0.055, 0.145);
       skullGrp.add(brow);
 
-      // 2. Cavidades Oculares Pretas e Profundas (Pixel Eyes)
-      const eyeL = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.09, 0.04), solidBlackMat);
-      eyeL.position.set(-0.085, 0.01, 0.185);
+      // 3. Cavidades Oculares Pretas Profundas (Pixel Eyes - Idênticas à referência)
+      const eyeL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.06), solidBlackMat);
+      eyeL.position.set(-0.072, 0.0, 0.142);
       skullGrp.add(eyeL);
 
-      const eyeR = new THREE.Mesh(new THREE.BoxGeometry(0.09, 0.09, 0.04), solidBlackMat);
-      eyeR.position.set(0.085, 0.01, 0.185);
+      const eyeR = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.08, 0.06), solidBlackMat);
+      eyeR.position.set(0.072, 0.0, 0.142);
       skullGrp.add(eyeR);
 
-      // 3. Cavidade Nasal Angular (Pixel Nose)
-      const nose = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.05, 0.03), solidBlackMat);
-      nose.position.set(0, -0.045, 0.19);
+      // 4. Cavidade Nasal Angular Preta no Centro (Pixel Nose)
+      const nose = new THREE.Mesh(new THREE.BoxGeometry(0.038, 0.045, 0.05), solidBlackMat);
+      nose.position.set(0, -0.048, 0.145);
       skullGrp.add(nose);
 
-      // 4. Maçãs do Rosto Salientes (Zygomatic)
-      const cheekL = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.08, 0.08), boneMat);
-      cheekL.position.set(-0.16, -0.02, 0.14);
+      // 5. Maçãs do Rosto Marcadas (Zygomatic Arches)
+      const cheekL = new THREE.Mesh(new THREE.BoxGeometry(0.048, 0.06, 0.08), boneMat);
+      cheekL.position.set(-0.135, -0.03, 0.09);
       skullGrp.add(cheekL);
 
-      const cheekR = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.08, 0.08), boneMat);
-      cheekR.position.set(0.16, -0.02, 0.14);
+      const cheekR = new THREE.Mesh(new THREE.BoxGeometry(0.048, 0.06, 0.08), boneMat);
+      cheekR.position.set(0.135, -0.03, 0.09);
       skullGrp.add(cheekR);
 
-      // 5. Maxilar e Arcada Dentária Pixelada 3D
-      const maxilla = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.06, 0.06), boneMat);
-      maxilla.position.set(0, -0.09, 0.17);
+      // 6. Maxilar Superior e Fundo Escuro dos Dentes
+      const maxilla = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.045, 0.08), boneMat);
+      maxilla.position.set(0, -0.082, 0.12);
       skullGrp.add(maxilla);
 
-      const toothBack = new THREE.Mesh(new THREE.BoxGeometry(0.20, 0.055, 0.02), solidBlackMat);
-      toothBack.position.set(0, -0.135, 0.155);
+      const toothBack = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.05, 0.04), solidBlackMat);
+      toothBack.position.set(0, -0.12, 0.115);
       skullGrp.add(toothBack);
 
-      [-0.07, -0.022, 0.022, 0.07].forEach(tx => {
-        const tooth = new THREE.Mesh(new THREE.BoxGeometry(0.038, 0.05, 0.04), boneMat);
-        tooth.position.set(tx, -0.135, 0.168);
+      // 7. 4 Dentes Pixelados Individuais em 3D (Brancos com Fendas Pretas)
+      [-0.055, -0.018, 0.018, 0.055].forEach(tx => {
+        const tooth = new THREE.Mesh(new THREE.BoxGeometry(0.032, 0.04, 0.032), boneMat);
+        tooth.position.set(tx, -0.12, 0.132);
         skullGrp.add(tooth);
       });
 
-      const jawBase = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.035, 0.08), boneMat);
-      jawBase.position.set(0, -0.165, 0.14);
+      // 8. Mandíbula Inferior e Base do Queixo
+      const jawBase = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.038, 0.12), boneMat);
+      jawBase.position.set(0, -0.15, 0.07);
       skullGrp.add(jawBase);
+
+      // 9. Encaixe do Pescoço (Conexão perfeita com o corpo)
+      const neckConnector = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.085, 0.08, 6), boneMat);
+      neckConnector.position.set(0, -0.14, 0);
+      skullGrp.add(neckConnector);
 
       accessoryGroup.add(skullGrp);
     } else if(acc === 5){ // 🥷 Balaclava Ghost (Caveira Tática)
@@ -3998,7 +4097,8 @@ const defaultKeyBindings = {
   dribble: "f",
   jump: "c",
   dance: "v",
-  reset: "t"
+  reset: "t",
+  voice: "b"
 };
 let userKeyBindings = { ...defaultKeyBindings };
 try {
@@ -5243,6 +5343,10 @@ function applyPlayerCustomization(){
   if(player.rebuildAccessoryMeshes){
     player.rebuildAccessoryMeshes(cfg.accessory);
   }
+  const acc = parseInt(cfg.accessory) || 0;
+  if(player.headMesh) player.headMesh.visible = (acc !== 4);
+  if(player.hairGroup) player.hairGroup.visible = (acc !== 4 && acc !== 5);
+
   // 3. Formato do rosto
   if(player.headMesh){
     if(cfg.faceShape === "angular") player.headMesh.scale.set(0.98, 1.10, 0.94);
@@ -5598,10 +5702,17 @@ function openCustomizerStudio(){
   $("#topWrap").style.display = "none";
   $("#customizerModal").style.display = "flex";
   setupCustomizerUI();
+  applyPlayerCustomization();
   
   // Posiciona o jogador de frente para a câmera no centro/esquerda para visualização ao vivo
   customizerRot = 0;
-  player.root.position.set(-1.25, 0, 0);
+  const isMobile = window.innerWidth <= 768;
+  const px = isMobile ? 0 : -1.25;
+  const py = isMobile ? 0.35 : 0;
+  const cy = isMobile ? 1.75 : 1.55;
+  const ty = isMobile ? 1.55 : 1.35;
+
+  player.root.position.set(px, py, 0);
   player.vel.set(0, 0, 0);
   player.yaw = Math.PI; // De frente para o usuário!
   player.state = "idle";
@@ -5618,8 +5729,8 @@ function openCustomizerStudio(){
   ballVel.set(0, 0, 0);
 
   // Câmera perfeitamente enquadrada de frente para o jogador
-  camera.position.set(-1.25, 1.55, 3.8);
-  camera.lookAt(-1.25, 1.35, 0);
+  camera.position.set(px, cy, 3.8);
+  camera.lookAt(px, ty, 0);
 }
 
 function closeCustomizerStudio(){
@@ -6137,7 +6248,7 @@ window.addEventListener("touchstart", e=>{
 
   for(let i=0; i<e.changedTouches.length; i++){
     const t = e.changedTouches[i];
-    if(t.clientX > innerWidth * 0.4 && !t.target.closest("#joy") && !t.target.closest("#btnGrid") && !t.target.closest("#start") && !t.target.closest("#customizerModal") && !t.target.closest("#trainingHud") && !t.target.closest("#systemModal")){
+    if(t.clientX > innerWidth * 0.4 && !t.target.closest("#joy") && !t.target.closest("#btnGrid") && !t.target.closest("#voiceBtn") && !t.target.closest("#start") && !t.target.closest("#customizerModal") && !t.target.closest("#trainingHud") && !t.target.closest("#systemModal")){
       touchCamId = t.identifier;
       touchPrevX = t.clientX;
       touchPrevY = t.clientY;
@@ -6443,11 +6554,20 @@ if(btnCloseCustom) btnCloseCustom.addEventListener("click", closeCustomizerStudi
 const btnSaveCustom = $("#btnSaveCustom");
 if(btnSaveCustom) btnSaveCustom.addEventListener("click", closeCustomizerStudio);
 
+const voiceBtn = $("#voiceBtn");
+if(voiceBtn) voiceBtn.addEventListener("click", (e)=>{ e.stopPropagation(); voiceToggleMute(); });
+document.querySelectorAll(".voiceModeBtn").forEach(b => {
+  b.addEventListener("click", ()=> voiceSetMode(b.dataset.voicemode));
+});
+
 const btnOpenControls = $("#btnOpenControls");
 const systemModal = $("#systemModal");
 const btnCloseSystem = $("#btnCloseSystem");
 if(btnOpenControls && systemModal){
-  btnOpenControls.addEventListener("click", ()=> systemModal.style.display = "flex");
+  btnOpenControls.addEventListener("click", ()=>{
+    systemModal.style.display = "flex";
+    voiceRenderVoiceSettings();
+  });
 }
 if(btnCloseSystem && systemModal){
   btnCloseSystem.addEventListener("click", ()=> systemModal.style.display = "none");
@@ -6461,7 +6581,8 @@ const actionLabels = {
   up: "Movimentar P/ Cima", down: "Movimentar P/ Baixo", left: "Movimentar P/ Esquerda", right: "Movimentar P/ Direita",
   sprint: "Pique / Arrancada", shoot: "Chutar / Encher o pé", pass: "Tocar a bola",
   tackle: "Carrinho", steal: "Desarme em pé", dribble: "Drible de Cria",
-  jump: "Pular / Cabecear", dance: "Dancinha / Emoji", reset: "Resetar bola (Treino)"
+  jump: "Pular / Cabecear", dance: "Dancinha / Emoji", reset: "Resetar bola (Treino)",
+  voice: "Falar (voz do time)"
 };
 let activeBindAction = null;
 
@@ -6497,6 +6618,7 @@ addEventListener("keydown", (e)=>{
     userKeyBindings[activeBindAction] = k;
     activeBindAction = null;
     renderKeybinds();
+    voiceRenderVoiceSettings(); voiceUpdateHud();
   }
 }, true); // Use capture phase to prevent triggering other actions during rebinding
 
@@ -6504,6 +6626,7 @@ if(btnResetKeybinds){
   btnResetKeybinds.addEventListener("click", ()=>{
     userKeyBindings = { ...defaultKeyBindings };
     renderKeybinds();
+    voiceRenderVoiceSettings(); voiceUpdateHud();
   });
 }
 if(btnSaveKeybinds){
@@ -6810,6 +6933,7 @@ function mpClearRoster(){
   mp.chars.clear();
   mp.roster = [];
   mp.snaps.length = 0; mp.history.length = 0; mp.ready = false;
+  mpWorld.ents.clear(); mpWorld.ball = null;
 }
 
 function mpBuildRoster(d){
@@ -6937,23 +7061,40 @@ function mpReconcile(serverEnt){
   }
 }
 
+// Reusados entre frames. mpInterpolate roda a 60+ fps e antes alocava um Map,
+// um objeto de bola e um objeto por entidade toda vez — uns 700 objetos por
+// segundo so para o coletor de lixo limpar no meio da partida, que e
+// exatamente o tipo de coisa que vira engasgo na hora do gol.
+const mpWorld = { ents: new Map(), ball: null };
+const mpBallOut = { x: 0, y: 0.28, z: 0 };
+
+// A ordem das entidades no snapshot e sempre a mesma (o servidor percorre
+// w.ents na ordem), entao o par quase sempre esta no mesmo indice. So cai na
+// busca linear se algo mudar de posicao na lista.
+function mpPairEnt(list, id, i){
+  const direto = list[i];
+  if(direto && direto[0] === id) return direto;
+  for(let j = 0; j < list.length; j++) if(list[j][0] === id) return list[j];
+  return null;
+}
+
 function mpInterpolate(){
   const renderTime = performance.now()/1000 - MP_INTERP;
-  const out = { ents: new Map(), ball: null };
-  if(!mp.snaps.length) return out;
+  const out = mpWorld;
+  out.ball = null;
+  if(!mp.snaps.length){ out.ents.clear(); return out; }
   let a = null, b = null;
   for(let i = mp.snaps.length-1; i >= 0; i--){
     if(mp.snaps[i].time <= renderTime){ a = mp.snaps[i]; b = mp.snaps[i+1] || null; break; }
   }
   if(!a){ a = mp.snaps[0]; b = mp.snaps[1] || null; }
   let t = 0;
+  out.ball = mpBallOut;
   if (b && b.time > a.time) {
     t = Math.min(1, Math.max(0, (renderTime - a.time)/(b.time - a.time)));
-    out.ball = {
-      x: a.data.b[0] + (b.data.b[0] - a.data.b[0]) * t,
-      y: a.data.b[1] + (b.data.b[1] - a.data.b[1]) * t,
-      z: a.data.b[2] + (b.data.b[2] - a.data.b[2]) * t
-    };
+    mpBallOut.x = a.data.b[0] + (b.data.b[0] - a.data.b[0]) * t;
+    mpBallOut.y = a.data.b[1] + (b.data.b[1] - a.data.b[1]) * t;
+    mpBallOut.z = a.data.b[2] + (b.data.b[2] - a.data.b[2]) * t;
   } else {
     // Extrapolação (Dead Reckoning) se não houver pacote futuro (Lag)
     const dt = Math.max(0, renderTime - a.time);
@@ -6961,26 +7102,27 @@ function mpInterpolate(){
     const vy = a.data.b[4] || 0;
     const vz = a.data.b[5] || 0;
     // O motor do servidor usa gravidade ~18, e atrito/redução é suave.
-    out.ball = {
-      x: a.data.b[0] + vx * dt,
-      y: Math.max(0.28, a.data.b[1] + (vy * dt - 0.5 * 18 * dt * dt)),
-      z: a.data.b[2] + vz * dt
-    };
+    mpBallOut.x = a.data.b[0] + vx * dt;
+    mpBallOut.y = Math.max(0.28, a.data.b[1] + (vy * dt - 0.5 * 18 * dt * dt));
+    mpBallOut.z = a.data.b[2] + vz * dt;
   }
   const bd = b ? b.data : a.data;
-  for(const ea of a.data.e){
-    const eb = bd.e.find(x => x[0] === ea[0]) || ea;
-    let dy = ((eb[4]-ea[4]+Math.PI*3)%(Math.PI*2)) - Math.PI;
-    out.ents.set(ea[0], {
-      x: ea[1]+(eb[1]-ea[1])*t,
-      y: ea[2]+(eb[2]-ea[2])*t,
-      z: ea[3]+(eb[3]-ea[3])*t,
-      yaw: ea[4]+dy*t,
-      state: eb[5],
-      vx: ea[6]+(eb[6]-ea[6])*t,
-      vz: ea[7]+(eb[7]-ea[7])*t,
-      charge: (ea[8]||0)+((eb[8]||0)-(ea[8]||0))*t
-    });
+  const ae = a.data.e;
+  for(let i = 0; i < ae.length; i++){
+    const ea = ae[i];
+    const eb = mpPairEnt(bd.e, ea[0], i) || ea;
+    const dy = ((eb[4]-ea[4]+Math.PI*3)%(Math.PI*2)) - Math.PI;
+    // Mutação no lugar: o objeto da entidade sobrevive de um frame para o outro.
+    let o = out.ents.get(ea[0]);
+    if(!o){ o = { x:0, y:0, z:0, yaw:0, state:0, vx:0, vz:0, charge:0 }; out.ents.set(ea[0], o); }
+    o.x = ea[1]+(eb[1]-ea[1])*t;
+    o.y = ea[2]+(eb[2]-ea[2])*t;
+    o.z = ea[3]+(eb[3]-ea[3])*t;
+    o.yaw = ea[4]+dy*t;
+    o.state = eb[5];
+    o.vx = ea[6]+(eb[6]-ea[6])*t;
+    o.vz = ea[7]+(eb[7]-ea[7])*t;
+    o.charge = (ea[8]||0)+((eb[8]||0)-(ea[8]||0))*t;
   }
   return out;
 }
@@ -7136,44 +7278,83 @@ function mpUpdate(dt){
 // O SDK tem ~1,3 MB, então só é baixado quando a primeira partida começa: quem
 // nunca joga online não paga esse download.
 //
-// Fluxo: partida começa → pede o token → conecta já ouvindo os companheiros.
-// O microfone só é pedido ao navegador quando você aperta T pela primeira vez,
-// e não no meio do saque — assim a permissão aparece porque VOCÊ quis falar.
+// Dois modos, escolhidos em SISTEMA & CONTROLES:
+//   "ptt"   — segure a tecla de falar (padrão, remapeável)
+//   "open"  — microfone sempre aberto
+// O botão da partida muta nos dois modos: é uma chave geral, então no modo PTT
+// a tecla não abre nada enquanto ele estiver mudo.
 
 const VOICE_SDK_URL = "https://cdn.jsdelivr.net/npm/livekit-client@2.22.1/dist/livekit-client.esm.mjs";
-const VOICE_PTT_KEY   = "t";   // segure para falar
-const VOICE_LATCH_KEY = "m";   // trava o microfone aberto
+const VOICE_PREFS_KEY = "fut_cria_voice_v1";
+
+const voicePrefs = { mode: "ptt", muted: false };
+try {
+  const saved = JSON.parse(localStorage.getItem(VOICE_PREFS_KEY) || "{}");
+  if (saved.mode === "open" || saved.mode === "ptt") voicePrefs.mode = saved.mode;
+  voicePrefs.muted = !!saved.muted;
+} catch (e) { /* preferências corrompidas: fica no padrão */ }
+
+function voiceSavePrefs(){
+  try { localStorage.setItem(VOICE_PREFS_KEY, JSON.stringify(voicePrefs)); } catch(e){}
+}
 
 const voice = {
   lib: null, room: null, pub: null,
   connecting: false, micPending: false,
   open: false,        // transmitindo neste instante
-  ptt: false,         // tecla de falar pressionada
-  latched: false,     // microfone travado aberto pelo M
+  held: false,        // tecla de falar pressionada
+  away: false,        // aba em segundo plano
   speaking: [],       // nomes de quem está falando agora
   blocked: false,     // navegador segurou o áudio esperando um clique
   status: ""          // mensagem de problema, quando houver
 };
 
-function voiceUpdateHud(){
-  const el = document.querySelector("#voiceHud");
-  if(!el) return;
-  if(!voice.room && !voice.connecting && !voice.status){ el.style.display = "none"; return; }
+// Transmitir é sempre resultado do mesmo cálculo: mudo manda em tudo, e no modo
+// aberto o microfone fica ligado sem depender de tecla. Uma fonte só de verdade
+// evita o pior bug possível aqui — microfone preso aberto sem o jogador saber.
+function voiceShouldTransmit(){
+  if(!voice.room || voice.status || voicePrefs.muted || voice.away) return false;
+  return voicePrefs.mode === "open" || voice.held;
+}
 
-  el.style.display = "flex";
-  el.classList.toggle("live", voice.open && !voice.status);
-  el.classList.toggle("warn", !!voice.status);
+function voiceKeyLabel(){
+  const k = userKeyBindings.voice || "b";
+  return k === " " ? "ESPAÇO" : k.toUpperCase();
+}
+
+function voiceUpdateHud(){
+  const hud = document.querySelector("#voiceHud");
+  const btn = document.querySelector("#voiceBtn");
+  const ativo = !!(voice.room || voice.connecting || voice.status);
+
+  if(btn) btn.style.display = (ativo && gameMode === "multiplayer") ? "flex" : "none";
+  if(!hud) return;
+  if(!ativo){ hud.style.display = "none"; return; }
+
+  hud.style.display = "flex";
+  hud.classList.toggle("live", voice.open && !voice.status);
+  hud.classList.toggle("warn", !!voice.status || voicePrefs.muted);
 
   const label = document.querySelector("#voiceLabel");
   const peers = document.querySelector("#voicePeers");
   let text;
-  if(voice.status)          text = voice.status;
-  else if(voice.connecting) text = "Conectando voz...";
-  else if(voice.blocked)    text = "Clique para ouvir o time";
-  else if(voice.open)       text = voice.latched ? "Mic aberto · M desliga" : "Falando";
-  else                      text = "T falar · M trava";
+  if(voice.status)                    text = voice.status;
+  else if(voice.connecting)           text = "Conectando voz...";
+  else if(voice.blocked)              text = "Clique para ouvir o time";
+  else if(voicePrefs.muted)           text = "Mudo";
+  else if(voicePrefs.mode === "open") text = "Mic aberto";
+  else                                text = voice.open ? "Falando" : "Segure " + voiceKeyLabel();
   if(label) label.textContent = text;
   if(peers) peers.textContent = voice.speaking.length ? "🔊 " + voice.speaking.join(", ") : "";
+
+  if(btn){
+    btn.classList.toggle("muted", voicePrefs.muted);
+    btn.classList.toggle("live", voice.open);
+    const ic = btn.querySelector(".voiceBtnIcon");
+    const tx = btn.querySelector(".voiceBtnLabel");
+    if(ic) ic.textContent = voicePrefs.muted ? "🔇" : "🎙️";
+    if(tx) tx.textContent = voicePrefs.muted ? "MUDO" : (voicePrefs.mode === "open" ? "ABERTO" : voiceKeyLabel());
+  }
 }
 
 // Pedido feito pelo WebSocket da partida (e não por HTTP) porque a própria
@@ -7186,10 +7367,8 @@ function voiceRequestToken(){
 async function voiceConnect(d){
   if(voice.room || voice.connecting) return;
   if(!d || d.error || !d.url || !d.token){
-    // VoIP desligado no servidor: some da tela em vez de mostrar erro para
-    // quem nem sabe que existe voz.
     // "voice_disabled" = servidor sem LiveKit; "solo" = 1v1, sem companheiro.
-    // Nos dois casos o HUD some em vez de anunciar um problema que nao e do jogador.
+    // Nos dois casos o HUD some em vez de anunciar um problema que não é do jogador.
     const mudo = !d || !d.error || d.error === "voice_disabled" || d.error === "solo";
     voice.status = mudo ? "" : "Voz indisponível";
     voiceUpdateHud();
@@ -7204,7 +7383,11 @@ async function voiceConnect(d){
     const LK = voice.lib;
 
     const room = new LK.Room({
-      audioCaptureDefaults: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+      audioCaptureDefaults: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+      // Voz de jogo não precisa de fidelidade de música: o preset de fala corta
+      // o encode de 48 para 24 kbps. A redundância (RED) continua ligada, que é
+      // o que segura a conversa em 4G ruim de campo de várzea.
+      publishDefaults: { audioPreset: LK.AudioPresets.speech, dtx: true }
     });
     voice.room = room;
 
@@ -7233,7 +7416,10 @@ async function voiceConnect(d){
     await room.connect(d.url, d.token);
     voice.connecting = false;
     voice.blocked = !room.canPlaybackAudio;
-    voiceUpdateHud();
+
+    // No modo aberto o jogador espera já entrar falando — a não ser que tenha
+    // deixado o botão mudo numa partida anterior.
+    voiceApply();
   }catch(err){
     voice.connecting = false;
     voice.status = "Voz indisponível";
@@ -7244,8 +7430,8 @@ async function voiceConnect(d){
   }
 }
 
-// Publica o microfone na primeira vez que o jogador aperta a tecla de falar.
-// Publicar uma vez só (em vez de a cada aperto) faz o T responder na hora, sem
+// Publica o microfone na primeira vez que ele é realmente necessário. Publicar
+// uma vez só (em vez de a cada aperto da tecla) faz a fala sair na hora, sem
 // renegociar a conexão no meio da jogada.
 async function voiceEnsureMic(){
   if(voice.pub || voice.micPending || !voice.room || !voice.lib) return;
@@ -7264,31 +7450,58 @@ async function voiceEnsureMic(){
   }
 }
 
-// Fonte única da verdade: o estado do publish sempre persegue voice.open, então
-// apertar e soltar rápido nunca deixa o microfone preso aberto.
+// O estado do publish sempre persegue voiceShouldTransmit(), então apertar e
+// soltar mais rápido que a rede nunca deixa o microfone preso aberto.
 async function voiceSyncMic(){
   const pub = voice.pub;
   if(!pub) return;
+  const on = voiceShouldTransmit();
   try{
-    if(voice.open && pub.isMuted) await pub.unmute();
-    else if(!voice.open && !pub.isMuted) await pub.mute();
+    if(on && pub.isMuted) await pub.unmute();
+    else if(!on && !pub.isMuted) await pub.mute();
   }catch(e){ /* troca de estado no meio de outra: o próximo sync corrige */ }
 }
 
-function voiceSetTransmitting(on){
-  if(!voice.room || voice.status) return;
-  if(voice.open === on && voice.pub) return;
-  voice.open = on;
+// Chamado depois de qualquer mudança: tecla, botão, modo ou foco da aba.
+function voiceApply(){
+  if(!voice.room){ voiceUpdateHud(); return; }
+  voice.open = voiceShouldTransmit();
   voiceUpdateHud();
-  if(on) voiceEnsureMic().then(voiceSyncMic);
+  if(voice.open) voiceEnsureMic().then(voiceSyncMic);
   else voiceSyncMic();
+}
+
+function voiceToggleMute(){
+  voicePrefs.muted = !voicePrefs.muted;
+  voiceSavePrefs();
+  voiceApply();
+}
+
+function voiceSetMode(mode){
+  if(mode !== "ptt" && mode !== "open") return;
+  voicePrefs.mode = mode;
+  voiceSavePrefs();
+  voiceRenderVoiceSettings();
+  voiceApply();
+}
+
+function voiceRenderVoiceSettings(){
+  document.querySelectorAll(".voiceModeBtn").forEach(b => {
+    b.classList.toggle("selected", b.dataset.voicemode === voicePrefs.mode);
+  });
+  const hint = document.querySelector("#voiceModeHint");
+  if(hint){
+    hint.innerHTML = voicePrefs.mode === "open"
+      ? "Microfone ligado o tempo todo. Use o botão da partida para mutar."
+      : "Só transmite enquanto você segura <b>" + voiceKeyLabel() + "</b> (remapeável na lista acima).";
+  }
 }
 
 function voiceStop(){
   const room = voice.room;
-  voice.room = null; voice.pub = null;      // voice.lib fica: o SDK ja baixado e reusado
+  voice.room = null; voice.pub = null;      // voice.lib fica: o SDK já baixado é reusado
   voice.connecting = false; voice.micPending = false;
-  voice.open = false; voice.ptt = false; voice.latched = false;
+  voice.open = false; voice.held = false; voice.away = false;
   voice.speaking = []; voice.blocked = false; voice.status = "";
   if(room){ try{ room.disconnect(); }catch(e){} }
   document.querySelectorAll("audio[data-voice]").forEach(el => el.remove());
@@ -7298,7 +7511,7 @@ function voiceStop(){
 // Pedir o microfone no lobby, e não no meio da partida, é de propósito: durante
 // o jogo o mouse está travado na tela (pointer lock) e a caixa de permissão do
 // navegador arrancaria o jogador do controle bem na hora em que ele quis falar.
-// Aqui a permissão fica guardada pelo navegador e o T já sai falando.
+// Aqui a permissão fica guardada pelo navegador e a tecla já sai falando.
 function voiceSetMicButton(state, text){
   const btn = document.querySelector("#mpBtnMic");
   if(!btn) return;
@@ -7342,7 +7555,6 @@ addEventListener("click", () => {
   if(voice.room && voice.blocked){ voice.room.startAudio().catch(()=>{}); }
 });
 
-
 // Eventos de movimento da câmera multiplayer reutilizam o mousemove global.
 // O chute/passe por mouse já é roteado no handler global de mousedown/mouseup.
 
@@ -7355,39 +7567,37 @@ addEventListener("keydown", (e)=>{
   const k = e.key.toLowerCase();
   mpKeys[k] = true;
 
-  // Voz: T fala enquanto segurado, M trava o microfone aberto. Nenhuma das duas
-  // e usada pelo jogo, entao nao brigam com os controles.
   if(!voice.room || e.repeat || voiceTypingInField(e)) return;
-  if(k === VOICE_PTT_KEY){
-    voice.ptt = true;
-    voiceSetTransmitting(true);
-  } else if(k === VOICE_LATCH_KEY){
-    voice.latched = !voice.latched;
-    voiceSetTransmitting(voice.latched || voice.ptt);
+  if(k === (userKeyBindings.voice || "b")){
+    // No modo aberto segurar a tecla nao faria sentido, entao ela vira o
+    // liga/desliga — o mesmo que o botao da tela.
+    if(voicePrefs.mode === "open"){ voiceToggleMute(); }
+    else { voice.held = true; voiceApply(); }
   }
 });
 
 addEventListener("keyup", (e)=>{
   const k = e.key.toLowerCase();
   mpKeys[k] = false;
-  if(k === VOICE_PTT_KEY && voice.ptt){
-    voice.ptt = false;
-    if(!voice.latched) voiceSetTransmitting(false);
+  if(k === (userKeyBindings.voice || "b") && voice.held){
+    voice.held = false;
+    voiceApply();
   }
 });
 
 addEventListener("blur", ()=>{
   for(const k in mpKeys) mpKeys[k] = false;
   mpMouseShoot = mpMousePass = false;
-  // Corta a transmissao ao sair da aba mesmo com o mic travado: ninguem quer
-  // continuar transmitindo o quarto depois de trocar de janela. O M continua
-  // travado e volta a valer quando a aba recebe foco de novo.
-  voice.ptt = false;
-  voiceSetTransmitting(false);
+  // Ninguem quer continuar transmitindo o quarto depois de trocar de janela —
+  // vale ate no modo aberto. O modo escolhido nao muda: volta ao dar foco.
+  voice.held = false;
+  voice.away = true;
+  voiceApply();
 });
 
 addEventListener("focus", ()=>{
-  if(voice.latched) voiceSetTransmitting(true);
+  voice.away = false;
+  voiceApply();
 });
 
 // ───── Wiring do modal ─────

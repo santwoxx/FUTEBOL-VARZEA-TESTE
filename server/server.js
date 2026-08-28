@@ -61,9 +61,19 @@ const server = http.createServer((req, res) => {
 
   // Wake-up do free tier: o frontend bate aqui assim que a página abre, então
   // o Render acorda enquanto o jogador ainda está no menu.
-  if (pathname === "/health") {
+  //
+  // "/" responde igual a "/health" de propósito: antes da separação a raiz
+  // servia o jogo e devolvia 200, então o health check do Render pode estar
+  // apontado para lá. Devolver 404 na raiz reprovaria todo deploy.
+  if (pathname === "/health" || pathname === "/") {
     res.writeHead(200, { ...cors, "Content-Type": "application/json", "Cache-Control": "no-store" });
-    res.end(JSON.stringify({ ok: true, rooms: rooms.size, players: clients.size, uptime: Math.round(process.uptime()) }));
+    res.end(JSON.stringify({
+      ok: true,
+      service: "creative-football-backend",   // o jogo em si vive na Vercel
+      rooms: rooms.size,
+      players: clients.size,
+      uptime: Math.round(process.uptime())
+    }));
     return;
   }
 

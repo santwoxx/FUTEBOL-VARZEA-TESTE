@@ -34,7 +34,7 @@ sair do plano free.
 | `frontend/index.html` | O jogo inteiro: Three.js, cena, HUD, lobby, netcode do cliente. |
 | `frontend/config.js` | **Único** arquivo que sabe o endereço do backend. |
 | `frontend/vercel.json` | Config de deploy da Vercel. |
-| `server/index.js` | API HTTP (`/health`, `/rooms`) + WebSocket. |
+| `server/server.js` | API HTTP (`/health`, `/rooms`) + WebSocket. |
 | `server/room.js` | Uma sala = uma partida. Matchmaking e loop de tick. |
 | `server/shared/sim.js` | Física e regras (autoritativo no servidor). |
 | `server/shared/constants.js` | Dimensões do campo, modos, formações. |

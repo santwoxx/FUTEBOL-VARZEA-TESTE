@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "node tools/dev.js",
-    "dev:server": "node --watch server/index.js",
+    "dev:server": "node --watch server/server.js",
     "dev:web": "node tools/serve-static.js",
     "postinstall": "npm --prefix server install"
   }

@@ -8,7 +8,7 @@ import { fileURLToPath } from "node:url";
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
 const procs = [
-  spawn(process.execPath, ["--watch", path.join(ROOT, "server", "index.js")], { stdio: "inherit" }),
+  spawn(process.execPath, ["--watch", path.join(ROOT, "server", "server.js")], { stdio: "inherit" }),
   spawn(process.execPath, [path.join(ROOT, "tools", "serve-static.js")], { stdio: "inherit" })
 ];
 

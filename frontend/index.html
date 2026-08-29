@@ -1186,6 +1186,111 @@ canvas{display:block;width:100%;height:100%}
 }
 #cardLevelUpModal.show { display: flex; animation: levelUpPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
 @keyframes levelUpPop { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
+
+/* ═══════════ PORTÃO DE ACESSO (LOGIN GOOGLE / BETA FECHADA) ═══════════ */
+#gateModal{
+  position:fixed;inset:0;z-index:60;
+  background:radial-gradient(circle at 50% 25%,rgba(22,12,34,0.93),rgba(4,2,8,0.97));
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  display:none;align-items:center;justify-content:center;padding:20px;overflow:auto;
+}
+#gateModal.show{display:flex}
+.gateCard{
+  width:min(94vw,470px);text-align:center;color:#fff;
+  background:linear-gradient(180deg,rgba(28,16,40,0.92),rgba(12,8,20,0.96));
+  border:1.5px solid rgba(255,215,0,0.35);border-radius:28px;
+  box-shadow:0 30px 90px rgba(0,0,0,0.9),0 0 50px rgba(255,140,0,0.2);
+  padding:30px 26px;position:relative;overflow:hidden;
+  animation:gatePop .35s cubic-bezier(0.16,1,0.3,1) both;
+}
+@keyframes gatePop{from{opacity:0;transform:translateY(14px) scale(0.96)}to{opacity:1;transform:none}}
+.gateCard::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;
+  background:linear-gradient(90deg,#00f0b8,#ffd700,#00d2ff)}
+.gateIcon{font-size:42px;line-height:1;margin-bottom:4px}
+.gateCard h2{margin:0 0 10px;font-family:'Teko',sans-serif;font-size:36px;letter-spacing:1.5px;line-height:1;
+  background:linear-gradient(135deg,#ffd700,#ff8800);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.gateText{font-size:13.5px;line-height:1.6;color:rgba(255,255,255,0.75)}
+.gateText b{color:#ffd700}
+.gateMail{
+  display:block;width:fit-content;margin:14px auto 0;padding:7px 14px;border-radius:10px;
+  background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);
+  font-size:12.5px;font-weight:800;letter-spacing:.4px;color:#8ef0c8;word-break:break-all;
+}
+.gateActions{display:flex;flex-direction:column;gap:9px;margin-top:20px}
+.gateBtn{
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  padding:13px 16px;border-radius:14px;border:0;cursor:pointer;
+  font-family:'Outfit',sans-serif;font-weight:900;font-size:13.5px;letter-spacing:1px;
+  text-transform:uppercase;transition:transform .12s,box-shadow .2s,background .2s;
+  text-decoration:none;
+}
+.gateBtn:active{transform:scale(0.97)}
+.gateBtnGoogle{background:#fff;color:#1f1f1f;box-shadow:0 8px 24px rgba(255,255,255,0.16)}
+.gateBtnGoogle:hover{background:#f1f1f1}
+.gateBtnGoogle svg{width:18px;height:18px;flex:none}
+.gateBtnPix{background:linear-gradient(135deg,#00f0b8,#008f6b);color:#041a14;box-shadow:0 8px 24px rgba(0,240,180,0.3)}
+.gateBtnGhost{background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.2)}
+.gateBtnGhost:hover{background:rgba(255,255,255,0.16)}
+
+/* Item do menu travado enquanto o jogador não tem acesso */
+.lobbyMenuItem.locked{opacity:.62}
+.lobbyMenuItem.locked .itemBadge{background:rgba(255,255,255,0.12);color:rgba(255,255,255,0.7);border-color:rgba(255,255,255,0.2)}
+.lobbyMenuItem.supportItem{border-color:rgba(0,240,184,0.3)}
+.lobbyMenuItem.supportItem .itemBadge{background:rgba(0,240,184,0.16);color:#8ef0c8;border-color:rgba(0,240,184,0.4)}
+
+/* ═══════════ APOIE O JOGO — LIVEPIX ═══════════ */
+#donateModal{
+  position:fixed;inset:0;z-index:61;
+  background:linear-gradient(180deg,rgba(10,6,16,0.93),rgba(6,4,10,0.97));
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  display:none;align-items:center;justify-content:center;padding:20px;overflow:auto;
+}
+#donateModal.show{display:flex}
+.donateCard{
+  width:min(94vw,560px);color:#fff;
+  background:linear-gradient(180deg,rgba(28,16,40,0.86),rgba(12,8,20,0.94));
+  border:1.5px solid rgba(0,240,184,0.35);border-radius:28px;
+  box-shadow:0 30px 90px rgba(0,0,0,0.9),0 0 50px rgba(0,240,184,0.18);
+  padding:24px;position:relative;overflow:hidden;
+  animation:gatePop .35s cubic-bezier(0.16,1,0.3,1) both;
+}
+.donateCard::before{content:"";position:absolute;top:0;left:0;right:0;height:4px;
+  background:linear-gradient(90deg,#00f0b8,#ffd700,#00d2ff)}
+.donateHeader{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:4px}
+.donateHeader h2{margin:0;font-family:'Teko',sans-serif;font-size:34px;letter-spacing:1.5px;line-height:1;
+  background:linear-gradient(135deg,#00f0b8,#ffd700);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.donateTag{font-size:10px;font-weight:900;letter-spacing:2.5px;color:#8ef0c8;text-transform:uppercase;margin-bottom:14px}
+.donateIntro{font-size:13px;line-height:1.6;color:rgba(255,255,255,0.72);margin-bottom:16px}
+.donateIntro b{color:#ffd700}
+.donateBox{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);
+  border-radius:18px;padding:12px}
+.donateLabel{font-size:10px;font-weight:900;letter-spacing:2px;color:rgba(255,255,255,0.5);
+  text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:7px}
+.donateLive{width:7px;height:7px;border-radius:50%;background:#ff3b3b;flex:none;
+  box-shadow:0 0 0 0 rgba(255,59,59,0.7);animation:donatePulse 1.8s infinite}
+@keyframes donatePulse{
+  70%{box-shadow:0 0 0 7px rgba(255,59,59,0)}
+  100%{box-shadow:0 0 0 0 rgba(255,59,59,0)}
+}
+/* A meta do LivePix é feita para overlay de OBS: texto branco sobre fundo
+   transparente. Por isso ela fica direto no escuro do card — numa placa clara
+   o texto sumiria. */
+.donateGoalBox iframe{width:100%;border:0;display:block;background:transparent}
+.donateGrid{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:stretch;margin-top:12px}
+/* O QR é SVG gerado aqui dentro: aparece na hora, sem depender de widget de
+   terceiro carregar. Fundo branco porque leitor de QR precisa de contraste. */
+.donateQrPlate{background:#fff;border-radius:12px;padding:8px;width:150px}
+.donateQrSvg{width:100%;height:auto;display:block}
+.donateSide{display:flex;flex-direction:column;justify-content:center;gap:10px}
+.donateSide .gateBtn{width:100%;box-sizing:border-box}
+.donateHandle{display:block;text-align:center;font-size:12px;font-weight:800;
+  letter-spacing:.5px;color:rgba(255,255,255,0.55)}
+.donateHandle b{color:#8ef0c8}
+@media (max-width:560px){
+  .donateGrid{grid-template-columns:1fr;justify-items:center}
+  .donateCard{padding:20px 16px}
+  .donateSide{width:100%}
+}
 </style>
 </head>
 <body>
@@ -1252,6 +1357,12 @@ canvas{display:block;width:100%;height:100%}
         <span class="itemIcon">⚙️</span>
         <span class="itemText">SISTEMA</span>
         <span class="itemBadge">CONTROLES</span>
+      </button>
+
+      <button class="lobbyMenuItem supportItem" id="btnOpenDonate">
+        <span class="itemIcon">💚</span>
+        <span class="itemText">APOIAR O JOGO</span>
+        <span class="itemBadge">PIX • DOAÇÃO</span>
       </button>
     </div>
   </div>
@@ -1774,10 +1885,58 @@ canvas{display:block;width:100%;height:100%}
   </div>
 </div>
 
+<!-- ═══════════ PORTÃO DE ACESSO (LOGIN GOOGLE / BETA FECHADA) ═══════════ -->
+<div id="gateModal">
+  <div class="gateCard">
+    <div class="gateIcon" id="gateIcon">🔒</div>
+    <h2 id="gateTitle">ENTRE PARA JOGAR</h2>
+    <div class="gateText" id="gateText"></div>
+    <div class="gateActions" id="gateActions"></div>
+  </div>
+</div>
+
+<!-- ═══════════ APOIE O JOGO (LIVEPIX) ═══════════ -->
+<div id="donateModal">
+  <div class="donateCard">
+    <div class="donateHeader">
+      <h2>APOIAR O JOGO</h2>
+      <button class="mpBtnBack" id="donateClose">✕</button>
+    </div>
+    <div class="donateTag">LIVEPIX • PIX NA HORA</div>
+
+    <div class="donateIntro">
+      O CREATIVE FOOTBALL é feito de forma independente e roda em servidor pago.
+      Qualquer valor ajuda a manter o multiplayer no ar e a
+      <b>abrir a beta</b> para todo mundo.
+    </div>
+
+    <div class="donateBox donateGoalBox">
+      <div class="donateLabel"><span class="donateLive"></span>META DE ARRECADAÇÃO • AO VIVO</div>
+      <iframe id="donateGoal" data-src="https://widget.livepix.gg/embed/caf82fda-5849-4ce8-bef3-3b536f29f55a"
+              height="150" title="Meta de doações do LivePix" loading="lazy" scrolling="no"></iframe>
+    </div>
+
+    <div class="donateGrid">
+      <div class="donateBox">
+        <div class="donateLabel">APONTE A CÂMERA</div>
+        <div class="donateQrPlate"><svg class="donateQrSvg" viewBox="0 0 37 37" role="img" aria-label="QR Code para doar em livepix.gg/sofia1227bb" shape-rendering="crispEdges"><rect width="37" height="37" fill="#ffffff"/><path transform="translate(4 4)" fill="#0a0a0a" d="M0 0h1v1h-1zM1 0h1v1h-1zM2 0h1v1h-1zM3 0h1v1h-1zM4 0h1v1h-1zM5 0h1v1h-1zM6 0h1v1h-1zM8 0h1v1h-1zM10 0h1v1h-1zM11 0h1v1h-1zM12 0h1v1h-1zM13 0h1v1h-1zM14 0h1v1h-1zM15 0h1v1h-1zM17 0h1v1h-1zM18 0h1v1h-1zM19 0h1v1h-1zM20 0h1v1h-1zM22 0h1v1h-1zM23 0h1v1h-1zM24 0h1v1h-1zM25 0h1v1h-1zM26 0h1v1h-1zM27 0h1v1h-1zM28 0h1v1h-1zM0 1h1v1h-1zM6 1h1v1h-1zM8 1h1v1h-1zM10 1h1v1h-1zM11 1h1v1h-1zM13 1h1v1h-1zM16 1h1v1h-1zM17 1h1v1h-1zM20 1h1v1h-1zM22 1h1v1h-1zM28 1h1v1h-1zM0 2h1v1h-1zM2 2h1v1h-1zM3 2h1v1h-1zM4 2h1v1h-1zM6 2h1v1h-1zM10 2h1v1h-1zM11 2h1v1h-1zM12 2h1v1h-1zM16 2h1v1h-1zM18 2h1v1h-1zM20 2h1v1h-1zM22 2h1v1h-1zM24 2h1v1h-1zM25 2h1v1h-1zM26 2h1v1h-1zM28 2h1v1h-1zM0 3h1v1h-1zM2 3h1v1h-1zM3 3h1v1h-1zM4 3h1v1h-1zM6 3h1v1h-1zM8 3h1v1h-1zM11 3h1v1h-1zM14 3h1v1h-1zM15 3h1v1h-1zM17 3h1v1h-1zM22 3h1v1h-1zM24 3h1v1h-1zM25 3h1v1h-1zM26 3h1v1h-1zM28 3h1v1h-1zM0 4h1v1h-1zM2 4h1v1h-1zM3 4h1v1h-1zM4 4h1v1h-1zM6 4h1v1h-1zM9 4h1v1h-1zM14 4h1v1h-1zM16 4h1v1h-1zM17 4h1v1h-1zM19 4h1v1h-1zM22 4h1v1h-1zM24 4h1v1h-1zM25 4h1v1h-1zM26 4h1v1h-1zM28 4h1v1h-1zM0 5h1v1h-1zM6 5h1v1h-1zM13 5h1v1h-1zM15 5h1v1h-1zM16 5h1v1h-1zM19 5h1v1h-1zM20 5h1v1h-1zM22 5h1v1h-1zM28 5h1v1h-1zM0 6h1v1h-1zM1 6h1v1h-1zM2 6h1v1h-1zM3 6h1v1h-1zM4 6h1v1h-1zM5 6h1v1h-1zM6 6h1v1h-1zM8 6h1v1h-1zM10 6h1v1h-1zM12 6h1v1h-1zM14 6h1v1h-1zM16 6h1v1h-1zM18 6h1v1h-1zM20 6h1v1h-1zM22 6h1v1h-1zM23 6h1v1h-1zM24 6h1v1h-1zM25 6h1v1h-1zM26 6h1v1h-1zM27 6h1v1h-1zM28 6h1v1h-1zM8 7h1v1h-1zM9 7h1v1h-1zM15 7h1v1h-1zM16 7h1v1h-1zM17 7h1v1h-1zM18 7h1v1h-1zM19 7h1v1h-1zM0 8h1v1h-1zM2 8h1v1h-1zM3 8h1v1h-1zM5 8h1v1h-1zM6 8h1v1h-1zM7 8h1v1h-1zM10 8h1v1h-1zM11 8h1v1h-1zM12 8h1v1h-1zM13 8h1v1h-1zM15 8h1v1h-1zM17 8h1v1h-1zM22 8h1v1h-1zM25 8h1v1h-1zM27 8h1v1h-1zM28 8h1v1h-1zM0 9h1v1h-1zM1 9h1v1h-1zM3 9h1v1h-1zM7 9h1v1h-1zM8 9h1v1h-1zM10 9h1v1h-1zM12 9h1v1h-1zM13 9h1v1h-1zM14 9h1v1h-1zM15 9h1v1h-1zM19 9h1v1h-1zM20 9h1v1h-1zM22 9h1v1h-1zM23 9h1v1h-1zM24 9h1v1h-1zM28 9h1v1h-1zM0 10h1v1h-1zM1 10h1v1h-1zM4 10h1v1h-1zM5 10h1v1h-1zM6 10h1v1h-1zM8 10h1v1h-1zM9 10h1v1h-1zM12 10h1v1h-1zM13 10h1v1h-1zM16 10h1v1h-1zM17 10h1v1h-1zM26 10h1v1h-1zM27 10h1v1h-1zM1 11h1v1h-1zM4 11h1v1h-1zM5 11h1v1h-1zM7 11h1v1h-1zM9 11h1v1h-1zM10 11h1v1h-1zM11 11h1v1h-1zM16 11h1v1h-1zM18 11h1v1h-1zM22 11h1v1h-1zM23 11h1v1h-1zM28 11h1v1h-1zM0 12h1v1h-1zM1 12h1v1h-1zM3 12h1v1h-1zM6 12h1v1h-1zM7 12h1v1h-1zM10 12h1v1h-1zM14 12h1v1h-1zM15 12h1v1h-1zM17 12h1v1h-1zM18 12h1v1h-1zM20 12h1v1h-1zM25 12h1v1h-1zM26 12h1v1h-1zM1 13h1v1h-1zM2 13h1v1h-1zM3 13h1v1h-1zM4 13h1v1h-1zM5 13h1v1h-1zM7 13h1v1h-1zM8 13h1v1h-1zM9 13h1v1h-1zM12 13h1v1h-1zM14 13h1v1h-1zM16 13h1v1h-1zM17 13h1v1h-1zM18 13h1v1h-1zM19 13h1v1h-1zM22 13h1v1h-1zM26 13h1v1h-1zM27 13h1v1h-1zM28 13h1v1h-1zM0 14h1v1h-1zM2 14h1v1h-1zM3 14h1v1h-1zM4 14h1v1h-1zM5 14h1v1h-1zM6 14h1v1h-1zM9 14h1v1h-1zM10 14h1v1h-1zM13 14h1v1h-1zM15 14h1v1h-1zM16 14h1v1h-1zM17 14h1v1h-1zM19 14h1v1h-1zM20 14h1v1h-1zM24 14h1v1h-1zM26 14h1v1h-1zM27 14h1v1h-1zM28 14h1v1h-1zM0 15h1v1h-1zM1 15h1v1h-1zM2 15h1v1h-1zM8 15h1v1h-1zM9 15h1v1h-1zM11 15h1v1h-1zM14 15h1v1h-1zM16 15h1v1h-1zM18 15h1v1h-1zM19 15h1v1h-1zM20 15h1v1h-1zM23 15h1v1h-1zM24 15h1v1h-1zM27 15h1v1h-1zM0 16h1v1h-1zM4 16h1v1h-1zM5 16h1v1h-1zM6 16h1v1h-1zM11 16h1v1h-1zM12 16h1v1h-1zM14 16h1v1h-1zM15 16h1v1h-1zM16 16h1v1h-1zM19 16h1v1h-1zM20 16h1v1h-1zM21 16h1v1h-1zM24 16h1v1h-1zM25 16h1v1h-1zM27 16h1v1h-1zM1 17h1v1h-1zM3 17h1v1h-1zM7 17h1v1h-1zM8 17h1v1h-1zM10 17h1v1h-1zM14 17h1v1h-1zM16 17h1v1h-1zM18 17h1v1h-1zM21 17h1v1h-1zM23 17h1v1h-1zM25 17h1v1h-1zM26 17h1v1h-1zM27 17h1v1h-1zM0 18h1v1h-1zM2 18h1v1h-1zM3 18h1v1h-1zM4 18h1v1h-1zM6 18h1v1h-1zM8 18h1v1h-1zM9 18h1v1h-1zM10 18h1v1h-1zM13 18h1v1h-1zM14 18h1v1h-1zM15 18h1v1h-1zM16 18h1v1h-1zM17 18h1v1h-1zM18 18h1v1h-1zM20 18h1v1h-1zM21 18h1v1h-1zM22 18h1v1h-1zM23 18h1v1h-1zM24 18h1v1h-1zM26 18h1v1h-1zM2 19h1v1h-1zM4 19h1v1h-1zM5 19h1v1h-1zM8 19h1v1h-1zM9 19h1v1h-1zM11 19h1v1h-1zM12 19h1v1h-1zM13 19h1v1h-1zM14 19h1v1h-1zM17 19h1v1h-1zM19 19h1v1h-1zM23 19h1v1h-1zM24 19h1v1h-1zM26 19h1v1h-1zM1 20h1v1h-1zM3 20h1v1h-1zM4 20h1v1h-1zM5 20h1v1h-1zM6 20h1v1h-1zM9 20h1v1h-1zM10 20h1v1h-1zM11 20h1v1h-1zM13 20h1v1h-1zM14 20h1v1h-1zM16 20h1v1h-1zM17 20h1v1h-1zM19 20h1v1h-1zM20 20h1v1h-1zM21 20h1v1h-1zM22 20h1v1h-1zM23 20h1v1h-1zM24 20h1v1h-1zM25 20h1v1h-1zM26 20h1v1h-1zM8 21h1v1h-1zM9 21h1v1h-1zM10 21h1v1h-1zM11 21h1v1h-1zM12 21h1v1h-1zM15 21h1v1h-1zM16 21h1v1h-1zM20 21h1v1h-1zM24 21h1v1h-1zM25 21h1v1h-1zM26 21h1v1h-1zM27 21h1v1h-1zM28 21h1v1h-1zM0 22h1v1h-1zM1 22h1v1h-1zM2 22h1v1h-1zM3 22h1v1h-1zM4 22h1v1h-1zM5 22h1v1h-1zM6 22h1v1h-1zM8 22h1v1h-1zM9 22h1v1h-1zM10 22h1v1h-1zM12 22h1v1h-1zM14 22h1v1h-1zM15 22h1v1h-1zM18 22h1v1h-1zM19 22h1v1h-1zM20 22h1v1h-1zM22 22h1v1h-1zM24 22h1v1h-1zM25 22h1v1h-1zM27 22h1v1h-1zM0 23h1v1h-1zM6 23h1v1h-1zM8 23h1v1h-1zM9 23h1v1h-1zM10 23h1v1h-1zM11 23h1v1h-1zM12 23h1v1h-1zM13 23h1v1h-1zM14 23h1v1h-1zM15 23h1v1h-1zM18 23h1v1h-1zM20 23h1v1h-1zM24 23h1v1h-1zM25 23h1v1h-1zM0 24h1v1h-1zM2 24h1v1h-1zM3 24h1v1h-1zM4 24h1v1h-1zM6 24h1v1h-1zM9 24h1v1h-1zM10 24h1v1h-1zM12 24h1v1h-1zM17 24h1v1h-1zM20 24h1v1h-1zM21 24h1v1h-1zM22 24h1v1h-1zM23 24h1v1h-1zM24 24h1v1h-1zM26 24h1v1h-1zM28 24h1v1h-1zM0 25h1v1h-1zM2 25h1v1h-1zM3 25h1v1h-1zM4 25h1v1h-1zM6 25h1v1h-1zM8 25h1v1h-1zM9 25h1v1h-1zM10 25h1v1h-1zM17 25h1v1h-1zM19 25h1v1h-1zM23 25h1v1h-1zM24 25h1v1h-1zM25 25h1v1h-1zM27 25h1v1h-1zM0 26h1v1h-1zM2 26h1v1h-1zM3 26h1v1h-1zM4 26h1v1h-1zM6 26h1v1h-1zM8 26h1v1h-1zM9 26h1v1h-1zM10 26h1v1h-1zM11 26h1v1h-1zM16 26h1v1h-1zM17 26h1v1h-1zM23 26h1v1h-1zM26 26h1v1h-1zM28 26h1v1h-1zM0 27h1v1h-1zM6 27h1v1h-1zM10 27h1v1h-1zM11 27h1v1h-1zM13 27h1v1h-1zM14 27h1v1h-1zM18 27h1v1h-1zM20 27h1v1h-1zM22 27h1v1h-1zM24 27h1v1h-1zM25 27h1v1h-1zM27 27h1v1h-1zM0 28h1v1h-1zM1 28h1v1h-1zM2 28h1v1h-1zM3 28h1v1h-1zM4 28h1v1h-1zM5 28h1v1h-1zM6 28h1v1h-1zM8 28h1v1h-1zM9 28h1v1h-1zM10 28h1v1h-1zM11 28h1v1h-1zM13 28h1v1h-1zM18 28h1v1h-1zM19 28h1v1h-1zM20 28h1v1h-1zM22 28h1v1h-1zM24 28h1v1h-1zM27 28h1v1h-1z"/></svg></div>
+      </div>
+      <div class="donateBox donateSide">
+        <a class="gateBtn gateBtnPix" id="donateOpenPage"
+           href="https://livepix.gg/sofia1227bb" target="_blank" rel="noopener noreferrer">
+          ⚡ ABRIR PÁGINA DE DOAÇÃO
+        </a>
+        <span class="donateHandle">livepix.gg/<b>sofia1227bb</b></span>
+        <span class="donateHandle" style="opacity:.75">Pix na hora, qualquer valor.<br>Obrigado por segurar o jogo! 💚</span>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script type="module">
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.179.1/build/three.module.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, onIdTokenChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -1795,6 +1954,67 @@ const fbDb = getFirestore(firebaseApp);
 window.firebaseUser = null;
 window.firebaseUid = null;
 
+/* ═══════════════ PORTA DE ENTRADA: LOGIN GOOGLE + BETA FECHADA ═══════════════
+
+   Jogar (qualquer modo) exige login com o Google.
+   Jogar ONLINE exige mais: o e-mail precisa estar na lista da beta.
+
+   Quem decide de verdade quem entra no online são duas travas fora do
+   navegador — e as duas precisam ter a mesma lista:
+     · firestore.rules  → só quem está na lista consegue LER betaAccess/{uid};
+     · MP_ALLOWED_EMAILS no servidor → confere o ID token do Google antes de
+       deixar criar ou entrar em sala.
+   O que existe aqui é a vitrine: serve para o jogador entender por que o botão
+   está trancado. DevTools passa por cima disto, mas não passa pelas duas
+   travas de cima.
+
+   reason: "allowed" | "login" (não logado / sessão vencida)
+         | "beta" (logado, fora da lista) | "offline" (não deu para conferir)   */
+window.mpAccess = { checked: false, allowed: false, reason: "login", uid: null };
+window.fbIdToken = null;
+
+const GOOGLE_G = '<svg viewBox="0 0 48 48" aria-hidden="true">' +
+  '<path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9 3.6l6.7-6.7C35.6 2.6 30.2 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.8 6.1C12.3 13.2 17.7 9.5 24 9.5z"/>' +
+  '<path fill="#4285F4" d="M46.1 24.6c0-1.6-.1-3.1-.4-4.6H24v9.1h12.4c-.5 2.9-2.2 5.3-4.7 6.9l7.6 5.9c4.4-4.1 6.8-10.1 6.8-17.3z"/>' +
+  '<path fill="#FBBC05" d="M10.4 28.7c-.5-1.4-.8-2.9-.8-4.7s.3-3.3.8-4.7l-7.8-6.1C.9 16.5 0 20.1 0 24s.9 7.5 2.6 10.8l7.8-6.1z"/>' +
+  '<path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.6-5.9c-2.1 1.4-4.8 2.3-8.3 2.3-6.3 0-11.7-3.7-13.6-9.1l-7.8 6.1C6.5 42.6 14.6 48 24 48z"/></svg>';
+
+// O ID token é o que o servidor confere. Vale ~1h; o onIdTokenChanged renova
+// sozinho, mas antes de conectar a gente pede um fresco por garantia.
+async function refreshIdToken() {
+  try {
+    window.fbIdToken = fbAuth.currentUser ? await fbAuth.currentUser.getIdToken() : null;
+  } catch (e) {
+    console.warn("Não foi possível renovar o token do Google:", e);
+    window.fbIdToken = null;
+  }
+  return window.fbIdToken;
+}
+onIdTokenChanged(fbAuth, () => { refreshIdToken(); });
+
+// Pergunta ao Firestore se este jogador está na beta. O conteúdo do documento
+// não importa (ele nem precisa existir): quem responde é a PERMISSÃO de
+// leitura escrita em firestore.rules. Fora da lista = permission-denied.
+async function checkMpAccess(force) {
+  const uid = window.firebaseUid;
+  if (!uid) {
+    window.mpAccess = { checked: true, allowed: false, reason: "login", uid: null };
+    return window.mpAccess;
+  }
+  if (!force && window.mpAccess.checked && window.mpAccess.uid === uid) return window.mpAccess;
+  try {
+    await getDoc(doc(fbDb, "betaAccess", uid));
+    window.mpAccess = { checked: true, allowed: true, reason: "allowed", uid };
+  } catch (e) {
+    const denied = e?.code === "permission-denied";
+    // Firestore fora do ar não é motivo para barrar ninguém: deixa seguir e o
+    // servidor — que é a trava real — dá a palavra final ao criar a sala.
+    if (!denied) console.warn("Não deu para conferir o acesso à beta:", e);
+    window.mpAccess = { checked: true, allowed: !denied, reason: denied ? "beta" : "offline", uid };
+  }
+  return window.mpAccess;
+}
+
 const btnAuth = document.getElementById("btnAuth");
 const authName = document.getElementById("authName");
 const authAvatar = document.getElementById("authAvatar");
@@ -1803,16 +2023,27 @@ btnAuth.addEventListener("click", () => {
   if (window.firebaseUser) {
     if (typeof openProfileModal === "function") openProfileModal();
   } else {
-    const provider = new GoogleAuthProvider();
-    signInWithPopup(fbAuth, provider).catch(e => {
-      console.error(e);
-      if (e?.code === "auth/unauthorized-domain") {
-        alert(`Login bloqueado: o domínio "${location.hostname}" não está autorizado no Firebase.\n\n` +
-              `Console do Firebase > Authentication > Settings > Authorized domains > Add domain`);
-      }
-    });
+    googleLogin();
   }
 });
+
+function googleLogin() {
+  const provider = new GoogleAuthProvider();
+  return signInWithPopup(fbAuth, provider).catch(e => {
+    // Fechar a janela do Google no meio é escolha do jogador, não erro.
+    if (e?.code === "auth/popup-closed-by-user" || e?.code === "auth/cancelled-popup-request") return;
+    if (e?.code === "auth/popup-blocked") {
+      alert("O navegador bloqueou a janela do Google. Libere os pop-ups deste site e tente de novo.");
+      return;
+    }
+    console.error(e);
+    if (e?.code === "auth/unauthorized-domain") {
+      alert(`Login bloqueado: o domínio "${location.hostname}" não está autorizado no Firebase.\n\n` +
+            `Console do Firebase > Authentication > Settings > Authorized domains > Add domain`);
+    }
+  });
+}
+window.googleLogin = googleLogin;
 
 onAuthStateChanged(fbAuth, async (user) => {
   window.firebaseUser = user;
@@ -1821,13 +2052,20 @@ onAuthStateChanged(fbAuth, async (user) => {
     authAvatar.innerHTML = user.photoURL ? `<img src="${user.photoURL}" style="width:20px;height:20px;border-radius:50%">` : "✅";
     btnAuth.title = "Clique para abrir seu Perfil";
     await loadFirebaseConfig();
+    await refreshIdToken();
+    await checkMpAccess(true);
   } else {
     window.firebaseUid = null;
     authAvatar.innerHTML = "👤";
     btnAuth.title = "Entrar com Google";
+    window.fbIdToken = null;
+    window.mpAccess = { checked: true, allowed: false, reason: "login", uid: null };
     loadLocalConfig();
   }
   if (typeof updateTopBarProfileChip === "function") updateTopBarProfileChip();
+  if (typeof updateLobbyAccessUI === "function") updateLobbyAccessUI();
+  // Entrou agora: fecha o portão e retoma o que o jogador tinha clicado.
+  if (user && typeof runAfterLogin === "function") runAfterLogin();
 });
 
 async function loadFirebaseConfig() {
@@ -1888,6 +2126,134 @@ function loadLocalConfig() {
   if(typeof setupCustomizerUI === "function") setupCustomizerUI();
   if(typeof applyPlayerCustomization === "function") applyPlayerCustomization();
   if(typeof updateTopBarProfileChip === "function") updateTopBarProfileChip();
+}
+
+/* ═══════════════ PORTÃO DE ACESSO E PAINEL DE APOIO ═══════════════
+
+   Um modal só, com conteúdo trocado por JS: pedir login, avisar que o online
+   está em beta fechada e avisar que a sessão venceu são a mesma tela com
+   textos diferentes.                                                        */
+
+// O que o jogador clicou antes de cair no portão. Depois que ele entra com o
+// Google, isso roda sozinho — ninguém precisa clicar em JOGAR duas vezes.
+let gatePendingAction = null;
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+}
+
+function showGate({ icon = "🔒", title = "", html = "", buttons = [] }){
+  const modal = document.getElementById("gateModal");
+  if(!modal) return;
+  document.getElementById("gateIcon").textContent = icon;
+  document.getElementById("gateTitle").textContent = title;
+  document.getElementById("gateText").innerHTML = html;
+  const actions = document.getElementById("gateActions");
+  actions.innerHTML = "";
+  for(const b of buttons){
+    const el = document.createElement("button");
+    el.className = "gateBtn " + (b.cls || "gateBtnGhost");
+    el.innerHTML = b.label;
+    el.addEventListener("click", () => { hideGate(); if(b.onClick) b.onClick(); });
+    actions.appendChild(el);
+  }
+  modal.classList.add("show");
+}
+
+function hideGate(){
+  const m = document.getElementById("gateModal");
+  if(m) m.classList.remove("show");
+}
+
+function runAfterLogin(){
+  hideGate();
+  const pending = gatePendingAction;
+  gatePendingAction = null;
+  // Um respiro para o avatar e o perfil da nuvem aparecerem antes da partida.
+  if(pending) setTimeout(pending, 80);
+}
+
+// Devolve true quando pode seguir. Quando não pode, abre o portão e guarda a
+// ação para retomar depois do login.
+function requireLogin(what, after){
+  if(window.firebaseUser) return true;
+  gatePendingAction = after || null;
+  showGate({
+    icon: "🎮",
+    title: "ENTRE PARA JOGAR",
+    html: "O CREATIVE FOOTBALL está em fase de testes e só roda com login. Entre com o Google para " +
+          escapeHtml(what || "jogar") + " — leva um clique, e seu <b>perfil, cartas e gols</b> " +
+          "ficam salvos na nuvem.",
+    buttons: [
+      { label: GOOGLE_G + "<span>ENTRAR COM O GOOGLE</span>", cls: "gateBtnGoogle", onClick: googleLogin },
+      { label: "AGORA NÃO", cls: "gateBtnGhost", onClick: () => { gatePendingAction = null; } }
+    ]
+  });
+  return false;
+}
+
+function showAccessGate(reason){
+  if(reason === "beta"){
+    const email = (window.firebaseUser && window.firebaseUser.email) || "";
+    showGate({
+      icon: "🚧",
+      title: "MULTIPLAYER EM BETA FECHADA",
+      html: "O online ainda está em teste: por enquanto entra só quem está na lista de convidados. " +
+            "<b>Partida rápida, treino e vestiário seguem liberados</b> para todo mundo." +
+            (email ? '<div class="gateMail">' + escapeHtml(email) + "</div>" : ""),
+      buttons: [
+        { label: "💚 APOIAR O JOGO (PIX)", cls: "gateBtnPix", onClick: openDonateModal },
+        { label: "ENTENDI, VOLTAR", cls: "gateBtnGhost" }
+      ]
+    });
+    return;
+  }
+  // "login": nunca entrou, ou o token do Google venceu no meio da sessão.
+  gatePendingAction = null;
+  showGate({
+    icon: "🔐",
+    title: "ENTRE DE NOVO",
+    html: "Sua sessão do Google expirou. Entre outra vez para voltar ao multiplayer.",
+    buttons: [
+      { label: GOOGLE_G + "<span>ENTRAR COM O GOOGLE</span>", cls: "gateBtnGoogle", onClick: googleLogin },
+      { label: "FECHAR", cls: "gateBtnGhost" }
+    ]
+  });
+}
+
+// Deixa o menu do lobby contando a verdade: o que está trancado e por quê.
+function updateLobbyAccessUI(){
+  const logged = !!window.firebaseUser;
+  for(const id of ["btnPlayMatch", "btnPlayTraining"]){
+    const b = document.getElementById(id);
+    if(b) b.classList.toggle("locked", !logged);
+  }
+  const mp = document.getElementById("btnPlayRanked");
+  const badge = document.getElementById("mpOnlineBadge");
+  if(!mp || !badge) return;
+  const blocked = !logged || (window.mpAccess.checked && !window.mpAccess.allowed);
+  mp.classList.toggle("locked", blocked);
+  badge.textContent = !logged ? "ENTRE COM O GOOGLE"
+    : blocked ? "🔒 BETA FECHADA"
+    : "CRIAR / ENTRAR";
+}
+
+/* ─────────────── APOIE O JOGO (LIVEPIX) ─────────────── */
+
+function openDonateModal(){
+  const m = document.getElementById("donateModal");
+  if(!m) return;
+  // Os widgets só carregam quando alguém abre o painel: quem só quer jogar não
+  // paga o custo de rede de dois iframes de terceiro.
+  m.querySelectorAll("iframe[data-src]").forEach(f => {
+    if(!f.getAttribute("src")) f.setAttribute("src", f.dataset.src);
+  });
+  m.classList.add("show");
+}
+
+function closeDonateModal(){
+  const m = document.getElementById("donateModal");
+  if(m) m.classList.remove("show");
 }
 
 /* ═══════════════ ÁUDIO PROCEDURAL (WEB AUDIO API) ═══════════════ */
@@ -8741,13 +9107,19 @@ addEventListener("keyup", e=>{
 
 // Botões do Menu Principal e Vestiário
 const btnPlayMatch = $("#btnPlayMatch");
-if(btnPlayMatch) btnPlayMatch.addEventListener("click", startMatchMode);
+if(btnPlayMatch) btnPlayMatch.addEventListener("click", ()=>{
+  if(!requireLogin("entrar em campo", startMatchMode)) return;
+  startMatchMode();
+});
 
 const btnPlayRanked = $("#btnPlayRanked");
 if(btnPlayRanked) btnPlayRanked.addEventListener("click", openMultiplayerLobby);
 
 const btnPlayTraining = $("#btnPlayTraining");
-if(btnPlayTraining) btnPlayTraining.addEventListener("click", startTrainingMode);
+if(btnPlayTraining) btnPlayTraining.addEventListener("click", ()=>{
+  if(!requireLogin("treinar", startTrainingMode)) return;
+  startTrainingMode();
+});
 
 const btnOpenCustomizer = $("#btnOpenCustomizer");
 if(btnOpenCustomizer) btnOpenCustomizer.addEventListener("click", openCustomizerStudio);
@@ -8943,7 +9315,15 @@ function mpBackendHttp(){
   return window.CF_CONFIG ? CF_CONFIG.httpUrl() : `http://${location.hostname}:8080`;
 }
 
-function openMultiplayerLobby(){
+async function openMultiplayerLobby(){
+  // Duas portas antes de gastar um socket: estar logado e estar na beta.
+  // Nenhuma das duas segura de verdade (o servidor é quem confere o token) —
+  // elas só evitam mandar o jogador para uma tela que vai recusá-lo.
+  if(!requireLogin("jogar o multiplayer online", openMultiplayerLobby)) return;
+  const acc = await checkMpAccess();
+  updateLobbyAccessUI();
+  if(!acc.allowed){ showAccessGate(acc.reason); return; }
+
   running = false; over = false;
   gameMode = "menu";              // mantém o personagem do lobby visível atrás do modal
   stopMouseControl();
@@ -8951,6 +9331,8 @@ function openMultiplayerLobby(){
   const srv = document.querySelector("#mpServer");
   if(srv && !srv.value){ srv.value = mpDefaultServerUrl(); }
   voiceRefreshMicButton();
+  mpSetStatus("Conferindo seu acesso...");
+  await refreshIdToken();         // o servidor recusa token vencido
   mpConnect();
 }
 
@@ -8988,6 +9370,7 @@ function mpConnect(){
       name,
       customConfig: playerCustomConfig,
       uid: window.firebaseUid,
+      idToken: window.fbIdToken,
       mpGoals: playerStats.mpGoals || 0,
       cardTier: getCardTier(playerStats.mpGoals).id
     });
@@ -9017,6 +9400,21 @@ function mpHandle(msg){
   if(!msg || !msg.t) return;
   switch(msg.t){
     case S2C.WELCOME: mp.clientId = msg.d.id; break;
+    case S2C.AUTH: {
+      // Palavra final sobre quem pode jogar online: o servidor conferiu o token
+      // do Google contra as chaves públicas e a lista de e-mails liberados.
+      const ok = !!(msg.d && msg.d.ok);
+      window.mpAccess = {
+        checked: true, allowed: ok, uid: window.firebaseUid,
+        reason: ok ? "allowed" : ((msg.d && msg.d.reason) || "login")
+      };
+      updateLobbyAccessUI();
+      if(!ok && $("#multiplayerLobby").classList.contains("show")){
+        closeMultiplayerLobby();
+        showAccessGate(window.mpAccess.reason);
+      }
+      break;
+    }
     case S2C.ROOM_CREATED:
       mp.roomId = msg.d.id;
       mpSetStatus(`Sala ${msg.d.mode.toUpperCase()} criada — aguardando jogadores (${msg.d.players}/${msg.d.capacity}).`);
@@ -9090,9 +9488,19 @@ function mpHandle(msg){
     case S2C.VOICE_TOKEN:
       voiceConnect(msg.d);
       break;
-    case S2C.ERROR:
-      mpSetStatus("Erro: " + (msg.d && msg.d.message ? msg.d.message : "desconhecido"), "error");
+    case S2C.ERROR: {
+      const err = msg.d || {};
+      // Recusa da porta da beta tem tela própria; o resto vira aviso no lobby.
+      if(err.code === "beta" || err.code === "login"){
+        window.mpAccess = { checked: true, allowed: false, reason: err.code, uid: window.firebaseUid };
+        updateLobbyAccessUI();
+        closeMultiplayerLobby();
+        showAccessGate(err.code);
+      } else {
+        mpSetStatus("Erro: " + (err.message || "desconhecido"), "error");
+      }
       break;
+    }
   }
 }
 
@@ -9143,7 +9551,7 @@ function mpListRooms(){
 function mpCreateRoom(mode){
   const name = (document.querySelector("#mpName").value || "CRIA").slice(0,14);
   if(!mp.connected){ mpSetStatus("Conectando ao servidor primeiro...", "error"); mpConnect(); return; }
-  mpSend(C2S.HELLO, { name, customConfig: playerCustomConfig, uid: window.firebaseUid });
+  mpSend(C2S.HELLO, { name, customConfig: playerCustomConfig, uid: window.firebaseUid, idToken: window.fbIdToken });
   mpSend(C2S.CREATE_ROOM, { mode });
   mpSetStatus(`Criando sala ${mode.toUpperCase()}...`);
 }
@@ -9151,7 +9559,7 @@ function mpCreateRoom(mode){
 function mpJoinRoom(id){
   const name = (document.querySelector("#mpName").value || "CRIA").slice(0,14);
   if(!mp.connected){ mpSetStatus("Conectando ao servidor primeiro...", "error"); mpConnect(); return; }
-  mpSend(C2S.HELLO, { name, customConfig: playerCustomConfig, uid: window.firebaseUid });
+  mpSend(C2S.HELLO, { name, customConfig: playerCustomConfig, uid: window.firebaseUid, idToken: window.fbIdToken });
   mpSend(C2S.JOIN_ROOM, { id });
 }
 
@@ -10096,6 +10504,44 @@ document.querySelectorAll(".mpModeBtn").forEach(btn => {
     btn.classList.add("selected");
   });
 });
+
+// ───── Wiring do portão de acesso e do painel de apoio (LivePix) ─────
+const btnOpenDonate = $("#btnOpenDonate");
+if(btnOpenDonate) btnOpenDonate.addEventListener("click", openDonateModal);
+
+const donateCloseBtn = $("#donateClose");
+if(donateCloseBtn) donateCloseBtn.addEventListener("click", closeDonateModal);
+
+const donateModalEl = $("#donateModal");
+if(donateModalEl) donateModalEl.addEventListener("click", e => {
+  if(e.target === donateModalEl) closeDonateModal();
+});
+
+const gateModalEl = $("#gateModal");
+if(gateModalEl) gateModalEl.addEventListener("click", e => {
+  if(e.target === gateModalEl){ gatePendingAction = null; hideGate(); }
+});
+
+addEventListener("keydown", e => {
+  if(e.key !== "Escape") return;
+  closeDonateModal();
+  gatePendingAction = null;
+  hideGate();
+});
+
+updateLobbyAccessUI();
+
+// Sem login, o portão aparece de cara uma vez por sessão: melhor descobrir que
+// precisa entrar agora do que depois de escolher o modo. Se o Firebase ainda
+// estiver restaurando a sessão, o onAuthStateChanged fecha isto sozinho.
+setTimeout(() => {
+  if(window.firebaseUser) return;
+  try {
+    if(sessionStorage.getItem("cf_gate_seen")) return;
+    sessionStorage.setItem("cf_gate_seen", "1");
+  } catch(e){}
+  requireLogin("entrar em campo", null);
+}, 2200);
 
 applyPlayerCustomization();
 updateScore(); updateClock(); kickoff(1); drawMini();

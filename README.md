@@ -40,11 +40,15 @@ sair do plano free.
 | `server/shared/constants.js` | Dimensões do campo, modos, formações. |
 | `server/shared/protocol.js` | Formato das mensagens. |
 | `server/voice.js` | Assina os tokens da voz do time (LiveKit). |
+| `server/auth.js` | Confere o login Google e a lista da beta fechada do multiplayer. |
+| `firestore.rules` | Regras do Firestore **e** a lista de e-mails da beta. |
 | `server/env.js` | Lê `server/.env` em dev. Em produção não faz nada. |
 | `tools/` | Scripts de desenvolvimento local (não vão para produção). |
 
-Autenticação e perfil do jogador são **client-side puro**: Firebase Auth +
-Firestore falam direto do browser com o Google. O backend não tem banco.
+Perfil e customização do jogador são **client-side puro**: Firebase Auth +
+Firestore falam direto do browser com o Google. O backend não tem banco — mas
+ele confere o login por conta própria antes de deixar alguém entrar numa sala
+(veja [Beta fechada](#beta-fechada-do-multiplayer)).
 
 ---
 
@@ -114,14 +118,18 @@ vírgula — inclua os previews da Vercel se for testar por lá.
 
 Não há build: é HTML estático.
 
-### Depois do primeiro deploy — 3 passos obrigatórios
+### Depois do primeiro deploy — 5 passos obrigatórios
 
 1. **Firebase.** Console do Firebase → *Authentication* → *Settings* →
    *Authorized domains* → adicione o domínio da Vercel. Sem isso o login com
    Google quebra com `auth/unauthorized-domain` (o jogo mostra um alerta
    explicando).
 2. **`ALLOWED_ORIGINS` no Render** com o domínio final da Vercel.
-3. **Credenciais do LiveKit no Render**, se quiser a voz in-game — veja
+3. **Publique o `firestore.rules`** com a lista de quem pode jogar online —
+   Console do Firebase → *Firestore Database* → *Regras*.
+4. **`MP_ALLOWED_EMAILS` no Render** com a mesma lista do passo 3. Esta é a
+   trava de verdade; confira em `/health` que `betaClosed` virou `true`.
+5. **Credenciais do LiveKit no Render**, se quiser a voz in-game — veja
    [VoIP](#voip--voz-do-time) abaixo. Sem elas o jogo funciona igual, só sem voz.
 
 Se o backend mudar de endereço, o único lugar a editar é a constante `PROD` em
@@ -285,6 +293,73 @@ objetos por segundo de lixo para o coletor, exatamente o tipo de coisa que vira
 engasgo na hora do gol. Agora os objetos são reusados entre frames e o par de
 entidades é achado por índice (a ordem do snapshot é estável) em vez de uma busca
 linear por entidade: **3,1x mais rápido, zero alocação**.
+
+## Beta fechada do multiplayer
+
+Enquanto o online está em teste, o jogo funciona assim:
+
+- **Jogar exige login com o Google.** Partida rápida, treino e vestiário abrem
+  para qualquer conta.
+- **O multiplayer exige convite.** Só entra quem está na lista de e-mails.
+
+### Onde mora a lista
+
+Em dois lugares, e os dois precisam ficar iguais:
+
+| Onde | Para quê |
+|---|---|
+| `firestore.rules` (função `betaEmails()`) | Só quem está na lista consegue ler `betaAccess/{uid}`. É o que faz o jogo mostrar o lobby ou a tela de "beta fechada". |
+| `MP_ALLOWED_EMAILS` (env do Render) | A trava real: o servidor recusa criar/entrar em sala de quem não está na lista. |
+
+Tudo em minúsculas, separado por vírgula. Convidar alguém = adicionar o e-mail
+nos dois lugares (publicar as regras no console + editar a variável no Render).
+
+Quando `MP_ALLOWED_EMAILS` está **vazia**, o multiplayer fica aberto para
+qualquer um logado — é a comodidade em dev, a mesma convenção do
+`ALLOWED_ORIGINS`. O boot do servidor diz em qual modo subiu, e `/health`
+devolve `betaClosed: true|false`.
+
+### Por que o servidor confere o login sozinho
+
+A checagem no navegador serve para explicar ao jogador por que o botão está
+trancado — quem abre o DevTools passa por cima dela em 10 segundos, e o
+endereço do WebSocket está no `config.js`, à vista de todos.
+
+Então quem barra de fato é o backend: no `hello`, o cliente manda o **ID token**
+do Firebase e o `server/auth.js` confere a assinatura contra as chaves públicas
+do Google (`securetoken@system.gserviceaccount.com`), o emissor, o projeto, a
+validade e o `email_verified` — depois compara o e-mail com a lista. Sem
+`firebase-admin`: o backend continua rodando com uma dependência só (`ws`).
+
+Recusa gera `error` com `code: "beta"` (logado, fora da lista) ou
+`code: "login"` (sem token / token vencido), e o jogo abre a tela certa para
+cada caso.
+
+---
+
+## Apoiar o jogo (LivePix)
+
+O botão **APOIAR O JOGO** no menu abre um painel com:
+
+- a **meta de arrecadação** ao vivo, num `<iframe>` do widget do LivePix (o
+  widget é feito para OBS: texto branco em fundo transparente, por isso fica
+  sobre o card escuro, não sobre placa clara);
+- o **QR Code** de <https://livepix.gg/sofia1227bb>, gerado como SVG e embutido
+  no HTML — aparece na hora, sem depender de widget de terceiro carregar;
+- o link direto da página de doação.
+
+O iframe da meta só recebe `src` quando alguém abre o painel: quem só quer
+jogar não paga o custo de rede de um recurso de terceiro.
+
+Trocar de conta ou de meta = trocar o `data-src` do `#donateGoal` e o link do
+`#donateOpenPage` em [`frontend/index.html`](frontend/index.html). Se mudar o
+endereço da página, o QR precisa ser gerado de novo (ele codifica a URL).
+
+O widget de **alertas** do LivePix não entra aqui de propósito: ele toca som e
+narra doação: é overlay de OBS, não conteúdo de página — cada jogador ouviria o
+alerta da sua live.
+
+---
 
 ## VoIP — voz do time
 

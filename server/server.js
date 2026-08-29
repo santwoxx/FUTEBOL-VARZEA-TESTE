@@ -15,6 +15,7 @@ import { MODES } from "./shared/constants.js";
 import { C2S, S2C, encode, decode } from "./shared/protocol.js";
 import { Room } from "./room.js";
 import { voiceConfig, voiceToken } from "./voice.js";
+import { accessConfig, checkMultiplayerAccess } from "./auth.js";
 
 const PORT = process.env.PORT || 8080;
 
@@ -87,6 +88,7 @@ const server = http.createServer((req, res) => {
       rooms: rooms.size,
       players: clients.size,
       voice: voiceConfig().enabled,
+      betaClosed: accessConfig().enforced,   // multiplayer so para e-mails liberados
       snapshotsDropped,
       uptime: Math.round(process.uptime())
     }));
@@ -137,6 +139,29 @@ function newRoomCode() {
   return String(Math.floor(1000 + Math.random() * 9000));
 }
 
+// Porta da beta fechada. Criar sala, entrar em sala e entrar na fila so passam
+// depois que o HELLO confirmou quem e o jogador. A conferencia do token bate
+// nas chaves publicas do Google, entao e assincrona: a acao espera a promessa
+// em vez de correr com ela — sem isso, quem cria a sala no mesmo instante em
+// que se apresenta passaria pela porta antes de ela existir.
+function withMpAccess(client, run) {
+  const ready = client.authReady;
+  if (!ready) {
+    client.send(S2C.ERROR, { code: "login", message: "Entre com o Google para jogar online." });
+    return;
+  }
+  ready.then((r) => {
+    if (r && r.ok) { run(); return; }
+    const beta = r && r.reason === "beta";
+    client.send(S2C.ERROR, {
+      code: beta ? "beta" : "login",
+      message: beta
+        ? "Multiplayer em beta fechada: seu e-mail ainda nao foi liberado."
+        : "Sessao do Google expirou. Entre de novo para jogar online."
+    });
+  }).catch(() => { /* ja logado no HELLO */ });
+}
+
 wss.on("connection", (ws) => {
   const client = {
     id: nextClientId++,
@@ -180,9 +205,27 @@ wss.on("connection", (ws) => {
         client.uid = msg.d?.uid || null;
         client.mpGoals = typeof msg.d?.mpGoals === "number" ? msg.d.mpGoals : 0;
         client.cardTier = typeof msg.d?.cardTier === "string" ? msg.d.cardTier : "silver";
+
+        // O lobby manda HELLO de novo antes de criar/entrar numa sala (o token
+        // pode ter sido renovado no meio da sessao), entao reconferir aqui e
+        // barato e evita que uma partida longa caia por token vencido.
+        client.authReady = checkMultiplayerAccess(msg.d?.idToken).then((r) => {
+          client.mpAllowed = r.ok;
+          if (r.email) client.email = r.email;
+          // A identidade do token vale mais que o uid que veio no JSON: e esse
+          // uid que a sala usa para devolver o jogador ao mesmo boneco.
+          if (r.uid) client.uid = r.uid;
+          client.send(S2C.AUTH, { ok: r.ok, reason: r.reason, email: r.email || null });
+          return r;
+        }).catch((e) => {
+          console.error("auth:", e.message);
+          client.mpAllowed = false;
+          client.send(S2C.AUTH, { ok: false, reason: "error" });
+          return { ok: false, reason: "error" };
+        });
         break;
       }
-      case C2S.CREATE_ROOM: {
+      case C2S.CREATE_ROOM: withMpAccess(client, () => {
         const mode = msg.d?.mode;
         if (!MODES[mode]) {
           client.send(S2C.ERROR, { message: "Modo invalido" });
@@ -202,9 +245,9 @@ wss.on("connection", (ws) => {
           return;
         }
         client.send(S2C.ROOM_CREATED, room.publicInfo());
-        break;
-      }
-      case C2S.JOIN_ROOM: {
+      });
+      break;
+      case C2S.JOIN_ROOM: withMpAccess(client, () => {
         const room = findRoomById(msg.d?.id);
         if (!room) {
           client.send(S2C.ERROR, { message: "Sala nao encontrada" });
@@ -223,8 +266,8 @@ wss.on("connection", (ws) => {
           ...room.publicInfo(),
           code: room.private ? room.code : undefined
         });
-        break;
-      }
+      });
+      break;
       case C2S.GET_ROOMS: {
         const list = [];
         for (const r of rooms.values()) {
@@ -233,7 +276,7 @@ wss.on("connection", (ws) => {
         client.send(S2C.ROOM_LIST, { rooms: list });
         break;
       }
-      case C2S.QUEUE: {
+      case C2S.QUEUE: withMpAccess(client, () => {
         const mode = msg.d?.mode;
         if (!MODES[mode]) {
           client.send(S2C.ERROR, { message: "Modo invalido" });
@@ -249,8 +292,8 @@ wss.on("connection", (ws) => {
         client.send(S2C.QUEUED, {
           mode, players: room.playerCount, capacity: room.capacity
         });
-        break;
-      }
+      });
+      break;
       case C2S.INPUT: {
         if (client.room) client.room.setInput(client, msg.d || {});
         break;
@@ -340,4 +383,8 @@ server.listen(PORT, () => {
   console.log(ALLOWED_ORIGINS.length
     ? `CORS restrito a: ${ALLOWED_ORIGINS.join(", ")}`
     : `CORS liberado (defina ALLOWED_ORIGINS em producao)`);
+  const acc = accessConfig();
+  console.log(acc.enforced
+    ? `Multiplayer em BETA FECHADA: ${acc.allowed} e-mail(s) liberado(s) — projeto ${acc.projectId}`
+    : `Multiplayer ABERTO (defina MP_ALLOWED_EMAILS para travar na beta fechada)`);
 });

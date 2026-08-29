@@ -1,0 +1,68 @@
+rules_version = '2';
+
+// ═══════════════════════════════════════════════════════════════════════════
+// CREATIVE FOOTBALL — regras do Firestore
+//
+// Publique estas regras em:
+//   Firebase Console > Firestore Database > Regras > (cole tudo) > Publicar
+// ou, com o firebase-tools instalado:
+//   firebase deploy --only firestore:rules
+//
+// AQUI mora a lista da BETA FECHADA do multiplayer (funcao betaEmails abaixo).
+// Ela aparece em dois lugares e os dois precisam ficar iguais:
+//   1. esta lista  -> o jogo le betaAccess/{uid} so para saber se abre o lobby
+//                     ou a tela de "beta fechada" (vitrine);
+//   2. MP_ALLOWED_EMAILS no painel do Render -> a trava de verdade, conferida
+//      pelo servidor antes de criar/entrar em qualquer sala.
+// Mexeu numa, mexa na outra.
+// ═══════════════════════════════════════════════════════════════════════════
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ───────────────── QUEM PODE JOGAR O MULTIPLAYER ─────────────────
+    // Tudo em MINUSCULO, um por linha, separados por virgula.
+    function betaEmails() {
+      return [
+        "coloque-seu-email@gmail.com"
+        // , "amigo1@gmail.com"
+        // , "amigo2@gmail.com"
+      ];
+    }
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Login tem que ser Google (e-mail verificado) e o e-mail tem que estar
+    // na lista de cima.
+    function isBetaTester() {
+      return isSignedIn()
+        && 'email' in request.auth.token
+        && request.auth.token.email is string
+        && request.auth.token.email_verified == true
+        && request.auth.token.email.lower() in betaEmails();
+    }
+
+    // O jogo tenta LER este documento assim que voce entra com o Google.
+    // Leitura passou = libera o lobby online. Tomou permission-denied = beta
+    // fechada. O documento nem precisa existir: o que vale e a permissao.
+    // Ninguem escreve aqui — a lista se muda nestas regras, nao no banco.
+    match /betaAccess/{uid} {
+      allow read: if isSignedIn() && request.auth.uid == uid && isBetaTester();
+      allow write: if false;
+    }
+
+    // Perfil do atleta: customizacao, gols, partidas e vitorias.
+    // Cada jogador mexe apenas no proprio documento — e so estando logado,
+    // que e o que obriga o login Google para jogar.
+    match /users/{uid} {
+      allow read, write: if isSignedIn() && request.auth.uid == uid;
+    }
+
+    // Qualquer outra colecao fica fechada.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

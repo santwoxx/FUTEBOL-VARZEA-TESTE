@@ -3,7 +3,7 @@
 // 4v4 (10 entidades a 20 snapshots/s) cabe folgado nesse formato.
 
 export const C2S = {
-  HELLO: "hello",         // cliente se apresenta (nome, aparencia)
+  HELLO: "hello",         // cliente se apresenta (nome, aparencia, ID token do Google)
   QUEUE: "queue",         // entrar na fila de um modo (1v1..4v4)
   LEAVE: "leave",         // sair da fila / da partida
   INPUT: "input",         // estado dos controles do jogador (enviado ~30x/s)
@@ -16,6 +16,7 @@ export const C2S = {
 
 export const S2C = {
   WELCOME: "welcome",     // id atribuido ao cliente
+  AUTH: "auth",           // resultado da conferencia do login (beta fechada do multiplayer)
   QUEUED: "queued",       // entrou na fila, aguardando oponentes
   ROOM_CREATED: "room_created",  // sala criada (com id/codigo)
   ROOM_LIST: "room_list",        // lista de salas abertas

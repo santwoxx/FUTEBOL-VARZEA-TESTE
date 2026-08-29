@@ -20,6 +20,14 @@ services:
       # Vercel. Sem isso, qualquer site consegue abrir salas no seu servidor.
       - key: ALLOWED_ORIGINS
         sync: false
+      # Beta fechada do multiplayer: e-mails liberados, separados por virgula.
+      # Vazio = multiplayer aberto para qualquer um logado. Mantenha igual a
+      # lista do firestore.rules.
+      - key: MP_ALLOWED_EMAILS
+        sync: false
+      # Projeto do Firebase que assina os ID tokens do login Google.
+      - key: FIREBASE_PROJECT_ID
+        value: creative-footbal
       # VoIP (LiveKit Cloud). sync: false = o valor vive no painel do Render,
       # nunca neste arquivo — o API_SECRET nao pode ir para o repositorio.
       - key: LIVEKIT_URL

@@ -1292,146 +1292,152 @@ canvas{display:block;width:100%;height:100%}
   .donateSide{width:100%}
 }
 
-/* ═══════════ MODAL DE SELEÇÃO DE COMEMORAÇÕES ═══════════ */
+/* ═══════════ RODA CIRCULAR MINIMALISTA DE COMEMORAÇÕES (NO CANTO DA TELA) ═══════════ */
 #celebrationModal {
   position: fixed;
-  inset: 0;
+  bottom: 24px;
+  right: 24px;
   z-index: 55;
-  background: rgba(4, 2, 8, 0.78);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  background: transparent;
   display: none;
   align-items: center;
   justify-content: center;
-  padding: 16px;
+  pointer-events: none;
 }
 #celebrationModal.show {
   display: flex;
-  animation: modalFadeIn .20s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: wheelPopIn .24s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
-.celebrationCard {
-  width: min(94vw, 520px);
-  background: linear-gradient(180deg, rgba(28, 16, 42, 0.96), rgba(12, 8, 20, 0.98));
-  border: 1.5px solid rgba(255, 215, 0, 0.45);
-  border-radius: 26px;
-  box-shadow: 0 30px 90px rgba(0,0,0,0.92), 0 0 50px rgba(255, 215, 0, 0.22);
-  padding: 22px 20px;
-  color: #fff;
-  position: relative;
-  overflow: hidden;
+@keyframes wheelPopIn {
+  from { opacity: 0; transform: scale(0.72) translateY(24px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
 }
-.celebrationCard::before {
-  content: "";
-  position: absolute;
-  top: 0; left: 0; right: 0; height: 4px;
-  background: linear-gradient(90deg, #ffd700, #ff4455, #00f0b8);
-}
-.celebrationHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 12px;
-}
-.celebrationHeader h3 {
-  margin: 0;
-  font-family: 'Teko', sans-serif;
-  font-size: 34px;
-  letter-spacing: 1.5px;
-  line-height: 1;
-  background: linear-gradient(135deg, #ffd700, #ff9900);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-.celebrationSubtitle {
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.65);
-  margin-top: -6px;
-  margin-bottom: 14px;
-  font-weight: 700;
-  letter-spacing: 0.5px;
-}
-.celebrationGrid {
+.celebrationWheelWrap {
   display: flex;
   flex-direction: column;
-  gap: 9px;
-}
-.celebrationOptionBtn {
-  display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 11px 16px;
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #fff;
-  cursor: pointer;
-  transition: all .14s ease;
-  text-align: left;
-  user-select: none;
+  gap: 8px;
+  pointer-events: auto;
 }
-.celebrationOptionBtn:hover, .celebrationOptionBtn:focus {
-  background: rgba(255, 215, 0, 0.15);
-  border-color: rgba(255, 215, 0, 0.6);
-  transform: translateX(4px);
-}
-.celebrationOptionBtn.selected {
-  background: linear-gradient(90deg, rgba(255, 215, 0, 0.22), rgba(255, 140, 0, 0.12));
-  border-color: #ffd700;
-  box-shadow: 0 0 16px rgba(255, 215, 0, 0.25);
-}
-.celebrationLeft {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-.celebrationIcon {
-  font-size: 26px;
-  flex: none;
-  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
-}
-.celebrationTitle {
-  font-size: 13.5px;
-  font-weight: 900;
-  letter-spacing: 0.5px;
-  color: #fff;
-  text-transform: uppercase;
-}
-.celebrationSub {
-  font-size: 11px;
-  color: rgba(255, 255, 255, 0.65);
-  margin-top: 2px;
-}
-.celebrationKeyBadge {
-  padding: 4px 10px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  font-size: 11px;
-  font-weight: 900;
-  color: #ffd700;
-  letter-spacing: 1px;
-  flex: none;
-}
-.celebrationCloseBtn {
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.18);
+.celebrationWheelRing {
+  position: relative;
+  width: 176px;
+  height: 176px;
   border-radius: 50%;
-  color: #fff;
-  width: 32px;
-  height: 32px;
+  background: radial-gradient(circle, rgba(22, 12, 34, 0.90) 30%, rgba(8, 4, 14, 0.96) 100%);
+  border: 1.8px solid rgba(255, 215, 0, 0.5);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.85), 0 0 25px rgba(255, 215, 0, 0.25);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 900;
-  transition: all .15s;
 }
-.celebrationCloseBtn:hover {
-  background: rgba(255,255,255,0.2);
+.celebrationWheelRing::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, #ffd700, #ff4455, #00f0b8, #ffd700);
+  z-index: -1;
+  opacity: 0.45;
+}
+.celebrationWheelCenter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 62px;
+  height: 62px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1.5px solid rgba(255, 215, 0, 0.35);
+  box-shadow: inset 0 0 10px rgba(255, 215, 0, 0.2);
+  text-align: center;
+  cursor: pointer;
+  transition: transform .14s;
+}
+.celebrationWheelCenter:hover {
   transform: scale(1.08);
+  border-color: #ffd700;
+}
+.wheelCenterEmoji {
+  font-size: 22px;
+  line-height: 1;
+}
+.wheelCenterLabel {
+  font-size: 8px;
+  font-weight: 900;
+  color: #ffd700;
+  letter-spacing: 0.8px;
+  margin-top: 2px;
+  text-transform: uppercase;
+}
+.celebrationWheelNode {
+  position: absolute;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(38, 24, 56, 0.95), rgba(16, 10, 24, 0.95));
+  border: 1.5px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  cursor: pointer;
+  transition: transform .14s ease, border-color .14s, box-shadow .14s, background .14s;
+  user-select: none;
+}
+.celebrationWheelNode:hover {
+  transform: scale(1.22);
+  border-color: #ffd700;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.35), rgba(255, 140, 0, 0.25));
+  box-shadow: 0 0 18px rgba(255, 215, 0, 0.65);
+  z-index: 10;
+}
+.celebrationWheelNode.selected {
+  border-color: #ffd700;
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.4), rgba(255, 68, 85, 0.3));
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.75);
+}
+.celebrationWheelNode .nodeIcon {
+  font-size: 19px;
+  line-height: 1;
+}
+.celebrationWheelNode .nodeKey {
+  font-size: 7.5px;
+  font-weight: 900;
+  color: #ffd700;
+  line-height: 1;
+  margin-top: 1px;
+}
+.celebrationWheelTag {
+  padding: 4px 12px;
+  border-radius: 12px;
+  background: rgba(12, 8, 18, 0.92);
+  border: 1px solid rgba(255, 215, 0, 0.4);
+  font-size: 10px;
+  font-weight: 900;
+  color: #ffd700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+  pointer-events: auto;
+  text-align: center;
+  max-width: 200px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+@media (max-width: 768px) {
+  #celebrationModal {
+    bottom: 96px;
+    right: 14px;
+    transform: scale(0.85);
+    transform-origin: bottom right;
+  }
 }
 </style>
 </head>
@@ -2037,18 +2043,17 @@ canvas{display:block;width:100%;height:100%}
   <div class="introSkipHint" id="introSkipBtn">Pressione ESPAÇO ou clique para Iniciar Agora ⏩</div>
 </div>
 
-<!-- ═══════════ MODAL DE SELEÇÃO DE COMEMORAÇÕES (5 COMEMORAÇÕES) ═══════════ -->
+<!-- ═══════════ RODA CIRCULAR MINIMALISTA DE COMEMORAÇÕES (NO CANTO DA TELA) ═══════════ -->
 <div id="celebrationModal">
-  <div class="celebrationCard">
-    <div class="celebrationHeader">
-      <h3>🎉 ESCOLHA SUA COMEMORAÇÃO</h3>
-      <button class="celebrationCloseBtn" id="btnCloseCelebration">✕</button>
+  <div class="celebrationWheelWrap">
+    <div class="celebrationWheelRing" id="celebrationWheelRing">
+      <div class="celebrationWheelCenter" id="btnWheelCenter" title="Comemorar">
+        <span class="wheelCenterEmoji" id="wheelCenterEmoji">🦅</span>
+        <span class="wheelCenterLabel">COMEMORAR</span>
+      </div>
+      <!-- 5 Nós Radiais Gerados Via JS -->
     </div>
-    <div class="celebrationSubtitle">Selecione uma comemoração para festejar em campo (ou use as teclas [1] a [5])</div>
-
-    <div class="celebrationGrid" id="celebrationOptionsList">
-      <!-- Opções geradas dinamicamente via JS com seleção interativa -->
-    </div>
+    <div class="celebrationWheelTag" id="celebrationActiveTag">1. BRAÇOS ABERTOS</div>
   </div>
 </div>
 
@@ -5789,107 +5794,106 @@ function animateHumanoid(char, dt, isMoving){
 
   if(char.state === "tackle"){
     const prog = Math.min(1, Math.max(0, 1 - (char.act / (char.tackleAct || TACKLE.duration))));
-    // Deslize atlético sobre o lado da perna de apoio com a perna boa esticada na bola
     const roll = -footSign;
     char.hips.rotation.y = 0; char.hips.rotation.z = 0;
 
-    if(prog < 0.18){
-      // ---- FASE 1: ENTRADA DINÂMICA - drop suave e atlético sem afundar no chão ----
-      const e = prog / 0.18;
-      const dropEase = e * e;
+    if(prog < 0.20){
+      // ---- FASE 1: ENTRADA SUAVE NO DESLIZE (CORPO RECLINA PARA TRÁS/LADO E PROJETA OS PÉS PARA FRENTE) ----
+      const e = prog / 0.20;
+      const ease = e * e;
       const bendEase = Math.sqrt(e);
 
-      char.hips.position.y = THREE.MathUtils.damp(char.hips.position.y, THREE.MathUtils.lerp(1.05, 0.44, dropEase), 22, dt);
-      char.root.rotation.z = THREE.MathUtils.damp(char.root.rotation.z, roll * 0.22 * dropEase, 20, dt);
-      char.root.rotation.x = THREE.MathUtils.damp(char.root.rotation.x, -0.08 * dropEase, 20, dt);
-      char.torsoGroup.rotation.x = 0.12 + dropEase * 0.10;
-      char.torsoGroup.rotation.y = 0;
-      char.headGroup.rotation.x = -0.06;
+      char.hips.position.y = THREE.MathUtils.damp(char.hips.position.y, THREE.MathUtils.lerp(1.05, 0.38, ease), 22, dt);
+      char.root.rotation.z = THREE.MathUtils.damp(char.root.rotation.z, roll * 0.35 * ease, 20, dt);
+      char.root.rotation.x = THREE.MathUtils.damp(char.root.rotation.x, -0.38 * ease, 20, dt);
+      char.torsoGroup.rotation.x = -0.40 * ease;
+      char.torsoGroup.rotation.y = footSign * 0.20 * ease;
+      char.headGroup.rotation.x = -0.25 * ease;
 
-      // Perna de ataque se projeta esticada na linha da bola
-      legKick.hipJoint.rotation.x  = THREE.MathUtils.lerp(0.3, 1.45, bendEase);
+      // Perna atacante (de carrinho) se estica totalmente para frente como uma lâmina
+      legKick.hipJoint.rotation.x  = THREE.MathUtils.lerp(0.3, 1.35, bendEase);
       legKick.hipJoint.rotation.z  = footSign * -0.06 * bendEase;
       legKick.kneeJoint.rotation.x = THREE.MathUtils.lerp(0.2, 0.04, bendEase);
       legKick.footGroup.rotation.x = -0.15 * bendEase;
 
-      // Perna de apoio recolhe deitada plana sobre o gramado (Z positivo abre o quadril)
-      legPlant.hipJoint.rotation.x = THREE.MathUtils.lerp(0.0, 0.10, bendEase);
-      legPlant.hipJoint.rotation.z = -roll * THREE.MathUtils.lerp(0.0, 0.85, bendEase);
-      legPlant.kneeJoint.rotation.x = THREE.MathUtils.lerp(0.1, 1.55, bendEase);
-      legPlant.footGroup.rotation.x = -0.20 * bendEase;
+      // Perna de apoio vem trazida para frente plana junto ao corpo, sem dobrar o joelho pra baixo
+      legPlant.hipJoint.rotation.x = THREE.MathUtils.lerp(0.0, 0.55, bendEase);
+      legPlant.hipJoint.rotation.z = -roll * THREE.MathUtils.lerp(0.0, 0.45, bendEase);
+      legPlant.kneeJoint.rotation.x = THREE.MathUtils.lerp(0.1, 0.65, bendEase);
+      legPlant.footGroup.rotation.x = 0;
 
-      armPlant.shoulder.rotation.x = THREE.MathUtils.lerp(-0.3, -0.65, bendEase);
-      armPlant.shoulder.rotation.z = -footSign * THREE.MathUtils.lerp(0.1, 0.35, bendEase);
-      armPlant.elbow.rotation.x = THREE.MathUtils.lerp(-0.8, -0.50, bendEase);
+      // Braço de apoio auxilia no deslize lateral no gramado
+      armPlant.shoulder.rotation.x = THREE.MathUtils.lerp(-0.3, 0.55, bendEase);
+      armPlant.shoulder.rotation.z = -footSign * THREE.MathUtils.lerp(0.1, 0.40, bendEase);
+      armPlant.elbow.rotation.x = THREE.MathUtils.lerp(-0.8, -0.35, bendEase);
 
-      armKick.shoulder.rotation.x = THREE.MathUtils.lerp(-0.3, -0.25, bendEase);
-      armKick.shoulder.rotation.z = footSign * THREE.MathUtils.lerp(0.1, 0.40, bendEase);
+      // Braço atacante esticado para equilíbrio
+      armKick.shoulder.rotation.x = THREE.MathUtils.lerp(-0.3, -0.65, bendEase);
+      armKick.shoulder.rotation.z = footSign * THREE.MathUtils.lerp(0.1, 0.35, bendEase);
 
     } else if(prog < TACKLE.glideEnd){
-      // ---- FASE 2: DESLIZE FLUIDO & POTENTE - 100% apoiado sobre a quadra ----
-      const g = (prog - 0.18) / (TACKLE.glideEnd - 0.18);
+      // ---- FASE 2: DESLIZE PERFEITO COM OS PÉS PARA FRENTE (CARRINHO CLÁSSICO DE FUTEBOL) ----
+      const g = (prog - 0.20) / (TACKLE.glideEnd - 0.20);
       const sway = Math.sin(g * Math.PI);
 
-      char.hips.position.y = THREE.MathUtils.damp(char.hips.position.y, 0.44, 20, dt);
-      char.root.rotation.z = THREE.MathUtils.damp(char.root.rotation.z, roll * (0.22 + sway * 0.03), 18, dt);
-      char.root.rotation.x = THREE.MathUtils.damp(char.root.rotation.x, -0.08, 18, dt);
-      char.torsoGroup.rotation.x = 0.22 - g * 0.04;
-      char.torsoGroup.rotation.y = footSign * sway * 0.08;
-      char.headGroup.rotation.x = -0.08 + g * 0.06;
+      char.hips.position.y = THREE.MathUtils.damp(char.hips.position.y, 0.38, 20, dt);
+      char.root.rotation.z = THREE.MathUtils.damp(char.root.rotation.z, roll * (0.35 + sway * 0.04), 18, dt);
+      char.root.rotation.x = THREE.MathUtils.damp(char.root.rotation.x, -0.38, 18, dt);
+      char.torsoGroup.rotation.x = -0.40 + g * 0.05;
+      char.torsoGroup.rotation.y = footSign * (0.20 + sway * 0.06);
+      char.headGroup.rotation.x = -0.25;
 
-      // Perna de ataque esticada como lâmina na bola (limpa e precisa)
-      legKick.hipJoint.rotation.x  = 1.45 + g * 0.10;
-      legKick.hipJoint.rotation.z  = footSign * -0.08;
+      // Perna atacante esticada para frente desarmando a bola
+      legKick.hipJoint.rotation.x  = 1.35 + g * 0.08;
+      legKick.hipJoint.rotation.z  = footSign * -0.06;
       legKick.kneeJoint.rotation.x = 0.04;
       legKick.footGroup.rotation.x = -0.15;
 
-      // Perna de apoio descansa dobrada deitada sobre o solo
-      legPlant.hipJoint.rotation.x = 0.10;
-      legPlant.hipJoint.rotation.z = -roll * 0.85;
-      legPlant.kneeJoint.rotation.x = 1.55;
-      legPlant.footGroup.rotation.x = -0.20;
+      // Perna de apoio recolhida suavemente deitada paralela ao chão (zero contato vertical de joelho)
+      legPlant.hipJoint.rotation.x = 0.55;
+      legPlant.hipJoint.rotation.z = -roll * 0.45;
+      legPlant.kneeJoint.rotation.x = 0.65;
+      legPlant.footGroup.rotation.x = 0;
 
-      armPlant.shoulder.rotation.x = -0.65 - sway * 0.10;
-      armPlant.shoulder.rotation.z = -footSign * 0.35;
-      armPlant.elbow.rotation.x = -0.50;
+      armPlant.shoulder.rotation.x = 0.55 - sway * 0.08;
+      armPlant.shoulder.rotation.z = -footSign * 0.40;
+      armPlant.elbow.rotation.x = -0.35;
 
-      armKick.shoulder.rotation.x = -0.25 + sway * 0.15;
-      armKick.shoulder.rotation.z = footSign * 0.40;
+      armKick.shoulder.rotation.x = -0.65 + sway * 0.10;
+      armKick.shoulder.rotation.z = footSign * 0.35;
 
-      // Spawna efeitos de rachaduras no chão, faíscas e cascalho
+      // Spawna efeitos de rastro no gramado e faíscas nos pés
       if(typeof vfxSpawnTackleTrail === "function"){
         vfxSpawnTackleTrail(char, footSign);
       }
 
     } else {
-      // ---- FASE 3: LEVANTADA SUAVE & ÁGIL SEM TRANCOS ----
+      // ---- FASE 3: RECUPERAÇÃO NATURAL E LEVANTADA FLUÍDA ----
       const u = (prog - TACKLE.glideEnd) / (1 - TACKLE.glideEnd);
       const riseEase = u * (2 - u);
       const unfoldEase = u * u;
 
-      char.hips.position.y = THREE.MathUtils.damp(char.hips.position.y, THREE.MathUtils.lerp(0.44, 1.05, riseEase), 18, dt);
+      char.hips.position.y = THREE.MathUtils.damp(char.hips.position.y, THREE.MathUtils.lerp(0.38, 1.05, riseEase), 18, dt);
       char.root.rotation.z = THREE.MathUtils.damp(char.root.rotation.z, 0, 16, dt);
       char.root.rotation.x = THREE.MathUtils.damp(char.root.rotation.x, 0, 16, dt);
-      char.torsoGroup.rotation.x = (1 - riseEase) * 0.22;
-      char.torsoGroup.rotation.y = 0;
+      char.torsoGroup.rotation.x = THREE.MathUtils.lerp(-0.35, 0.10, riseEase);
+      char.torsoGroup.rotation.y = (1 - riseEase) * footSign * 0.15;
       char.headGroup.rotation.x = THREE.MathUtils.damp(char.headGroup.rotation.x, 0, 16, dt);
 
-      legKick.hipJoint.rotation.x  = THREE.MathUtils.lerp(1.55, 0.10, unfoldEase);
+      legKick.hipJoint.rotation.x  = THREE.MathUtils.lerp(1.43, 0.10, unfoldEase);
       legKick.hipJoint.rotation.z  = 0;
-      legKick.kneeJoint.rotation.x = THREE.MathUtils.lerp(0.04, 0.06, unfoldEase);
+      legKick.kneeJoint.rotation.x = THREE.MathUtils.lerp(0.04, 0.08, unfoldEase);
       legKick.footGroup.rotation.x = (1 - unfoldEase) * -0.15;
 
-      legPlant.hipJoint.rotation.x = THREE.MathUtils.lerp(0.10, 0.05, unfoldEase);
-      legPlant.hipJoint.rotation.z = -roll * 0.85 * (1 - unfoldEase);
-      legPlant.kneeJoint.rotation.x = THREE.MathUtils.lerp(1.55, 0.06, unfoldEase);
-      legPlant.footGroup.rotation.x = (1 - unfoldEase) * -0.20;
+      legPlant.hipJoint.rotation.x = THREE.MathUtils.lerp(0.55, 0.05, unfoldEase);
+      legPlant.hipJoint.rotation.z = THREE.MathUtils.lerp(-roll * 0.45, 0, unfoldEase);
+      legPlant.kneeJoint.rotation.x = THREE.MathUtils.lerp(0.65, 0.08, unfoldEase);
+      legPlant.footGroup.rotation.x = 0;
 
-      armPlant.shoulder.rotation.x = THREE.MathUtils.lerp(-0.65, 0.0, riseEase);
-      armPlant.shoulder.rotation.z = -footSign * 0.35 * (1 - riseEase);
-      armPlant.elbow.rotation.x = THREE.MathUtils.lerp(-0.50, -0.80, riseEase);
-
-      armKick.shoulder.rotation.x = THREE.MathUtils.lerp(-0.25, 0.0, riseEase);
-      armKick.shoulder.rotation.z = footSign * 0.40 * (1 - riseEase);
+      armPlant.shoulder.rotation.x = THREE.MathUtils.lerp(0.55, -0.3, riseEase);
+      armPlant.shoulder.rotation.z = -footSign * THREE.MathUtils.lerp(0.40, 0.2, riseEase);
+      armKick.shoulder.rotation.x = THREE.MathUtils.lerp(-0.65, -0.3, riseEase);
+      armKick.shoulder.rotation.z = footSign * THREE.MathUtils.lerp(0.35, 0.2, riseEase);
     }
     return;
   }
@@ -7125,28 +7129,53 @@ try {
 
 function openCelebrationMenu(){
   const modal = $("#celebrationModal");
-  const list = $("#celebrationOptionsList");
-  if(!modal || !list) return;
+  const ring = $("#celebrationWheelRing");
+  const tag = $("#celebrationActiveTag");
+  const emoji = $("#wheelCenterEmoji");
+  if(!modal || !ring) return;
 
-  list.innerHTML = "";
+  // Remove nós antigos
+  ring.querySelectorAll(".celebrationWheelNode").forEach(n => n.remove());
+
+  const R = 64; // raio da roda em pixels
   CELEBRATIONS.forEach((cel, idx) => {
-    const btn = document.createElement("button");
-    btn.className = "celebrationOptionBtn" + (idx === selectedCelebrationIdx ? " selected" : "");
-    btn.innerHTML = `
-      <div class="celebrationLeft">
-        <span class="celebrationIcon">${cel.icon}</span>
-        <div>
-          <div class="celebrationTitle">${cel.name}</div>
-          <div class="celebrationSub">${cel.sub}</div>
-        </div>
-      </div>
-      <span class="celebrationKeyBadge">[ ${idx + 1} ]</span>
+    const angle = -Math.PI / 2 + idx * (2 * Math.PI / CELEBRATIONS.length);
+    const x = Math.round(Math.cos(angle) * R);
+    const y = Math.round(Math.sin(angle) * R);
+
+    const node = document.createElement("div");
+    node.className = "celebrationWheelNode" + (idx === selectedCelebrationIdx ? " selected" : "");
+    node.style.left = `calc(50% + ${x}px - 21px)`;
+    node.style.top = `calc(50% + ${y}px - 21px)`;
+    node.innerHTML = `
+      <span class="nodeIcon">${cel.icon}</span>
+      <span class="nodeKey">[${idx + 1}]</span>
     `;
-    btn.addEventListener("click", () => {
+    node.title = `${idx + 1}. ${cel.name}`;
+
+    node.addEventListener("click", (e) => {
+      e.stopPropagation();
       playCelebration(idx);
     });
-    list.appendChild(btn);
+    node.addEventListener("mouseenter", () => {
+      if(tag) tag.textContent = `${idx + 1}. ${cel.name}`;
+      if(emoji) emoji.textContent = cel.icon;
+    });
+    node.addEventListener("mouseleave", () => {
+      const cur = CELEBRATIONS[selectedCelebrationIdx];
+      if(tag) tag.textContent = `${selectedCelebrationIdx + 1}. ${cur.name}`;
+      if(emoji) emoji.textContent = cur.icon;
+    });
+
+    ring.appendChild(node);
   });
+
+  const cur = CELEBRATIONS[selectedCelebrationIdx];
+  if(tag) tag.textContent = `${selectedCelebrationIdx + 1}. ${cur.name}`;
+  if(emoji) emoji.textContent = cur.icon;
+
+  const btnCenter = $("#btnWheelCenter");
+  if(btnCenter) btnCenter.onclick = () => playCelebration(selectedCelebrationIdx);
 
   modal.classList.add("show");
   modal.style.display = "flex";
@@ -9561,9 +9590,9 @@ addEventListener("keyup", e=>{
   if(k === userKeyBindings.sprint){ input.sprint = false; if(sprintBtn) sprintBtn.classList.remove("activeKey"); }
 });
 
-// Botão de fechar modal de comemorações
-const btnCloseCelebration = $("#btnCloseCelebration");
-if(btnCloseCelebration) btnCloseCelebration.addEventListener("click", closeCelebrationMenu);
+// Botão do centro da roda de comemorações
+const btnWheelCenter = $("#btnWheelCenter");
+if(btnWheelCenter) btnWheelCenter.addEventListener("click", () => playCelebration(selectedCelebrationIdx));
 
 // Botões do Menu Principal e Vestiário
 const btnPlayMatch = $("#btnPlayMatch");

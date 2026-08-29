@@ -57,6 +57,44 @@ const CHAPEU = {
   stun:       0.50  // atordoamento de quem levou o chapeu
 };
 
+// Passe. Espelhado em frontend/index.html.
+//
+// O atrito do gramado neste jogo e altissimo (0,91^60 por segundo): uma bola que
+// so rola perde ~99% da velocidade em um segundo, entao o alcance rolando e so
+// v0/5,66 — um passe de 14m a meia forca morria com 6,6m de sobra. A saida nao
+// foi mexer no atrito (isso mudaria chute, rebote e bola solta), e sim mandar a
+// bola pelo AR na maior parte do caminho, onde o arrasto e desprezivel: ela
+// cobre ~75% da distancia voando e chega quicando no pe do companheiro.
+//
+// Medido de 4m a 40m, em toda a faixa de carga: chega sempre, entre 0,3s e 1,7s,
+// com 4 a 10 m/s de pace na chegada e pico de 0,3m a 1,8m — bola conduzida,
+// nunca balao.
+const PASSE = {
+  base:    10.0,  // velocidade minima antes de contar a distancia
+  porM:     0.60, // acrescimo por metro ate o alvo
+  min:     13.0,  // piso: toque curto ainda sai com pe firme
+  max:     34.0,  // teto: passe longo nao vira chute
+  carga:    7.0,  // quanto a carga do botao soma na velocidade
+  fracVoo:  0.75, // fracao da distancia coberta no ar
+  loftMin:  1.1,  // altura minima de saida
+  loftMax:  8.0   // ...e maxima, para nao virar lob
+};
+
+// Pedido de passe. Vale por pouco tempo de proposito: e um pedido para AGORA,
+// nao uma preferencia permanente.
+// Depois de tocar, o pe que bateu fica um instante sem poder reaver a bola.
+// Sem isso um passe curto era engolido pelo proprio passador: doPass solta a
+// posse, mas no tick seguinte a bola ainda esta a menos de 1,65m dele e abaixo
+// do corte de velocidade, entao findOwner devolvia tudo — a bola nem saia do
+// pe. Era isso que fazia o toque curto parecer "sem forca".
+const RECUO_TOQUE = Math.round(0.30 * CFG.TICK_HZ);
+
+const CALL = {
+  ticks: Math.round(1.5 * CFG.TICK_HZ), // validade do pedido
+  bonus: 1.4,   // peso na escolha do alvo do passe (o dot vai de -1 a 1)
+  raio:  34     // longe demais para receber, o pedido nao conta
+};
+
 // ─────────────────────────── criacao de entidades ───────────────────────────
 
 let nextEntId = 1;
@@ -77,6 +115,7 @@ function createEnt(team, role, foot, isBot, slot) {
     prev: null,    // input anterior, para deteccao de bordas
     stunned: 0,
     tackleResolved: false,
+    callT: -1e9,   // tick do ultimo pedido de passe
     name: ""
   };
 }
@@ -149,6 +188,11 @@ export function getEnt(w, id) {
 
 // ──────────────────────────── posse de bola ────────────────────────────────
 
+// Quem acabou de bater ainda esta impedido de pegar a bola de volta?
+function recuandoDoToque(w, e) {
+  return w.tick < (e.semBolaAte ?? -1e9);
+}
+
 function emDrible(e) {
   return e.act > 0 && e.state >= STATE.DRIBBLE_STEPOVER && e.state <= STATE.DRIBBLE_CARRETILHA;
 }
@@ -169,7 +213,8 @@ function findOwner(w) {
   // Quem ja tinha a posse mantem numa zona maior (histerese, evita piscar posse)
   if (w.ownerId) {
     const cur = getEnt(w, w.ownerId);
-    if (cur && cur.state !== STATE.FALL && cur.state !== STATE.TACKLE && cur.stunned <= 0) {
+    if (cur && cur.state !== STATE.FALL && cur.state !== STATE.TACKLE && cur.stunned <= 0 &&
+        !recuandoDoToque(w, cur)) {
       if (dist2(cur.x, cur.z, b.x, b.z) < 1.85 && b.y < 1.6) return cur.id;
     }
   }
@@ -177,6 +222,7 @@ function findOwner(w) {
   let best = 0, bestD = 1.65;
   for (const e of w.ents) {
     if (e.state === STATE.FALL || e.state === STATE.TACKLE || e.stunned > 0) continue;
+    if (recuandoDoToque(w, e)) continue;
     const d = dist2(e.x, e.z, b.x, b.z);
     if (d < bestD && b.y < 1.6) { bestD = d; best = e.id; }
   }
@@ -275,6 +321,13 @@ function dribbleBall(w, e, dt) {
   b.vx = e.vx; b.vy = e.vy; b.vz = e.vz;
 }
 
+// Este jogador pediu a bola ha pouco e ainda esta em condicoes de receber?
+export function pedindoPasse(w, e) {
+  if (w.tick - (e.callT ?? -1e9) > CALL.ticks) return false;
+  if (e.state === STATE.FALL || e.stunned > 0) return false;
+  return true;
+}
+
 // ──────────────────────────── acoes de jogo ────────────────────────────────
 
 function doShoot(w, e, power, over = 0) {
@@ -318,6 +371,7 @@ function doShoot(w, e, power, over = 0) {
   }
   e.yaw = Math.atan2(dx, dz);
   w.ownerId = 0;
+  e.semBolaAte = w.tick + RECUO_TOQUE;
   return true;
 }
 
@@ -333,34 +387,41 @@ function doPass(w, e, power) {
   if (fl < 0.1) { fx = Math.sin(e.yaw); fz = Math.cos(e.yaw); fl = 1; }
   fx /= fl; fz /= fl;
 
-  let target = null, bestDot = -2;
+  let target = null, bestScore = -1e9;
   for (const m of w.ents) {
     if (m.team !== e.team || m.id === e.id || m.role === "keeper") continue;
     const vx = m.x - b.x, vz = m.z - b.z;
     const l = Math.hypot(vx, vz);
     if (l < 1.2) continue;
-    const dot = (vx / l) * fx + (vz / l) * fz;
-    if (dot > bestDot) { bestDot = dot; target = m; }
+    // Quem pediu a bola entra na frente da mira: e uma jogada combinada, e no
+    // meio da correria ninguem aponta com precisao para o companheiro.
+    let sc = (vx / l) * fx + (vz / l) * fz;
+    if (l < CALL.raio && pedindoPasse(w, m)) sc += CALL.bonus;
+    if (sc > bestScore) { bestScore = sc; target = m; }
   }
 
   let dx, dz, d;
-  if (target && bestDot > -0.25) {
+  if (target && bestScore > -0.25) {
     dx = target.x - b.x; dz = target.z - b.z;
     d = Math.hypot(dx, dz); dx /= d; dz /= d;
+    target.callT = -1e9;   // pedido atendido
   } else {
     dx = fx; dz = fz; d = 14;
   }
 
   b.y = Math.max(b.y, 0.30);
-  const minSpeed = clamp(d * 0.55 + 7, 9, 20);
-  const sp = minSpeed + p * 14;
+  // Velocidade pela distancia real ate o alvo + carga do botao, e altura de
+  // saida calculada para o voo cobrir PASSE.fracVoo do caminho. Ver o bloco
+  // PASSE la em cima: e isso que faz a bola chegar em vez de morrer no meio.
+  const sp = clamp(PASSE.base + d * PASSE.porM, PASSE.min, PASSE.max) + p * PASSE.carga;
   b.vx = dx * sp; b.vz = dz * sp;
-  b.vy = 0.7 + p * 1.1 + Math.min(1.2, d * 0.03);
+  b.vy = clamp((PASSE.fracVoo * d * 18) / (2 * sp), PASSE.loftMin, PASSE.loftMax);
   b.spinY = 1.2;
 
   e.yaw = Math.atan2(dx, dz);
   e.state = STATE.PASS; e.act = 0.22 + p * 0.10; e.cool = 0.22;
   w.ownerId = 0;
+  e.semBolaAte = w.tick + RECUO_TOQUE;
   return true;
 }
 
@@ -597,7 +658,7 @@ function headerContact(w, e) {
 // Copia o input para e.prev SEM alocar. Antes era `e.prev = { ...input }`, um
 // objeto novo por jogador por tick — 240 objetos por segundo num 4v4, so para o
 // coletor recolher no meio da partida.
-const BOTOES_PREV = ["shoot", "pass", "steal", "tackle", "dribble", "jump", "dance"];
+const BOTOES_PREV = ["shoot", "pass", "steal", "tackle", "dribble", "jump", "dance", "callPass"];
 function guardarPrev(e, input) {
   const d = e.prev || (e.prev = {});
   for (let i = 0; i < BOTOES_PREV.length; i++) {
@@ -649,6 +710,9 @@ function applyInput(w, e, input, dt) {
     doPass(w, e, p);
   }
 
+  // Pedir a bola. So faz sentido sem ela no pe — com a bola o botao nao faz nada.
+  if (pressed("callPass") && w.ownerId !== e.id) e.callT = w.tick;
+
   if (pressed("steal")) doSteal(w, e);
   if (pressed("tackle")) doTackle(w, e);
   if (pressed("dribble")) { e.lastDribT = w.tick; doDribbleMove(w, e); }
@@ -689,18 +753,41 @@ function applyInput(w, e, input, dt) {
   }
 
   const mag = Math.hypot(input.dx, input.dz);
-  let speed = input.sprint ? 12.0 : 8.5;
+  const isMoving = mag > 0.14;
+  if (e.stamina === undefined) e.stamina = 100;
+  if (e.isExhausted === undefined) e.isExhausted = false;
+
+  const wantsSprint = !!input.sprint && isMoving;
+
+  if (wantsSprint && !e.isExhausted) {
+    // Drena estamina correndo (~22 por seg, dura ~4.5s de arrancada direta)
+    e.stamina = Math.max(0, e.stamina - dt * 22);
+    if (e.stamina <= 0) {
+      e.stamina = 0;
+      e.isExhausted = true;
+    }
+  } else {
+    // Recupera estamina: mais rápido parado/andando devagar (36/s), normal em corrida (24/s)
+    const recRate = isMoving ? 24 : 36;
+    e.stamina = Math.min(100, e.stamina + dt * recRate);
+    if (e.stamina >= 28) {
+      e.isExhausted = false;
+    }
+  }
+
+  const canSprint = wantsSprint && !e.isExhausted;
+  let speed = canSprint ? 12.0 : 8.5;
   if (w.ownerId === e.id) speed *= 0.90;
   if (e.state === STATE.KICK_CHARGE) speed *= 0.55; // carregando chute anda mais devagar
 
-  if (mag > 0.14) {
+  if (isMoving) {
     const nx = input.dx / mag, nz = input.dz / mag;
     const m = Math.min(1, mag);
     e.vx = damp(e.vx, nx * speed * m, 16, dt);
     e.vz = damp(e.vz, nz * speed * m, 16, dt);
     e.yaw = Math.atan2(nx, nz);
     if (e.act <= 0 && e.state !== STATE.KICK_CHARGE) {
-      e.state = input.sprint ? STATE.SPRINT : STATE.RUN;
+      e.state = canSprint ? STATE.SPRINT : STATE.RUN;
     }
   } else {
     e.vx = damp(e.vx, 0, 13, dt);
@@ -720,6 +807,7 @@ function botThink(w, e, dt) {
   input.dx = 0; input.dz = 0;
   input.sprint = false; input.shoot = false; input.pass = false;
   input.tackle = false; input.steal = false; input.dribble = false; input.jump = false;
+  input.callPass = false;
   input.aimx = 0; input.aimy = 1.2; input.aimz = atk * HH;
 
   if (e.role === "keeper") {
@@ -761,6 +849,24 @@ function botThink(w, e, dt) {
       e.kickCd = 2.2;
       return;
     }
+    // Companheiro pediu a bola: toca na hora. E para isso que serve o botao —
+    // o bot que conduz nao fica te ignorando enquanto voce pede por ela.
+    if (e.kickCd <= 0) {
+      let pede = null, melhorD = CALL.raio;
+      for (const m of w.ents) {
+        if (m.team !== e.team || m.id === e.id || m.role === "keeper") continue;
+        if (!pedindoPasse(w, m)) continue;
+        const dm = dist2(e.x, e.z, m.x, m.z);
+        if (dm > 2.5 && dm < melhorD) { melhorD = dm; pede = m; }
+      }
+      if (pede) {
+        e.aimx = pede.x; e.aimy = 1; e.aimz = pede.z;
+        doPass(w, e, 0.5);
+        e.kickCd = 1.0;
+        return;
+      }
+    }
+
     // Passe ocasional para um companheiro melhor posicionado
     if (e.kickCd <= 0 && Math.random() < dt * 0.4) {
       e.aimx = e.x; e.aimy = 1; e.aimz = atk * HH;
@@ -779,6 +885,19 @@ function botThink(w, e, dt) {
     const spread = (e.slot - (w.teamSize - 1) / 2) * 7.5;
     tx = clamp(b.x * 0.4 + spread, -HW + 4, HW - 4);
     tz = clamp(b.z + atk * (weHaveBall ? 9 : -4), -HH + 6, HH - 6);
+
+    // Bot tambem pede a bola: se o time conduz e ele esta livre e adiantado,
+    // levanta a mao. Quem conduz — humano ou bot — ve o marcador em campo.
+    if (weHaveBall && owner && !pedindoPasse(w, e) && Math.random() < dt * 0.6) {
+      const dDono = dist2(e.x, e.z, owner.x, owner.z);
+      const ganho = (e.z - owner.z) * atk;   // esta mais adiantado que o dono?
+      let livre = 1e9;
+      for (const o of w.ents) {
+        if (o.team === e.team) continue;
+        livre = Math.min(livre, dist2(e.x, e.z, o.x, o.z));
+      }
+      if (dDono > 5 && dDono < 26 && livre > 4.5 && ganho > -3) e.callT = w.tick;
+    }
   }
 
   const ddx = tx - e.x, ddz = tz - e.z;
@@ -1100,7 +1219,7 @@ export function serialize(w) {
     o: w.ownerId,
     f: w.kickoffFreeze > 0 ? 1 : 0,
     b: [r2(w.ball.x), r2(w.ball.y), r2(w.ball.z), r2(w.ball.vx), r2(w.ball.vy), r2(w.ball.vz)],
-    // [id, x, y, z, yaw, state, vx, vz, charge]
+    // [id, x, y, z, yaw, state, vx, vz, charge, pediuPasse]
     // vx/vz sao necessarios para a reconciliacao da predicao no cliente
     e: w.ents.map((e) => [
       e.id,
@@ -1108,7 +1227,8 @@ export function serialize(w) {
       r2(e.yaw),
       e.state,
       r2(e.vx), r2(e.vz),
-      r2(e.charge)
+      r2(e.charge),
+      pedindoPasse(w, e) ? 1 : 0
     ])
   };
 }

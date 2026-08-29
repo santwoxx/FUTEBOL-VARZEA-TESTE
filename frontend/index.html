@@ -301,7 +301,7 @@ canvas{display:block;width:100%;height:100%}
 /* ═══════════ BOTÕES MOBILE CONTEXTUAIS INTELIGENTES (4 BOTÕES) ═══════════ */
 #btnGrid{
   position:absolute;right:max(16px,env(safe-area-inset-right));bottom:calc(16px + env(safe-area-inset-bottom));
-  display:none;grid-template-columns:78px 86px;grid-template-rows:68px 84px;gap:10px 12px;
+  display:none;grid-template-columns:78px 86px;grid-template-rows:52px 68px 84px;gap:10px 12px;
   align-items:end;justify-items:end;pointer-events:none;z-index:5;
 }
 
@@ -328,7 +328,7 @@ canvas{display:block;width:100%;height:100%}
 /* Botão 1: Ação Principal (Chute no Ataque / Desarme na Defesa) */
 .btnActionMain{
   width:86px;height:84px;border-radius:26px;
-  grid-column:2;grid-row:2;
+  grid-column:2;grid-row:3;
   background:linear-gradient(135deg,rgba(230,35,60,0.92),rgba(150,15,35,0.98));
   border:2px solid rgba(255,100,120,0.7);box-shadow:0 8px 26px rgba(230,35,60,0.45);
 }
@@ -342,7 +342,7 @@ canvas{display:block;width:100%;height:100%}
 /* Botão 2: Passe / Carrinho */
 .btnPassTackle{
   width:78px;height:74px;border-radius:22px;
-  grid-column:1;grid-row:2;
+  grid-column:1;grid-row:3;
   background:linear-gradient(135deg,rgba(240,150,20,0.90),rgba(160,90,10,0.98));
   border:1.8px solid rgba(255,185,60,0.65);box-shadow:0 6px 20px rgba(240,150,20,0.4);
 }
@@ -354,7 +354,7 @@ canvas{display:block;width:100%;height:100%}
 /* Botão 3: Drible / Pulo / Passinho */
 .btnSkill{
   width:78px;height:66px;border-radius:20px;
-  grid-column:2;grid-row:1;
+  grid-column:2;grid-row:2;
   background:linear-gradient(135deg,rgba(255,170,0,0.92),rgba(210,75,0,0.98));
   border:1.8px solid rgba(255,220,40,0.7);box-shadow:0 6px 20px rgba(255,150,0,0.4);
 }
@@ -363,13 +363,89 @@ canvas{display:block;width:100%;height:100%}
   border-color:rgba(100,240,185,0.65);box-shadow:0 6px 20px rgba(20,185,130,0.4);
 }
 
-/* Botão 4: Pique / Sprint */
+/* Botão 4: Pique / Sprint com Barra de Estamina */
 .btnSprint{
   width:72px;height:62px;border-radius:18px;
-  grid-column:1;grid-row:1;
+  grid-column:1;grid-row:2;
   background:linear-gradient(135deg,rgba(0,190,240,0.90),rgba(0,105,155,0.98));
   border:1.8px solid rgba(90,225,255,0.65);box-shadow:0 6px 20px rgba(0,190,240,0.4);
+  position:relative;overflow:hidden;
 }
+.btnSprint .staminaFill{
+  position:absolute;bottom:0;left:0;right:0;height:100%;
+  background:linear-gradient(180deg,rgba(0,240,255,0.35),rgba(16,185,129,0.25));
+  pointer-events:none;transition:height 0.08s linear, background 0.2s ease;z-index:0;
+}
+.btnSprint.exhausted{
+  background:linear-gradient(135deg,rgba(180,30,40,0.90),rgba(100,10,20,0.98));
+  border-color:rgba(255,90,90,0.65);box-shadow:0 6px 20px rgba(220,38,38,0.4);
+}
+.btnSprint.exhausted .staminaFill{
+  background:linear-gradient(180deg,rgba(239,68,68,0.4),rgba(185,28,28,0.3));
+}
+
+/* ═══════════ HUD DE FÔLEGO / STAMINA FLUTUANTE ═══════════ */
+#staminaHud{
+  position:absolute;bottom:calc(18px + env(safe-area-inset-bottom));
+  left:50%;transform:translateX(-50%);
+  display:none;align-items:center;gap:8px;
+  background:linear-gradient(135deg,rgba(22,12,30,0.92),rgba(10,8,16,0.96));
+  border:1.2px solid rgba(0,240,255,0.4);border-radius:20px;
+  padding:4px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.6),0 0 15px rgba(0,240,255,0.2);
+  backdrop-filter:blur(10px);z-index:4;pointer-events:none;
+  transition:opacity .2s ease,border-color .2s ease,box-shadow .2s ease;
+}
+#staminaHud.show{display:flex}
+#staminaHud.exhausted{
+  border-color:rgba(239,68,68,0.8);
+  box-shadow:0 8px 24px rgba(0,0,0,0.6),0 0 20px rgba(239,68,68,0.5);
+  animation:staminaPulse 0.55s infinite alternate;
+}
+@keyframes staminaPulse{
+  0%{transform:translateX(-50%) scale(1)}
+  100%{transform:translateX(-50%) scale(1.05)}
+}
+.staminaIcon{font-size:12px;line-height:1;color:#00f0ff;filter:drop-shadow(0 0 5px #00f0ff)}
+.staminaTrack{
+  width:110px;height:7px;background:rgba(255,255,255,0.12);
+  border-radius:6px;overflow:hidden;position:relative;
+}
+.staminaBar{
+  height:100%;width:100%;
+  background:linear-gradient(90deg,#00f0ff,#10b981);
+  border-radius:6px;transition:width 0.06s linear,background 0.2s ease;
+  box-shadow:0 0 8px rgba(0,240,255,0.7);
+}
+.staminaBar.mid{
+  background:linear-gradient(90deg,#ffd700,#ff8800);
+  box-shadow:0 0 8px rgba(255,215,0,0.7);
+}
+.staminaBar.low{
+  background:linear-gradient(90deg,#ff4455,#dc2626);
+  box-shadow:0 0 10px rgba(255,68,85,0.9);
+}
+.staminaLabel{
+  font-family:'Outfit',sans-serif;font-size:9.5px;font-weight:900;
+  letter-spacing:1px;color:#fff;text-transform:uppercase;min-width:48px;
+}
+
+/* Botão 5: Pedir a bola. Fica na linha de cima, longe do polegar em repouso —
+   é um pedido, não uma ação de disputa, e não pode sair sem querer no meio de
+   um carrinho. */
+.btnCall{
+  width:100%;height:48px;border-radius:16px;
+  grid-column:1 / span 2;grid-row:1;
+  background:linear-gradient(135deg,rgba(255,215,0,0.90),rgba(190,130,0,0.98));
+  border:1.8px solid rgba(255,235,120,0.7);box-shadow:0 6px 18px rgba(255,190,0,0.38);
+  flex-direction:row;gap:7px;color:#231800;
+}
+.btnCall .kLabel{font-size:12px}
+.btnCall .kBadge{background:rgba(0,0,0,0.22);border-color:rgba(0,0,0,0.3);color:#231800}
+.btnCall.asked{
+  background:linear-gradient(135deg,rgba(0,240,200,0.92),rgba(0,140,120,0.98));
+  border-color:rgba(120,255,230,0.8);box-shadow:0 6px 20px rgba(0,230,190,0.5);color:#00231c;
+}
+.btnCall.asked .kBadge{color:#00231c}
 
 /* ═══════════ LOBBY PRINCIPAL ESTILO EA FC / UFL VOLTA ═══════════ */
 #start{
@@ -2134,11 +2210,28 @@ canvas{display:block;width:100%;height:100%}
   </button>
 
   <div id="powerWrap"><div id="power"></div><div id="powerSafe"></div></div>
+  
+  <!-- HUD Dinâmico de Estamina / Fôlego -->
+  <div id="staminaHud">
+    <span class="staminaIcon">⚡</span>
+    <div class="staminaTrack">
+      <div class="staminaBar" id="staminaBar"></div>
+    </div>
+    <span class="staminaLabel" id="staminaText">FÔLEGO</span>
+  </div>
+
   <div id="joy"><div id="knob"></div></div>
 
   <div id="btnGrid">
-    <!-- 1. Topo Esquerda: Pique (Arrancada) -->
+    <!-- 0. Linha de cima: Pedir a bola (vale para bots e para o time no online) -->
+    <button class="btn btnCall" id="callPassBtn">
+      <span class="kBadge" id="callPassBadge">X</span>
+      <span class="kLabel">PEDIR BOLA</span>
+    </button>
+
+    <!-- 1. Topo Esquerda: Pique (Arrancada) com Barra de Estamina -->
     <button class="btn btnSprint" id="sprintBtn">
+      <div class="staminaFill" id="sprintStaminaFill"></div>
       <span class="kBadge">SHIFT</span>
       <span class="kLabel">PIQUE</span>
     </button>
@@ -5715,6 +5808,16 @@ function animateHumanoid(char, dt, isMoving){
   char.cool = Math.max(0, char.cool - dt);
   char.kick = Math.max(0, char.kick - dt);
   char.act = Math.max(0, char.act - dt);
+  if(char.noBall > 0) char.noBall = Math.max(0, char.noBall - dt);
+  if(char.callT > 0){
+    char.callT = Math.max(0, char.callT - dt);
+    if(char.callT === 0 && char.callMark) char.callMark.visible = false;
+  }
+  if(char.callMark && char.callMark.visible){
+    // Balança de leve para puxar o olho de quem está conduzindo
+    char.callMark.position.y = 2.62 + Math.sin(performance.now() / 190) * 0.11;
+    char.callMark.rotation.y += dt * 3.2;
+  }
 
   // Retorno automático para idle ao finalizar qualquer animação de ação
   if(char.act <= 0){
@@ -6678,6 +6781,7 @@ const defaultKeyBindings = {
   dribble: "f",
   jump: "c",
   dance: "v",
+  callPass: "x",
   reset: "t",
   voice: "b"
 };
@@ -6710,6 +6814,7 @@ fitCamera();
 
 function kickoff(dir){
   player.root.position.set(0,0,7.0); player.vel.set(0,0,0); player.yaw = Math.PI; player.state = "idle"; player.act = 0;
+  player.stamina = 100; player.isExhausted = false; updateStaminaHUD(0);
   mateA.root.position.set(-11.5, 0, 3.5); mateA.vel.set(0,0,0); mateA.state = "idle";
   mateB.root.position.set( 11.5, 0, 3.5); mateB.vel.set(0,0,0); mateB.state = "idle";
   foeA.root.position.set(8.5, 0, -8.0);   foeA.vel.set(0,0,0);  foeA.state = "idle";
@@ -6717,7 +6822,7 @@ function kickoff(dir){
   foeC.root.position.set(0, 0, -5.5);     foeC.vel.set(0,0,0);  foeC.state = "idle";
   gkFoe.root.position.set(0, 0, -HH+2.0); gkFoe.vel.set(0,0,0);
   gkOwn.root.position.set(0, 0,  HH-2.0); gkOwn.vel.set(0,0,0);
-  for(const c of chars){ c.root.position.y = 0; c.cool = 0; c.kick = 0; c.state = "idle"; c.act = 0; }
+  for(const c of chars){ c.root.position.y = 0; c.cool = 0; c.kick = 0; c.state = "idle"; c.act = 0; c.stamina = 100; c.isExhausted = false; }
   ball.position.set(0, 0.28, dir*1.8); ballVel.set(0,0,0); ballSpin.set(0,0,0);
   camFocus.set(player.root.position.x, player.root.position.y + 1.45, player.root.position.z);
   // Limpa qualquer jogada parada pendente ao recomeçar do meio
@@ -6775,25 +6880,52 @@ function updatePlayer(dt){
     player.vel.z = THREE.MathUtils.damp(player.vel.z, 0, 4.0, dt);
   } else {
     if(player.state === "tackle" || player.state === "steal" || player.state === "fall" || player.state === "foul") player.state = "idle";
-    // Velocidade atlética responsiva e rápida (ritmo frenético)
-    let speed = input.sprint ? 14.5 : 10.2;
+
+    // ════════════ SISTEMA DE ESTAMINA / FÔLEGO ════════════
+    if(player.stamina === undefined) player.stamina = 100;
+    if(player.isExhausted === undefined) player.isExhausted = false;
+
+    const isMoving = mag > 0.14;
+    const wantsSprint = !!input.sprint && isMoving;
+
+    if(wantsSprint && !player.isExhausted){
+      // Consome estamina durante a arrancada (gasta 22/s -> dura ~4.5s de pique direto)
+      player.stamina = Math.max(0, player.stamina - dt * 22);
+      if(player.stamina <= 0){
+        player.stamina = 0;
+        player.isExhausted = true;
+      }
+    } else {
+      // Recuperação rápida: 36/s parado/andando devagar, 24/s correndo leve
+      const recRate = isMoving ? 24 : 36;
+      player.stamina = Math.min(100, player.stamina + dt * recRate);
+      if(player.stamina >= 28){
+        player.isExhausted = false;
+      }
+    }
+
+    const canSprint = wantsSprint && !player.isExhausted;
+    // Velocidade de corrida e arrancada
+    let speed = canSprint ? 14.5 : 10.2;
     // Condução da bola com controle dinâmico rápido (92%)
     if(owner === player) speed *= 0.92;
 
-    if(mag > 0.14){
+    if(isMoving){
       tA.set(0,0,0).addScaledVector(camF, -iy).addScaledVector(camR, ix);
       tA.y = 0; tA.normalize().multiplyScalar(speed * mag);
       player.vel.x = THREE.MathUtils.damp(player.vel.x, tA.x, 16, dt);
       player.vel.z = THREE.MathUtils.damp(player.vel.z, tA.z, 16, dt);
       player.yaw = Math.atan2(tA.x, tA.z);
       if(player.state !== "jump" && player.state !== "header" && player.state !== "kick_charge" && player.state !== "pass" && !player.state.startsWith("shot")){
-        player.state = input.sprint ? "sprint" : "run";
+        player.state = canSprint ? "sprint" : "run";
       }
     } else {
       player.vel.x = THREE.MathUtils.damp(player.vel.x, 0, 13, dt);
       player.vel.z = THREE.MathUtils.damp(player.vel.z, 0, 13, dt);
       if(player.state !== "jump" && player.state !== "header" && player.state !== "kick_charge" && player.state !== "shot" && player.state !== "shot_power" && player.state !== "shot_technique" && player.state !== "pass" && player.state !== "steal") player.state = "idle";
     }
+
+    updateStaminaHUD(dt);
   }
 
   player.vel.y -= 23*dt;
@@ -6901,6 +7033,105 @@ function getAimWorldPoint(){
   return aimWorldPoint;
 }
 
+/* ═══════════════ PASSE & PEDIDO DE BOLA ═══════════════ */
+// Espelhado em server/shared/sim.js.
+//
+// O atrito do gramado aqui é altíssimo (0,91^60 por segundo): uma bola que só
+// rola perde ~99% da velocidade em um segundo, então o alcance rolando é apenas
+// v0/5,66 — um passe de 14m a meia força morria com 6,6m de sobra. A saída não
+// foi mexer no atrito (isso mudaria chute, rebote e bola solta), e sim mandar a
+// bola pelo AR na maior parte do caminho, onde o arrasto é desprezível: ela
+// cobre ~75% da distância voando e chega quicando no pé do companheiro.
+//
+// Medido de 4m a 40m, em toda a faixa de carga: chega sempre, entre 0,3s e 1,7s,
+// com 4 a 10 m/s de pace na chegada e pico de 0,3m a 1,8m — bola conduzida,
+// nunca balão.
+const PASSE = {
+  base:    10.0,  // velocidade mínima antes de contar a distância
+  porM:     0.60, // acréscimo por metro até o alvo
+  min:     13.0,  // piso: toque curto ainda sai com pé firme
+  max:     34.0,  // teto: passe longo não vira chute
+  carga:    7.0,  // quanto a carga do botão soma na velocidade
+  fracVoo:  0.75, // fração da distância coberta no ar
+  loftMin:  1.1,  // altura mínima de saída
+  loftMax:  8.0   // ...e máxima, para não virar lob
+};
+
+// Depois de tocar, o pé que bateu fica um instante sem poder reaver a bola.
+// Sem isso um passe curto era engolido pelo próprio passador: a posse é solta,
+// mas no quadro seguinte a bola ainda está a menos de 1,65m dele, então
+// findOwner() devolvia tudo — a bola nem saía do pé. Era isso que fazia o toque
+// curto parecer "sem força".
+const RECUO_TOQUE = 0.30;
+
+// Pedido de bola. Vale por pouco tempo de propósito: é um pedido para AGORA,
+// não uma preferência permanente.
+const CALL = { dur: 1.5, bonus: 1.4, raio: 34 };
+
+function pediuPasse(c){
+  return c && (c.callT || 0) > 0 && c.state !== "fall" && c.state !== "foul" && !(c.stunned > 0);
+}
+
+// Marcador de "me dá a bola" acima da cabeça. Como flash() é no-op neste jogo
+// (nada de texto na tela durante a jogada), é o marcador que dá o retorno: quem
+// conduz precisa ENXERGAR quem pediu, sem ler nada.
+//
+// Criado sob demanda e reaproveitado — só nasce no primeiro pedido daquele
+// jogador, e serve tanto o jogo local quanto o online.
+function criarMarcadorPedido(){
+  const g = new THREE.Group();
+  const cone = new THREE.Mesh(
+    new THREE.ConeGeometry(0.17, 0.34, 6),
+    new THREE.MeshBasicMaterial({ color: 0xffd700, transparent: true, opacity: 0.95, depthTest: false })
+  );
+  cone.rotation.x = Math.PI;   // ponta pra baixo, apontando o dono do pedido
+  g.add(cone);
+  const anel = new THREE.Mesh(
+    new THREE.TorusGeometry(0.26, 0.035, 6, 16),
+    new THREE.MeshBasicMaterial({ color: 0xfff2a0, transparent: true, opacity: 0.7, depthTest: false })
+  );
+  anel.rotation.x = Math.PI / 2;
+  anel.position.y = 0.24;
+  g.add(anel);
+  g.renderOrder = 999;         // some atrás de nada: é informação de jogo
+  g.position.y = 2.62;
+  return g;
+}
+
+function mostrarPedido(c, ligado){
+  if(!c) return;
+  if(ligado && !c.callMark){
+    c.callMark = criarMarcadorPedido();
+    c.root.add(c.callMark);
+  }
+  if(c.callMark) c.callMark.visible = !!ligado;
+}
+
+// Registra o pedido de bola no jogo local. O relógio corre em animateHumanoid.
+function marcarPedido(c){
+  if(!c) return;
+  c.callT = CALL.dur;
+  mostrarPedido(c, true);
+}
+
+// Botão PEDIR PASSE (partida local). Quem estiver conduzindo do seu time — bot
+// ou não — atende no quadro seguinte, em updateField.
+function pedirPasse(){
+  if(!running || gameMode === "multiplayer") return;
+  if(owner === player) return;         // com a bola no pé não há o que pedir
+  marcarPedido(player);
+  sfx.playSteal();
+}
+
+// Velocidade e altura de saída de um passe que percorre `dist` metros com carga
+// `p`. Uma função só, usada pelo jogador e pelos bots — antes cada um tinha a
+// sua conta e os passes de bot saíam com outra pegada.
+function velocidadePasse(dist, p){
+  const sp = clamp(PASSE.base + dist * PASSE.porM, PASSE.min, PASSE.max) + clamp(p, 0, 1) * PASSE.carga;
+  const vy = clamp((PASSE.fracVoo * dist * 18) / (2 * sp), PASSE.loftMin, PASSE.loftMax);
+  return { sp, vy };
+}
+
 function passToMate(targetMate, power=0.5){
   if(!running) return;
   const dToBall = flat(player.root.position, ball.position);
@@ -6917,17 +7148,19 @@ function passToMate(targetMate, power=0.5){
 
   const p = clamp(power, 0, 1);
   ball.position.y = Math.max(ball.position.y, 0.30);
-  // Piso mínimo pela distância (não morre no meio do caminho) + força real controlada
-  // por quanto tempo o botão ficou segurado — solta cedo = toque curto, segura = passe forte.
-  const minSpeed = clamp(dist * 0.55 + 7, 9, 20);
-  const passSpeed = minSpeed + p * 14;
-  ballVel.copy(tA).multiplyScalar(passSpeed);
-  ballVel.y = 0.7 + p * 1.1 + Math.min(1.2, dist * 0.03);
+  // Força calculada para a bola CHEGAR: velocidade pela distância real e altura
+  // de saída que põe ~75% do trajeto no ar. Ver o bloco PASSE lá em cima.
+  const { sp, vy } = velocidadePasse(dist, p);
+  ballVel.copy(tA).multiplyScalar(sp);
+  ballVel.y = vy;
   ballSpin.set(0, 1.2, 0);
+
+  targetMate.callT = 0;   // pedido atendido
 
   player.state = "pass";
   player.cool = 0.22;
   player.act = 0.22 + p * 0.10;
+  player.noBall = RECUO_TOQUE;
   shake = 0.05 + p * 0.10;
   sfx.playKick(0.35 + p * 0.5);
   owner = null;
@@ -6944,15 +7177,20 @@ function kick(power, type, over = 0){
 
   if(type === "pass"){
     facing(tA);
-    let chosenMate = mateA;
-    if(mateA && mateB){
-      const v1 = mateA.root.position.clone().sub(ball.position).normalize();
-      const v2 = mateB.root.position.clone().sub(ball.position).normalize();
-      const dot1 = v1.dot(tA);
-      const dot2 = v2.dot(tA);
-      chosenMate = dot2 > dot1 ? mateB : mateA;
+    // Escolhe entre os companheiros pelo alinhamento com a mira, mas quem pediu
+    // a bola entra na frente: é jogada combinada, e no meio da correria ninguém
+    // aponta com precisão pro parceiro.
+    let chosenMate = null, melhor = -1e9;
+    for(const m of [mateA, mateB]){
+      if(!m || m.state === "fall" || m.state === "foul") continue;
+      tB.copy(m.root.position).sub(ball.position); tB.y = 0;
+      const dd = tB.length();
+      if(dd < 0.8) continue;
+      let sc = tB.normalize().dot(tA);
+      if(dd < CALL.raio && pediuPasse(m)) sc += CALL.bonus;
+      if(sc > melhor){ melhor = sc; chosenMate = m; }
     }
-    passToMate(chosenMate, p);
+    passToMate(chosenMate || mateA, p);
     return;
   } else {
     const target = getAimWorldPoint();
@@ -7012,6 +7250,7 @@ function kick(power, type, over = 0){
       }
     }
   }
+  player.noBall = RECUO_TOQUE;
   owner = null;
 }
 
@@ -7371,6 +7610,57 @@ function performHeaderContact(){
   owner = null;
   shake = 0.16;
   sfx.playHeader();
+}
+
+/* ═══════════════ SISTEMA DE ESTAMINA / FÔLEGO DOS JOGADORES ═══════════════ */
+function updateStaminaHUD(dt){
+  const curStamina = (gameMode === "multiplayer")
+    ? (mp && mp.stamina !== undefined ? mp.stamina : 100)
+    : (player && player.stamina !== undefined ? player.stamina : 100);
+  const isExh = (gameMode === "multiplayer")
+    ? !!(mp && mp.isExhausted)
+    : !!(player && player.isExhausted);
+
+  const barEl = $("#staminaBar");
+  const textEl = $("#staminaText");
+  const hudEl = $("#staminaHud");
+  const fillEl = $("#sprintStaminaFill");
+  const sprintBtnEl = $("#sprintBtn");
+
+  const pct = Math.max(0, Math.min(100, Math.round(curStamina)));
+
+  if(barEl){
+    barEl.style.width = `${pct}%`;
+    barEl.classList.toggle("mid", pct < 60 && pct >= 28);
+    barEl.classList.toggle("low", pct < 28);
+  }
+
+  if(textEl){
+    if(isExh){
+      textEl.textContent = "CANSAÇO 😮‍💨";
+      textEl.style.color = "#ef4444";
+    } else if(pct < 100){
+      textEl.textContent = `${pct}% FÔLEGO`;
+      textEl.style.color = pct < 28 ? "#ff4455" : (pct < 60 ? "#ffd700" : "#00f0ff");
+    } else {
+      textEl.textContent = "FÔLEGO ⚡";
+      textEl.style.color = "#00f0ff";
+    }
+  }
+
+  if(hudEl){
+    hudEl.classList.toggle("exhausted", isExh);
+    const inActiveMatch = (gameMode === "match" || gameMode === "training" || gameMode === "multiplayer") && (running || (mp && mp.running));
+    hudEl.classList.toggle("show", inActiveMatch);
+    hudEl.style.opacity = (pct < 98 || isExh) ? "1" : "0.75";
+  }
+
+  if(fillEl){
+    fillEl.style.height = `${pct}%`;
+  }
+  if(sprintBtnEl){
+    sprintBtnEl.classList.toggle("exhausted", isExh);
+  }
 }
 
 /* ═══════════════ SISTEMA DE COMEMORAÇÕES & SELEÇÃO INTERATIVA (5 COMEMORAÇÕES) ═══════════════ */
@@ -8033,7 +8323,8 @@ function findOwner(){
   }
 
   // 3. Se o possuidor atual ainda está com ela na zona de controle
-  if(owner && owner.state !== "fall" && owner.state !== "foul" && owner.state !== "tackle" && !(owner.stunned > 0)){
+  if(owner && owner.state !== "fall" && owner.state !== "foul" && owner.state !== "tackle" &&
+     !(owner.stunned > 0) && !(owner.noBall > 0)){
     const d = flat(owner.root.position, ball.position);
     if(d < 1.85 && ball.position.y < 1.6){
       return owner;
@@ -8047,6 +8338,8 @@ function findOwner(){
   for(const c of chars){
     if(c.state === "fall" || c.state === "foul" || c.state === "tackle" || c.state === "dance") continue;
     if(c.stunned > 0) continue;
+    // Quem acabou de tocar não engole a própria bola de volta — ver RECUO_TOQUE
+    if(c.noBall > 0) continue;
     const d = flat(c.root.position, ball.position);
     if(d < bestDist && ball.position.y < 1.6){
       bestDist = d;
@@ -8270,7 +8563,34 @@ function updateField(c, dt, isChaser){
       return;
     }
 
-    // 3. Sob pressão e sem ângulo: toca pro companheiro melhor posicionado
+    // 3. Companheiro pediu a bola: toca na hora. É pra isso que serve o botão —
+    //    o bot que conduz não fica te ignorando enquanto você pede por ela.
+    if(!inDribble && c.kick <= 0){
+      let pede = null, melhorD = CALL.raio;
+      for(const m of chars){
+        if(m.team !== c.team || m === c || m.role === "keeper") continue;
+        if(!pediuPasse(m)) continue;
+        const dd = flat(c.root.position, m.root.position);
+        if(dd > 2.5 && dd < melhorD){ melhorD = dd; pede = m; }
+      }
+      if(pede){
+        tA.copy(pede.root.position).sub(ball.position); tA.y = 0;
+        const d = tA.length();
+        tA.normalize();
+        c.yaw = Math.atan2(tA.x, tA.z);
+        ball.position.y = Math.max(ball.position.y, 0.3);
+        const { sp, vy } = velocidadePasse(d, 0.5);
+        ballVel.copy(tA).multiplyScalar(sp);
+        ballVel.y = vy;
+        pede.callT = 0;
+        c.state = "pass"; c.act = 0.26; c.cool = 0.25; c.kick = 0.9; c.noBall = RECUO_TOQUE;
+        owner = null; lastToucher = c;
+        sfx.playKick(0.55);
+        return;
+      }
+    }
+
+    // 4. Sob pressão e sem ângulo: toca pro companheiro melhor posicionado
     if(!inDribble && c.kick <= 0 && pressure < 2.2 && Math.random() < dt*1.6){
       let best = null, bestScore = -1e9;
       for(const m of chars){
@@ -8288,9 +8608,12 @@ function updateField(c, dt, isChaser){
         const d = tA.length();
         tA.normalize();
         ball.position.y = Math.max(ball.position.y, 0.3);
-        ballVel.copy(tA).multiplyScalar(clamp(d*0.85 + 9, 12, 26));
-        ballVel.y = 0.9 + Math.min(1.4, d*0.035);
-        c.state = "pass"; c.act = 0.26; c.cool = 0.25; c.kick = 0.7;
+        // Mesma conta do passe do jogador: o toque do bot também precisa chegar
+        const { sp, vy } = velocidadePasse(d, 0.5);
+        ballVel.copy(tA).multiplyScalar(sp);
+        ballVel.y = vy;
+        best.callT = 0;
+        c.state = "pass"; c.act = 0.26; c.cool = 0.25; c.kick = 0.7; c.noBall = RECUO_TOQUE;
         owner = null; lastToucher = c;
         sfx.playKick(0.5);
         return;
@@ -8311,6 +8634,14 @@ function updateField(c, dt, isChaser){
     // ════════════ SEM A BOLA: SE OFERECE E FECHA ESPAÇO ════════════
     const weHaveBall = owner && owner.team === c.team;
     sp = weHaveBall ? 9.0 : 8.4;
+
+    // Bot também pede a bola: livre e adiantado, levanta a mão. Quem estiver
+    // conduzindo — você ou outro bot — vê o marcador em cima da cabeça dele.
+    if(weHaveBall && owner !== c && !pediuPasse(c) && Math.random() < dt*0.6){
+      const dDono = flat(c.root.position, owner.root.position);
+      const ganho = (c.root.position.z - owner.root.position.z) * atk;
+      if(dDono > 5 && dDono < 26 && nearestOpponentDist(c) > 4.5 && ganho > -3) marcarPedido(c);
+    }
     tC.set(
       clamp(-ball.position.x*0.5 + c.side*8.0, -HW+4, HW-4),
       0,
@@ -10253,6 +10584,32 @@ if(skillBtn){
   skillBtn.addEventListener("pointercancel", ()=>skillBtn.classList.remove("activeKey"));
 }
 
+// Botão PEDIR BOLA. No jogo local resolve na hora; no online vira um toque de
+// rede, igual aos outros botões — o servidor é quem registra o pedido.
+const callPassBtn = $("#callPassBtn");
+function acionarPedido(){
+  if(!running) return;
+  if(gameMode === "multiplayer"){
+    if(mpComBola()) return;      // com a bola no pé não há o que pedir
+    mpMarcarToque("callPass");
+    sfx.playSteal();
+  } else {
+    pedirPasse();
+  }
+  if(callPassBtn){
+    callPassBtn.classList.add("asked");
+    clearTimeout(callPassBtn._t);
+    callPassBtn._t = setTimeout(()=> callPassBtn.classList.remove("asked"), CALL.dur * 1000);
+  }
+}
+if(callPassBtn){
+  callPassBtn.addEventListener("pointerdown", (e)=>{
+    e.preventDefault();
+    sfx.init();
+    acionarPedido();
+  });
+}
+
 if(sprintBtn){
   sprintBtn.addEventListener("pointerdown", (e)=>{
     e.preventDefault();
@@ -10301,9 +10658,13 @@ addEventListener("keydown", e=>{
     return;
   }
 
-  // Na partida online as ações saem de mpGatherInput() lendo mpKeys — o mesmo
-  // keydown já alimentou aquele mapa. Executar também as ações locais aqui só
-  // mexeria no boneco estacionado fora de campo.
+  // Pedir a bola vale nos dois modos: acionarPedido() é que sabe se resolve
+  // aqui ou se manda o toque pela rede. Por isso vem ANTES do desvio do online.
+  if(k === userKeyBindings.callPass){ acionarPedido(); }
+
+  // Na partida online as demais ações saem de mpGatherInput() lendo mpKeys — o
+  // mesmo keydown já alimentou aquele mapa. Executar também as ações locais
+  // aqui só mexeria no boneco estacionado fora de campo.
   if(gameMode === "multiplayer") return;
 
   if(k === "1" || k === "numpad1"){ if(owner === player) passToMate(mateA); }
@@ -10424,7 +10785,8 @@ const actionLabels = {
   up: "Movimentar P/ Cima", down: "Movimentar P/ Baixo", left: "Movimentar P/ Esquerda", right: "Movimentar P/ Direita",
   sprint: "Pique / Arrancada", shoot: "Chutar / Encher o pé", pass: "Tocar a bola",
   tackle: "Carrinho", steal: "Desarme em pé", dribble: "Drible de Cria",
-  jump: "Pular / Cabecear", dance: "Dancinha / Emoji", reset: "Resetar bola (Treino)",
+  jump: "Pular / Cabecear", dance: "Dancinha / Emoji", callPass: "Pedir a bola",
+  reset: "Resetar bola (Treino)",
   voice: "Falar (voz do time)"
 };
 let activeBindAction = null;
@@ -11069,11 +11431,33 @@ function mpApplyLocalInput(input, dt, hasBall){
     return;
   }
 
-  let speed = input.sprint ? 12.0 : 8.5;
+  const mag = Math.hypot(input.dx, input.dz);
+  const isMoving = mag > 0.14;
+  if(mp.stamina === undefined) mp.stamina = 100;
+  if(mp.isExhausted === undefined) mp.isExhausted = false;
+
+  const wantsSprint = !!input.sprint && isMoving;
+
+  if(wantsSprint && !mp.isExhausted){
+    mp.stamina = Math.max(0, mp.stamina - dt * 22);
+    if(mp.stamina <= 0){
+      mp.stamina = 0;
+      mp.isExhausted = true;
+    }
+  } else {
+    const recRate = isMoving ? 24 : 36;
+    mp.stamina = Math.min(100, mp.stamina + dt * recRate);
+    if(mp.stamina >= 28){
+      mp.isExhausted = false;
+    }
+  }
+
+  const canSprint = wantsSprint && !mp.isExhausted;
+  let speed = canSprint ? 12.0 : 8.5;
   if(hasBall) speed *= 0.90;
   if(input.shoot) speed *= 0.55;
-  const mag = Math.hypot(input.dx, input.dz);
-  if(mag > 0.14){
+
+  if(isMoving){
     const nx = input.dx/mag, nz = input.dz/mag, m = Math.min(1, mag);
     mp.localVx = mpDamp(mp.localVx, nx*speed*m, 16, dt);
     mp.localVz = mpDamp(mp.localVz, nz*speed*m, 16, dt);
@@ -11081,11 +11465,9 @@ function mpApplyLocalInput(input, dt, hasBall){
   } else {
     mp.localVx = mpDamp(mp.localVx, 0, 13, dt);
     mp.localVz = mpDamp(mp.localVz, 0, 13, dt);
-    // Parado, o angulo volta devagar para o oficial. O servidor gira o corpo em
-    // acoes que o cliente nao prediz (o chute vira para a mira), e sem isso os
-    // dois divergiam para sempre. Enquanto o jogador dirige, o teclado manda.
     if(mp.serverYaw != null) mp.localYaw = angleLerp(mp.localYaw, mp.serverYaw, 1 - Math.exp(-6*dt));
   }
+  updateStaminaHUD(dt);
   mpIntegrarLocal(dt);
 }
 function mpReconcile(serverEnt){

@@ -49,45 +49,127 @@ canvas{display:block;width:100%;height:100%}
 .hudTeamName{font-family:'Teko',sans-serif;font-size:22px;letter-spacing:1.2px;line-height:1}
 .teamDot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}
 
-/* ═══════════ SELETOR DE TIMES & CONFRONTO (LOBBY) ═══════════ */
-.teamMatchupSelector{
-  display:flex;align-items:center;justify-content:space-between;gap:8px;
-  padding:8px 12px;border-radius:18px;
-  background:linear-gradient(135deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02));
-  border:1.5px solid rgba(255,215,0,0.35);box-shadow:0 6px 20px rgba(0,0,0,0.5);
-  margin-bottom:12px;
+/* ═══════════ MODAL DE CONFIGURAÇÃO DE PARTIDA (CONFRONTO 4V4) ═══════════ */
+#matchSetupModal{
+  position:fixed;inset:0;z-index:65;background:rgba(6,4,12,0.88);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  display:none;align-items:center;justify-content:center;padding:16px;
 }
-.teamPickCol{
-  flex:1;display:flex;align-items:center;gap:8px;padding:8px 10px;
-  border-radius:14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);
-  cursor:pointer;transition:all .16s ease;user-select:none;
+#matchSetupModal.show{display:flex;animation:modalFadeIn .22s cubic-bezier(0.16,1,0.3,1) both}
+.matchSetupCard{
+  width:min(95vw,680px);background:linear-gradient(180deg,rgba(28,16,42,0.98),rgba(12,8,20,0.99));
+  border:1.5px solid rgba(255,215,0,0.5);border-radius:28px;
+  box-shadow:0 30px 100px rgba(0,0,0,0.95),0 0 60px rgba(255,215,0,0.25);
+  padding:24px 24px 20px;color:#fff;position:relative;overflow:hidden;
+  max-height:94vh;display:flex;flex-direction:column;gap:14px;
 }
-.teamPickCol:hover{
-  background:rgba(255,215,0,0.15);border-color:#ffd700;
-  transform:translateY(-2px);box-shadow:0 4px 14px rgba(255,215,0,0.25);
+.matchSetupCard::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:4px;
+  background:linear-gradient(90deg,#ffd700,#ff4455,#00f0b8,#00d2ff);
 }
-.pickTeamBadge{width:28px;height:28px;display:flex;align-items:center;justify-content:center;flex:none;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.6))}
-.pickTeamBadge svg{width:100%;height:100%}
-.pickTeamInfo{display:flex;flex-direction:column;line-height:1.1;overflow:hidden}
-.pickTeamLabel{font-size:8.5px;font-weight:900;letter-spacing:1px;color:rgba(255,255,255,0.5);text-transform:uppercase}
-.pickTeamName{font-family:'Teko',sans-serif;font-size:18px;font-weight:700;letter-spacing:0.8px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.teamMatchupVs{
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:5px 8px;border-radius:12px;background:rgba(255,215,0,0.12);border:1px solid rgba(255,215,0,0.35);
-  cursor:pointer;transition:all .16s ease;user-select:none;flex:none;
+.matchSetupHeader{display:flex;align-items:center;justify-content:space-between}
+.matchSetupShowcase{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  background:rgba(255,255,255,0.04);border:1px solid rgba(255,215,0,0.25);
+  border-radius:20px;padding:14px 16px;
 }
-.teamMatchupVs:hover{
-  background:linear-gradient(135deg,#ffd700,#ff8800);transform:scale(1.05);
-  box-shadow:0 0 16px rgba(255,215,0,0.5);
+.matchSetupTeamBox{
+  flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;
+  padding:12px 10px;border-radius:16px;
+  background:rgba(255,255,255,0.05);border:1.5px solid rgba(255,255,255,0.12);
+  cursor:pointer;transition:all .16s ease;text-align:center;
 }
-.teamMatchupVs span{font-family:'Teko',sans-serif;font-size:17px;font-weight:900;color:#ffd700;line-height:1}
-.teamMatchupVs:hover span{color:#000}
-.teamMatchupVs small{font-size:7px;font-weight:900;letter-spacing:0.5px;color:rgba(255,255,255,0.7);white-space:nowrap}
-.teamMatchupVs:hover small{color:rgba(0,0,0,0.85)}
+.matchSetupTeamBox:hover{
+  background:rgba(255,215,0,0.12);border-color:#ffd700;
+  transform:translateY(-2px);box-shadow:0 6px 20px rgba(255,215,0,0.25);
+}
+.matchSetupTeamBox.activeTarget{
+  border-color:#ffd700;background:linear-gradient(180deg,rgba(255,215,0,0.20),rgba(255,140,0,0.08));
+  box-shadow:0 0 20px rgba(255,215,0,0.35);
+}
+.setupTeamBadgeWrap{
+  width:52px;height:52px;display:flex;align-items:center;justify-content:center;
+  filter:drop-shadow(0 4px 10px rgba(0,0,0,0.7));
+}
+.setupTeamBadgeWrap svg{width:100%;height:100%}
+.setupTeamRole{font-size:9px;font-weight:900;letter-spacing:1.2px;color:rgba(255,255,255,0.55);text-transform:uppercase}
+.setupTeamName{font-family:'Teko',sans-serif;font-size:26px;font-weight:700;letter-spacing:1px;color:#fff;line-height:1}
+.setupTeamColors{display:flex;gap:5px;margin-top:2px}
+.setupChangeBtn{
+  margin-top:4px;padding:4px 10px;font-size:10px;font-weight:800;letter-spacing:0.8px;
+  background:rgba(255,255,255,0.10);border:1px solid rgba(255,255,255,0.2);
+  color:#fff;border-radius:8px;cursor:pointer;pointer-events:none;
+}
+.matchSetupCenter{display:flex;flex-direction:column;align-items:center;gap:8px;flex:none}
+.matchSetupVsBadge{
+  font-family:'Teko',sans-serif;font-size:30px;font-weight:900;line-height:1;
+  color:#ffd700;text-shadow:0 0 12px rgba(255,215,0,0.6);
+}
+.btnRandomDerbyBig{
+  display:flex;align-items:center;gap:6px;padding:6px 12px;
+  background:linear-gradient(135deg,rgba(255,215,0,0.2),rgba(255,140,0,0.2));
+  border:1px solid rgba(255,215,0,0.4);border-radius:12px;
+  color:#ffd700;font-size:11px;font-weight:800;cursor:pointer;transition:all .16s ease;white-space:nowrap;
+}
+.btnRandomDerbyBig:hover{
+  background:linear-gradient(135deg,#ffd700,#ff8800);color:#000;
+  transform:scale(1.05);box-shadow:0 0 16px rgba(255,215,0,0.5);
+}
+.matchSetupTeamsListTitle{font-size:11px;font-weight:900;letter-spacing:1px;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-top:2px}
+.matchSetupGrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;max-height:190px;overflow-y:auto;padding-right:4px}
+@media (max-width:600px){.matchSetupGrid{grid-template-columns:repeat(2,1fr)}}
+.matchSetupItem{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  padding:8px 6px;border-radius:12px;
+  background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);
+  cursor:pointer;transition:all .14s ease;text-align:center;
+}
+.matchSetupItem:hover{background:rgba(255,215,0,0.16);border-color:#ffd700;transform:translateY(-2px)}
+.matchSetupItem.selectedHome{
+  background:linear-gradient(180deg,rgba(0,240,255,0.25),rgba(0,100,255,0.15));
+  border-color:#00f0ff;box-shadow:0 0 12px rgba(0,240,255,0.35);
+}
+.matchSetupItem.selectedAway{
+  background:linear-gradient(180deg,rgba(255,68,85,0.25),rgba(200,0,40,0.15));
+  border-color:#ff4455;box-shadow:0 0 12px rgba(255,68,85,0.35);
+}
+.matchSetupItemSvg{width:32px;height:32px;display:flex;align-items:center;justify-content:center}
+.matchSetupItemSvg svg{width:100%;height:100%}
+.matchSetupItemName{font-family:'Teko',sans-serif;font-size:16px;font-weight:700;color:#fff;line-height:1}
+.matchSetupActions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:6px}
+.btnMatchSetupBack{
+  padding:12px 20px;border-radius:14px;background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.2);color:#fff;font-weight:800;font-size:13px;
+  cursor:pointer;transition:all .16s ease;
+}
+.btnMatchSetupBack:hover{background:rgba(255,255,255,0.15)}
+.btnMatchSetupStart{
+  flex:1;padding:12px 24px;border-radius:14px;
+  background:linear-gradient(135deg,#ffd700,#ff8800);border:none;
+  color:#000;font-family:'Teko',sans-serif;font-size:26px;font-weight:900;letter-spacing:1px;
+  cursor:pointer;transition:all .16s ease;box-shadow:0 8px 25px rgba(255,140,0,0.4);
+}
+.btnMatchSetupStart:hover{transform:translateY(-2px);box-shadow:0 10px 30px rgba(255,215,0,0.6)}
+
+/* Seletor de Time no Lobby Multiplayer */
+.mpTeamPickerRow{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:8px 12px;border-radius:12px;background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,215,0,0.3);cursor:pointer;transition:all .16s ease;
+}
+.mpTeamPickerRow:hover{background:rgba(255,215,0,0.12);border-color:#ffd700}
+.mpTeamBadge{width:28px;height:28px;display:flex;align-items:center;justify-content:center;flex:none}
+.mpTeamBadge svg{width:100%;height:100%}
+.mpTeamName{font-family:'Teko',sans-serif;font-size:20px;font-weight:700;letter-spacing:1px;color:#fff;flex:1}
+.mpTeamChangeBtn{
+  font-size:10px;font-weight:800;padding:4px 8px;border-radius:6px;
+  background:rgba(255,215,0,0.2);border:1px solid rgba(255,215,0,0.4);
+  color:#ffd700;cursor:pointer;pointer-events:none;
+}
 
 /* Modal de Escolha de Times */
 #teamPickerModal{
-  position:fixed;inset:0;z-index:60;background:rgba(6,4,12,0.85);
+  position:fixed;inset:0;z-index:70;background:rgba(6,4,12,0.85);
   backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
   display:none;align-items:center;justify-content:center;padding:16px;
 }
@@ -1552,28 +1634,6 @@ canvas{display:block;width:100%;height:100%}
         <span id="startText"></span>
       </div>
 
-      <div class="lobbySectionTitle">CONFRONTO DE TIMES</div>
-      <div class="teamMatchupSelector" id="teamMatchupSelector">
-        <div class="teamPickCol" id="pickHomeTeamBtn" title="Escolher Time da Casa">
-          <span class="pickTeamBadge" id="pickHomeBadge"></span>
-          <div class="pickTeamInfo">
-            <span class="pickTeamLabel">CASA (VOCÊ)</span>
-            <span class="pickTeamName" id="pickHomeName">FLAMENGO</span>
-          </div>
-        </div>
-        <div class="teamMatchupVs" id="btnRandomMatchup" title="Sortear Clássico Aleatório">
-          <span>VS</span>
-          <small>🎲 CLÁSSICO</small>
-        </div>
-        <div class="teamPickCol" id="pickAwayTeamBtn" title="Escolher Time Visitante">
-          <span class="pickTeamBadge" id="pickAwayBadge"></span>
-          <div class="pickTeamInfo">
-            <span class="pickTeamLabel">ADVERSÁRIO</span>
-            <span class="pickTeamName" id="pickAwayName">PALMEIRAS</span>
-          </div>
-        </div>
-      </div>
-
       <div class="lobbySectionTitle">MODOS DE JOGO</div>
       
       <button class="lobbyMenuItem primaryHighlight" id="btnPlayMatch">
@@ -1669,6 +1729,60 @@ canvas{display:block;width:100%;height:100%}
   </div>
 </div>
 
+<!-- ═══════════ MODAL DE CONFRONTO / ESCOLHA DE TIMES (PARTIDA RÁPIDA) ═══════════ -->
+<div id="matchSetupModal">
+  <div class="matchSetupCard">
+    <div class="matchSetupHeader">
+      <div>
+        <h2 style="margin:0;font-family:'Teko',sans-serif;font-size:34px;letter-spacing:1.5px;color:#ffd700;line-height:1">CONFRONTO DA PARTIDA</h2>
+        <div style="font-size:12px;color:rgba(255,255,255,0.6);margin-top:2px">Escolha os times para o clássico 4v4</div>
+      </div>
+      <button class="closeCustomBtn" id="btnCloseMatchSetup">✕</button>
+    </div>
+
+    <div class="matchSetupShowcase">
+      <!-- Time Casa -->
+      <div class="matchSetupTeamBox activeTarget" id="setupHomeCard" title="Clique para trocar seu time">
+        <div class="setupTeamBadgeWrap" id="setupHomeBadge"></div>
+        <div class="setupTeamRole">CASA (SEU TIME)</div>
+        <div class="setupTeamName" id="setupHomeName">FLAMENGO</div>
+        <div class="setupTeamColors" id="setupHomeColors"></div>
+        <button class="setupChangeBtn" type="button">SELECIONADO (CASA)</button>
+      </div>
+
+      <!-- Centro VS & Sorteio -->
+      <div class="matchSetupCenter">
+        <div class="matchSetupVsBadge">VS</div>
+        <button class="btnRandomDerbyBig" id="btnSetupRandomMatch" type="button">
+          <span>🎲</span>
+          <span>SORTEAR CLÁSSICO</span>
+        </button>
+      </div>
+
+      <!-- Time Visitante -->
+      <div class="matchSetupTeamBox" id="setupAwayCard" title="Clique para trocar time rival">
+        <div class="setupTeamBadgeWrap" id="setupAwayBadge"></div>
+        <div class="setupTeamRole">VISITANTE (ADVERSÁRIO)</div>
+        <div class="setupTeamName" id="setupAwayName">PALMEIRAS</div>
+        <div class="setupTeamColors" id="setupAwayColors"></div>
+        <button class="setupChangeBtn" type="button">TROCAR RIVAL</button>
+      </div>
+    </div>
+
+    <!-- Grid Rápido dos 10 Times Clássicos -->
+    <div class="matchSetupTeamsListTitle" id="matchSetupGridTitle">CLIQUE NO TIME PARA DEFINIR O SEU TIME (CASA):</div>
+    <div class="matchSetupGrid" id="matchSetupGrid">
+      <!-- 10 Times gerados dinamicamente via JS -->
+    </div>
+
+    <!-- Rodapé de Ação -->
+    <div class="matchSetupActions">
+      <button class="btnMatchSetupBack" id="btnCancelMatchSetup">← VOLTAR</button>
+      <button class="btnMatchSetupStart" id="btnConfirmStartMatch">⚽ ENTRAR EM CAMPO</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══════════ MODAL DE ESCOLHA DOS 10 TIMES CLÁSSICOS ═══════════ -->
 <div id="teamPickerModal">
   <div class="teamPickerCard">
@@ -1694,6 +1808,15 @@ canvas{display:block;width:100%;height:100%}
     <div class="mpField">
       <label>SEU NOME</label>
       <input class="mpInput" id="mpName" maxlength="14" placeholder="ATÉ 14 CARACTERES" value="CRIA">
+    </div>
+
+    <div class="mpField">
+      <label>SEU TIME / CLUBE PREFERIDO</label>
+      <div class="mpTeamPickerRow" id="mpTeamSelectBtn" title="Clique para escolher seu clube favorito">
+        <span class="mpTeamBadge" id="mpTeamBadge"></span>
+        <span class="mpTeamName" id="mpTeamName">FLAMENGO</span>
+        <button class="mpTeamChangeBtn" type="button">MUDAR TIME</button>
+      </div>
     </div>
 
     <!-- Endereço do servidor configurado automaticamente via config.js -->
@@ -7526,7 +7649,7 @@ let matchTeams = {
   away: getTeamById("palmeiras")
 };
 
-let pickingTeamSide = "home";
+let setupTargetSide = "home"; // 'home' | 'away'
 
 function setMatchTeams(homeIdOrObj, awayIdOrObj) {
   const home = typeof homeIdOrObj === "string" ? getTeamById(homeIdOrObj) : (homeIdOrObj || matchTeams.home);
@@ -7537,8 +7660,9 @@ function setMatchTeams(homeIdOrObj, awayIdOrObj) {
     localStorage.setItem("fut_cria_home_team", home.id);
     localStorage.setItem("fut_cria_away_team", away.id);
   } catch(e){}
-  updateMenuMatchupUI();
+  updateMpTeamUI();
   updateHudTeamBadges();
+  renderMatchSetupShowcase();
 }
 
 function initSavedMatchTeams() {
@@ -7548,17 +7672,15 @@ function initSavedMatchTeams() {
     if(sHome) matchTeams.home = getTeamById(sHome);
     if(sAway) matchTeams.away = getTeamById(sAway);
   } catch(e){}
-  updateMenuMatchupUI();
+  updateMpTeamUI();
   updateHudTeamBadges();
 }
 
-function updateMenuMatchupUI() {
-  const pHomeBadge = $("#pickHomeBadge"), pHomeName = $("#pickHomeName");
-  const pAwayBadge = $("#pickAwayBadge"), pAwayName = $("#pickAwayName");
-  if(pHomeBadge) pHomeBadge.innerHTML = getTeamBadgeSvg(matchTeams.home.id, 28);
-  if(pHomeName) pHomeName.textContent = matchTeams.home.name;
-  if(pAwayBadge) pAwayBadge.innerHTML = getTeamBadgeSvg(matchTeams.away.id, 28);
-  if(pAwayName) pAwayName.textContent = matchTeams.away.name;
+function updateMpTeamUI() {
+  const badgeEl = $("#mpTeamBadge");
+  const nameEl = $("#mpTeamName");
+  if(badgeEl) badgeEl.innerHTML = getTeamBadgeSvg(matchTeams.home.id, 28);
+  if(nameEl) nameEl.textContent = matchTeams.home.name;
 }
 
 function updateHudTeamBadges(team0 = matchTeams.home, team1 = matchTeams.away) {
@@ -7579,6 +7701,102 @@ function updateHudTeamBadges(team0 = matchTeams.home, team1 = matchTeams.away) {
   if(hDot1) hDot1.style.backgroundColor = team1.primary === "#ffffff" ? "#ffd700" : team1.primary;
 }
 
+function renderMatchSetupShowcase() {
+  const hBadge = $("#setupHomeBadge"), hName = $("#setupHomeName"), hColors = $("#setupHomeColors");
+  const aBadge = $("#setupAwayBadge"), aName = $("#setupAwayName"), aColors = $("#setupAwayColors");
+  const hCard = $("#setupHomeCard"), aCard = $("#setupAwayCard");
+  const gridTitle = $("#matchSetupGridTitle");
+
+  if(hBadge) hBadge.innerHTML = getTeamBadgeSvg(matchTeams.home.id, 52);
+  if(hName) hName.textContent = matchTeams.home.name;
+  if(hColors) {
+    hColors.innerHTML = `
+      <span class="teamColorPill" style="background:${matchTeams.home.primary}"></span>
+      <span class="teamColorPill" style="background:${matchTeams.home.secondary}"></span>
+      <span class="teamColorPill" style="background:${matchTeams.home.shorts}"></span>
+    `;
+  }
+
+  if(aBadge) aBadge.innerHTML = getTeamBadgeSvg(matchTeams.away.id, 52);
+  if(aName) aName.textContent = matchTeams.away.name;
+  if(aColors) {
+    aColors.innerHTML = `
+      <span class="teamColorPill" style="background:${matchTeams.away.primary}"></span>
+      <span class="teamColorPill" style="background:${matchTeams.away.secondary}"></span>
+      <span class="teamColorPill" style="background:${matchTeams.away.shorts}"></span>
+    `;
+  }
+
+  if(hCard) hCard.classList.toggle("activeTarget", setupTargetSide === "home");
+  if(aCard) aCard.classList.toggle("activeTarget", setupTargetSide === "away");
+
+  if(gridTitle) {
+    gridTitle.textContent = setupTargetSide === "home" 
+      ? "CLIQUE NO TIME PARA DEFINIR O SEU TIME (CASA):"
+      : "CLIQUE NO TIME PARA DEFINIR O RIVAL (VISITANTE):";
+  }
+
+  renderMatchSetupGrid();
+}
+
+function renderMatchSetupGrid() {
+  const grid = $("#matchSetupGrid");
+  if(!grid) return;
+  grid.innerHTML = "";
+
+  TEAMS.forEach(team => {
+    const item = document.createElement("div");
+    const isHome = team.id === matchTeams.home.id;
+    const isAway = team.id === matchTeams.away.id;
+    
+    let cls = "matchSetupItem";
+    if(isHome) cls += " selectedHome";
+    if(isAway) cls += " selectedAway";
+    item.className = cls;
+
+    const tag = isHome ? "<small style='font-size:8px;color:#00f0ff;font-weight:900'>CASA</small>" : (isAway ? "<small style='font-size:8px;color:#ff4455;font-weight:900'>RIVAL</small>" : "");
+
+    item.innerHTML = `
+      <div class="matchSetupItemSvg">${getTeamBadgeSvg(team.id, 32)}</div>
+      <div class="matchSetupItemName">${team.short}</div>
+      ${tag}
+    `;
+
+    item.addEventListener("click", () => {
+      if(setupTargetSide === "home") {
+        const newAway = (matchTeams.away.id === team.id) ? (team.id === "real_madrid" ? "barcelona" : "real_madrid") : matchTeams.away.id;
+        setMatchTeams(team.id, newAway);
+        setupTargetSide = "away"; // Alterna automaticamente para facilitar a escolha do adversário
+      } else {
+        const newHome = (matchTeams.home.id === team.id) ? (team.id === "flamengo" ? "palmeiras" : "flamengo") : matchTeams.home.id;
+        setMatchTeams(newHome, team.id);
+      }
+      renderMatchSetupShowcase();
+      try { sfx.init(); sfx.playWhistle(false); } catch(e){}
+    });
+
+    grid.appendChild(item);
+  });
+}
+
+function openMatchSetupModal() {
+  setupTargetSide = "home";
+  renderMatchSetupShowcase();
+  const modal = $("#matchSetupModal");
+  if(modal) {
+    modal.classList.add("show");
+    modal.style.display = "flex";
+  }
+}
+
+function closeMatchSetupModal() {
+  const modal = $("#matchSetupModal");
+  if(modal) {
+    modal.classList.remove("show");
+    modal.style.display = "none";
+  }
+}
+
 function openTeamPicker(side = "home") {
   pickingTeamSide = side;
   const modal = $("#teamPickerModal");
@@ -7586,10 +7804,12 @@ function openTeamPicker(side = "home") {
   const title = $("#teamPickerTitle");
   if(!modal || !grid) return;
 
-  if(title) title.textContent = side === "home" ? "ESCOLHA SEU TIME (CASA)" : "ESCOLHA O TIME ADVERSÁRIO";
+  if(title) {
+    title.textContent = side === "mp" ? "ESCOLHA SEU TIME (MULTIPLAYER)" : (side === "home" ? "ESCOLHA SEU TIME (CASA)" : "ESCOLHA O TIME ADVERSÁRIO");
+  }
   grid.innerHTML = "";
 
-  const currentSelectedId = side === "home" ? matchTeams.home.id : matchTeams.away.id;
+  const currentSelectedId = side === "away" ? matchTeams.away.id : matchTeams.home.id;
 
   TEAMS.forEach(team => {
     const item = document.createElement("div");
@@ -7606,7 +7826,7 @@ function openTeamPicker(side = "home") {
       </div>
     `;
     item.addEventListener("click", () => {
-      if(pickingTeamSide === "home") {
+      if(pickingTeamSide === "mp" || pickingTeamSide === "home") {
         setMatchTeams(team.id, matchTeams.away.id === team.id ? (team.id === "real_madrid" ? "barcelona" : "real_madrid") : matchTeams.away.id);
       } else {
         setMatchTeams(matchTeams.home.id, team.id);
@@ -7634,6 +7854,7 @@ function rollRandomDerby() {
   setMatchTeams(derby[0], derby[1]);
   flash(`🏆 CLÁSSICO: ${matchTeams.home.name} vs ${matchTeams.away.name}!`, "#ffd700");
   try { sfx.init(); sfx.playWhistle(false); } catch(e){}
+  renderMatchSetupShowcase();
 }
 
 function applyTeamUniformToHumanoid(char, teamObj, isKeeper=false) {
@@ -8537,7 +8758,7 @@ function getCardTier(goals = 0) {
 const cardAvatarCache = new Map();
 
 function getAvatarSnapshot(customConfig = playerCustomConfig, forceRefresh = false) {
-  const key = JSON.stringify(customConfig || playerCustomConfig || {}) + "_v6";
+  const key = JSON.stringify(customConfig || playerCustomConfig || {}) + "_v8";
   if (!forceRefresh && cardAvatarCache.has(key)) {
     return cardAvatarCache.get(key);
   }
@@ -8584,8 +8805,8 @@ function getAvatarSnapshot(customConfig = playerCustomConfig, forceRefresh = fal
 
     const char = createHumanoidCria(0, "player", 0, 1, customConfig || playerCustomConfig);
     char.root.position.set(0, 0, 0);
-    // Face apontando 100% para frente (+Z) com leve pose
-    char.root.rotation.y = 0.04;
+    // Face e peito apontando 100% para frente (+Z) em direção à câmera
+    char.root.rotation.y = Math.PI - 0.06;
     offScene.add(char.root);
 
     offRenderer.render(offScene, offCam);
@@ -10119,7 +10340,19 @@ if(btnWheelCenter) btnWheelCenter.addEventListener("click", () => playCelebratio
 // Botões do Menu Principal e Vestiário
 const btnPlayMatch = $("#btnPlayMatch");
 if(btnPlayMatch) btnPlayMatch.addEventListener("click", ()=>{
-  if(!requireLogin("entrar em campo", startMatchMode)) return;
+  if(!requireLogin("entrar em campo", openMatchSetupModal)) return;
+  openMatchSetupModal();
+});
+
+const btnCloseMatchSetup = $("#btnCloseMatchSetup");
+if(btnCloseMatchSetup) btnCloseMatchSetup.addEventListener("click", closeMatchSetupModal);
+
+const btnCancelMatchSetup = $("#btnCancelMatchSetup");
+if(btnCancelMatchSetup) btnCancelMatchSetup.addEventListener("click", closeMatchSetupModal);
+
+const btnConfirmStart = $("#btnConfirmStartMatch");
+if(btnConfirmStart) btnConfirmStart.addEventListener("click", () => {
+  closeMatchSetupModal();
   startMatchMode();
 });
 
@@ -10141,15 +10374,23 @@ if(btnCloseCustom) btnCloseCustom.addEventListener("click", closeCustomizerStudi
 const btnSaveCustom = $("#btnSaveCustom");
 if(btnSaveCustom) btnSaveCustom.addEventListener("click", closeCustomizerStudio);
 
-// Seletor de Confronto e Times Clássicos
-const pickHomeBtn = $("#pickHomeTeamBtn");
-if(pickHomeBtn) pickHomeBtn.addEventListener("click", () => openTeamPicker("home"));
+const setupHomeCard = $("#setupHomeCard");
+if(setupHomeCard) setupHomeCard.addEventListener("click", () => {
+  setupTargetSide = "home";
+  renderMatchSetupShowcase();
+});
 
-const pickAwayBtn = $("#pickAwayTeamBtn");
-if(pickAwayBtn) pickAwayBtn.addEventListener("click", () => openTeamPicker("away"));
+const setupAwayCard = $("#setupAwayCard");
+if(setupAwayCard) setupAwayCard.addEventListener("click", () => {
+  setupTargetSide = "away";
+  renderMatchSetupShowcase();
+});
 
-const btnRandomMatch = $("#btnRandomMatchup");
-if(btnRandomMatch) btnRandomMatch.addEventListener("click", rollRandomDerby);
+const btnSetupRandomMatch = $("#btnSetupRandomMatch");
+if(btnSetupRandomMatch) btnSetupRandomMatch.addEventListener("click", rollRandomDerby);
+
+const mpTeamSelectBtn = $("#mpTeamSelectBtn");
+if(mpTeamSelectBtn) mpTeamSelectBtn.addEventListener("click", () => openTeamPicker("mp"));
 
 const btnClosePicker = $("#btnCloseTeamPicker");
 if(btnClosePicker) btnClosePicker.addEventListener("click", closeTeamPicker);

@@ -5853,6 +5853,22 @@ function drawMini(){
   mg.fillStyle = "#ff3b4e"; mg.fillRect(px(-GHW),h-5,px(GHW)-px(-GHW),5);
 
   const dot = (p,c,r)=>{mg.fillStyle=c;mg.beginPath();mg.arc(px(p.x),pz(p.z),r,0,Math.PI*2);mg.fill()};
+
+  if(gameMode === "multiplayer"){
+    for(const [id, c] of mp.chars){
+      const isAlly = c.team === mp.team;
+      const isMe = c.isMe;
+      let color = isAlly ? (isMe ? "#00ffcc" : "#ffd700") : (c.role === "keeper" ? "#ff8800" : "#ff3b4e");
+      dot(c.root.position, color, isMe ? 6.5 : (c.role === "keeper" ? 4.5 : 5.0));
+      if(isMe){
+        mg.strokeStyle = "#00ffcc"; mg.lineWidth = 2;
+        mg.beginPath(); mg.arc(px(c.root.position.x), pz(c.root.position.z), 8.5, 0, Math.PI*2); mg.stroke();
+      }
+    }
+    dot(ball.position, "#ffffff", 4.0);
+    return;
+  }
+
   dot(foeA.root.position,"#ffffff",4.5);
   dot(foeB.root.position,"#ffffff",4.5);
   dot(foeC.root.position,"#ffffff",4.5);
@@ -6596,6 +6612,7 @@ function loop(now){
 
   if(gameMode === "multiplayer"){
     mpUpdate(dt);
+    if(++miniTick % 4 === 0) drawMini();
   } else if(gameMode === "customizer"){
     shake = 0;
     // Exibição ao vivo do personagem de frente no Vestiário 3D
@@ -7546,7 +7563,41 @@ function mpClearRoster(){
   mp.chars.clear();
   mp.roster = [];
   mp.snaps.length = 0; mp.history.length = 0; mp.ready = false;
+  mp.hudScore = null; mp.hudClock = null;
   mpWorld.ents.clear(); mpWorld.ball = null;
+}
+
+function createNameTagSprite(name, isAlly, isMe, isKeeper){
+  const canvas = document.createElement("canvas");
+  canvas.width = 256; canvas.height = 64;
+  const ctx = canvas.getContext("2d");
+
+  ctx.fillStyle = isMe ? "rgba(0, 240, 255, 0.90)" : (isAlly ? "rgba(250, 204, 21, 0.88)" : "rgba(239, 68, 68, 0.88)");
+  if(ctx.roundRect){
+    ctx.beginPath();
+    ctx.roundRect(16, 12, 224, 40, 10);
+    ctx.fill();
+    ctx.strokeStyle = "#ffffff";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  } else {
+    ctx.fillRect(16, 12, 224, 40);
+  }
+
+  ctx.fillStyle = isMe ? "#0a0a0f" : "#18181b";
+  ctx.font = "bold 20px 'Outfit', 'Segoe UI', sans-serif";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  const label = isMe ? "★ VOCÊ ★" : (name || "CRIA").toUpperCase();
+  ctx.fillText(label.slice(0, 14), 128, 32);
+
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.minFilter = THREE.LinearFilter;
+  const mat = new THREE.SpriteMaterial({ map: texture, transparent: true, depthTest: false });
+  const sprite = new THREE.Sprite(mat);
+  sprite.scale.set(1.8, 0.45, 1);
+  sprite.position.set(0, 2.35, 0);
+  return sprite;
 }
 
 function mpBuildRoster(d){
@@ -7556,6 +7607,7 @@ function mpBuildRoster(d){
   mp.mode = d.mode;
   mp.score = [0,0];
   mp.timeLeft = d.match || 120;
+  mp.localKickCooldown = 0;
   (d.roster || []).forEach((r, i) => {
     const foot = r.foot === -1 ? -1 : 1;
     const role = r.role === "keeper" ? "keeper" : "field";
@@ -7564,6 +7616,11 @@ function mpBuildRoster(d){
     ch.isMe = r.id === mp.entId;
     ch.mpName = r.name || "BOT";
     if(r.bot) ch.mpBot = true;
+    const isMe = r.id === mp.entId;
+    const isAlly = r.team === mp.team;
+    const tag = createNameTagSprite(r.name, isAlly, isMe, role === "keeper");
+    ch.nameTag = tag;
+    ch.root.add(tag);
     mp.chars.set(r.id, ch);
   });
 
@@ -7578,9 +7635,10 @@ function mpBuildRoster(d){
   $("#trainingHud").style.display = "none";
   $("#customizerModal").style.display = "none";
   $("#topWrap").style.display = "block";
-  const jEl = $("#joy"); if(jEl) jEl.style.display = "none";
-  const bgEl = $("#btnGrid"); if(bgEl) bgEl.style.display = "none";
-  const mwEl = $("#miniWrap"); if(mwEl) mwEl.style.display = "none";
+  const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+  const jEl = $("#joy"); if(jEl) jEl.style.display = isTouchDevice ? "block" : "none";
+  const bgEl = $("#btnGrid"); if(bgEl) bgEl.style.display = isTouchDevice ? "grid" : "none";
+  const mwEl = $("#miniWrap"); if(mwEl) mwEl.style.display = "block";
   const chEl = $("#crosshairWrap"); if(chEl) chEl.style.display = "flex";
   camYaw = BASE_YAW; camPitch = 0.28; camDistance = 10; targetDist = 10;
   mp.ready = false; mp.frozen = false;
@@ -7639,6 +7697,9 @@ function mpSnapEnt(snap, id){
 
 const mpDamp = (a,b,l,dt)=> b + (a-b)*Math.exp(-l*dt);
 function mpApplyLocalInput(input, dt, hasBall){
+  // Saque e comemoração de gol: o servidor segura todo mundo parado. Prever
+  // movimento aqui só geraria correção depois.
+  if(mp.frozen){ mp.localVx = 0; mp.localVz = 0; return; }
   let speed = input.sprint ? 12.0 : 8.5;
   if(hasBall) speed *= 0.90;
   if(input.shoot) speed *= 0.55;
@@ -7668,6 +7729,7 @@ function mpReconcile(serverEnt){
   const startX = mp.localX, startZ = mp.localZ;
   mp.localX = sx; mp.localZ = sz; mp.localY = sy;
   mp.localVx = svx; mp.localVz = svz;
+  mp.localYaw = angleLerp(mp.localYaw, serverEnt[4], 0.25);
   const hasBall = mp.ownerId === mp.entId;
   for(const h of mp.history) mpApplyLocalInput(h.input, h.dt, hasBall);
   const err = Math.hypot(mp.localX - startX, mp.localZ - startZ);
@@ -7682,7 +7744,7 @@ function mpReconcile(serverEnt){
 // segundo so para o coletor de lixo limpar no meio da partida, que e
 // exatamente o tipo de coisa que vira engasgo na hora do gol.
 const mpWorld = { ents: new Map(), ball: null };
-const mpBallOut = { x: 0, y: 0.28, z: 0 };
+const mpBallOut = { x: 0, y: 0.28, z: 0, vx: 0, vz: 0 };
 
 // A ordem das entidades no snapshot e sempre a mesma (o servidor percorre
 // w.ents na ordem), entao o par quase sempre esta no mesmo indice. So cai na
@@ -7706,20 +7768,25 @@ function mpInterpolate(){
   if(!a){ a = mp.snaps[0]; b = mp.snaps[1] || null; }
   let t = 0;
   out.ball = mpBallOut;
+  mpBallOut.vx = a.data.b[3] || 0;
+  mpBallOut.vy = a.data.b[4] || 0;
+  mpBallOut.vz = a.data.b[5] || 0;
   if (b && b.time > a.time) {
     t = Math.min(1, Math.max(0, (renderTime - a.time)/(b.time - a.time)));
     mpBallOut.x = a.data.b[0] + (b.data.b[0] - a.data.b[0]) * t;
     mpBallOut.y = a.data.b[1] + (b.data.b[1] - a.data.b[1]) * t;
     mpBallOut.z = a.data.b[2] + (b.data.b[2] - a.data.b[2]) * t;
+    mpBallOut.vx = (a.data.b[3] || 0) + ((b.data.b[3] || 0) - (a.data.b[3] || 0)) * t;
+    mpBallOut.vy = (a.data.b[4] || 0) + ((b.data.b[4] || 0) - (a.data.b[4] || 0)) * t;
+    mpBallOut.vz = (a.data.b[5] || 0) + ((b.data.b[5] || 0) - (a.data.b[5] || 0)) * t;
   } else {
     // Extrapolação (Dead Reckoning) se não houver pacote futuro (Lag)
     const dt = Math.max(0, renderTime - a.time);
     const vx = a.data.b[3] || 0;
     const vy = a.data.b[4] || 0;
     const vz = a.data.b[5] || 0;
-    // O motor do servidor usa gravidade ~18, e atrito/redução é suave.
     mpBallOut.x = a.data.b[0] + vx * dt;
-    mpBallOut.y = Math.max(0.28, a.data.b[1] + (vy * dt - 0.5 * 18 * dt * dt));
+    mpBallOut.y = clamp(a.data.b[1] + (vy * dt - 0.5 * 18 * dt * dt), 0.28, CFG.CEIL - 0.28);
     mpBallOut.z = a.data.b[2] + vz * dt;
   }
   const bd = b ? b.data : a.data;
@@ -7745,6 +7812,7 @@ function mpInterpolate(){
 
 // Coleta entrada (mesma logica do single-player, adaptada para rede)
 let mpMouseShoot = false, mpMousePass = false;
+let mpPrevShoot = false, mpPrevPass = false;
 const mpKeys = {};
 let mpAccum = 0;
 function mpGatherInput(){
@@ -7753,21 +7821,54 @@ function mpGatherInput(){
   if(mpKeys[userKeyBindings.right]||mpKeys.arrowright) kx+=1;
   if(mpKeys[userKeyBindings.up]||mpKeys.arrowup) ky-=1;
   if(mpKeys[userKeyBindings.down]||mpKeys.arrowdown) ky+=1;
+  if(input.x || input.y){
+    kx += input.x;
+    ky += input.y;
+  }
   if(kx||ky){
-    const l = Math.hypot(kx,ky); kx/=l; ky/=l;
-    mpInputState.dx = camF.x*-ky + camR.x*kx;
-    mpInputState.dz = camF.z*-ky + camR.z*kx;
+    const l = Math.hypot(kx,ky);
+    const nx = kx / (l > 1 ? l : 1);
+    const ny = ky / (l > 1 ? l : 1);
+    mpInputState.dx = camF.x*-ny + camR.x*nx;
+    mpInputState.dz = camF.z*-ny + camR.z*nx;
     const dl = Math.hypot(mpInputState.dx, mpInputState.dz)||1;
     mpInputState.dx/=dl; mpInputState.dz/=dl;
   } else { mpInputState.dx = 0; mpInputState.dz = 0; }
-  mpInputState.sprint = !!mpKeys[userKeyBindings.sprint];
+  mpInputState.sprint = !!mpKeys[userKeyBindings.sprint] || !!input.sprint;
   mpInputState.steal = !!mpKeys[userKeyBindings.steal];
   mpInputState.tackle = !!mpKeys[userKeyBindings.tackle];
   mpInputState.dribble = !!mpKeys[userKeyBindings.dribble] || !!mpKeys.g;
   mpInputState.jump = !!mpKeys[userKeyBindings.jump];
   mpInputState.dance = !!mpKeys[userKeyBindings.dance];
-  mpInputState.shoot = mpMouseShoot || !!mpKeys[userKeyBindings.shoot];
-  mpInputState.pass = mpMousePass || !!mpKeys[userKeyBindings.pass];
+  mpInputState.shoot = mpMouseShoot || !!mpKeys[userKeyBindings.shoot] || !!input.charging;
+  mpInputState.pass = mpMousePass || !!mpKeys[userKeyBindings.pass] || !!input.passCharging;
+
+  // Detecção local imediata de chute/passe solto para desgrudar a bola sem lag de rede
+  if(mpPrevShoot && !mpInputState.shoot){
+    if(mp.ownerId === mp.entId){
+      mp.localKickCooldown = 0.35;
+      sfx.playKick(mp.charge >= 1.0 ? 1.0 : 0.75);
+      if(mp.charge >= 0.65) shake = 0.22;
+    }
+  }
+  if(mpPrevPass && !mpInputState.pass){
+    if(mp.ownerId === mp.entId){
+      mp.localKickCooldown = 0.25;
+      sfx.playKick(0.65);
+    }
+  }
+  if(mpInputState.steal && mp.ownerId !== mp.entId && !mpKeys._stealPressed){
+    sfx.playSteal();
+  }
+  if(mpInputState.tackle && mp.ownerId !== mp.entId && !mpKeys._tacklePressed){
+    sfx.playTackle();
+  }
+  mpKeys._stealPressed = mpInputState.steal;
+  mpKeys._tacklePressed = mpInputState.tackle;
+
+  mpPrevShoot = mpInputState.shoot;
+  mpPrevPass = mpInputState.pass;
+
   const aim = mpAimPoint();
   mpInputState.aimx = aim.x; mpInputState.aimy = aim.y; mpInputState.aimz = aim.z;
 }
@@ -7852,17 +7953,15 @@ function mpUpdate(dt){
     mp.history.push({ seq: mp.seq, input: packet, dt: step });
     if(mp.history.length > 120) mp.history.shift();
     mpSend(C2S.INPUT, packet);
-    mpApplyLocalInput(packet, step, mp.ownerId === mp.entId);
+    mpApplyLocalInput(packet, step, mp.ownerId === mp.entId && (mp.localKickCooldown || 0) <= 0);
   }
+
+  if(mp.localKickCooldown > 0) mp.localKickCooldown = Math.max(0, mp.localKickCooldown - dt);
 
   const world = mpInterpolate();
-  if(world.ball){
-    ball.position.set(world.ball.x, world.ball.y, world.ball.z);
-    ball.rotation.x += dt*3;
-    ball.rotation.z -= dt*2;
-  }
-
   const myChar = mp.chars.get(mp.entId);
+
+  // 1. Atualização dos Personagens
   for(const [id, c] of mp.chars){
     const s = world.ents.get(id);
     if(!s) continue;
@@ -7871,6 +7970,17 @@ function mpUpdate(dt){
       c.yaw = mp.localYaw;
       c.vel.set(mp.localVx, 0, mp.localVz);
       c.speed = Math.hypot(mp.localVx, mp.localVz);
+
+      // Predição visual imediata de movimento e carga para o próprio jogador
+      if(c.act <= 0){
+        if(mp.charge > 0){
+          c.state = "kick_charge";
+        } else if(c.speed > 0.4){
+          c.state = mpInputState.sprint ? "sprint" : "run";
+        } else {
+          c.state = "idle";
+        }
+      }
     } else {
       c.root.position.set(s.x, s.y, s.z);
       c.yaw = s.yaw;
@@ -7879,19 +7989,42 @@ function mpUpdate(dt){
     }
     c.charge = s.charge;
     const newSt = MP_STATE_NAME[s.state] || "idle";
-    // Ao trocar para uma ação, inicia a duração da animação (o servidor não envia act)
+
+    // Ao trocar para uma nova ação autoritativa pelo servidor
     if(newSt !== c.lastState){
       c.lastState = newSt;
       const d = MP_STATE_DUR[newSt];
       c.act = d || 0;
       c.dribbleDuration = d || 0.65;
-      if(newSt === "tackle") c.tackleAct = c.act;   // chars de rede drenam `act` 1x
+      if(newSt === "tackle"){ c.tackleAct = c.act; if(!c.isMe) sfx.playTackle(); }
+      if(newSt === "steal"){ if(!c.isMe) sfx.playSteal(); }
+      if(newSt === "shot_power"){ if(!c.isMe) sfx.playKick(1.0); shake = Math.max(shake, 0.22); }
+      if(newSt === "shot_technique"){ if(!c.isMe) sfx.playKick(0.70); }
+      if(newSt === "pass"){ if(!c.isMe) sfx.playKick(0.60); }
+      if(newSt.startsWith("dive_") || newSt.startsWith("catch_")){ sfx.playPostClank(); }
       if(newSt === "dance") c.danceTime = 0;
+      if(!c.isMe) c.state = newSt;
     }
-    c.state = newSt;
     animateHumanoid(c, dt, c.speed > 0.5);
   }
 
+  // 2. Condução e Sincronização da Bola
+  const euConduzo = mp.ownerId === mp.entId && mp.entId !== 0 && (mp.localKickCooldown || 0) <= 0;
+  if(euConduzo && myChar){
+    // Jogador local conduzindo: biomecânica completa, fintas e toques rítmicos sincronizados
+    dribble(myChar, dt);
+  } else if(mp.ownerId && mp.ownerId !== mp.entId && mp.chars.has(mp.ownerId)){
+    // Jogador remoto ou bot conduzindo: acompanha as fintas em tempo real sem arrastar atrás
+    const carrier = mp.chars.get(mp.ownerId);
+    dribble(carrier, dt);
+  } else if(world.ball){
+    // Bola livre: interpolada com física de rotação correspondente à velocidade
+    ball.position.set(world.ball.x, world.ball.y, world.ball.z);
+    ball.rotation.x += (world.ball.vz || 0) * dt * 2.4;
+    ball.rotation.z -= (world.ball.vx || 0) * dt * 2.4;
+  }
+
+  // 3. Câmera e Marcador de Posse
   if(myChar){
     mpCamera(dt, myChar.root.position);
     ring.position.set(myChar.root.position.x, 0.04, myChar.root.position.z);
@@ -7899,9 +8032,17 @@ function mpUpdate(dt){
   }
 
   const s = mp.score;
-  $("#score").textContent = `${s[mp.team]} — ${s[1-mp.team]}`;
+  const placar = `${s[mp.team]} — ${s[1-mp.team]}`;
+  if(placar !== mp.hudScore){
+    mp.hudScore = placar;
+    (mp.elScore || (mp.elScore = $("#score"))).textContent = placar;
+  }
   const t = Math.max(0, mp.timeLeft);
-  $("#clock").textContent = `${String(Math.floor(t/60)).padStart(2,"0")}:${String(t%60).padStart(2,"0")}`;
+  if(t !== mp.hudClock){
+    mp.hudClock = t;
+    (mp.elClock || (mp.elClock = $("#clock"))).textContent =
+      `${String(Math.floor(t/60)).padStart(2,"0")}:${String(t%60).padStart(2,"0")}`;
+  }
 }
 
 /* ═══════════════════════ VOZ DO TIME — LiveKit ═══════════════════════ */

@@ -156,6 +156,28 @@ desenha o resultado ◄───── 20x/s ────────  manda o e
 - **Interpolação** — os outros jogadores e a bola são desenhados ~100ms no
   passado, entre dois estados recebidos, o que elimina tremida.
 
+**A pegadinha das três juntas:** predição desenha você no *presente*,
+interpolação desenha o resto no *passado*. Enquanto você conduz, a bola é
+sua — e vinha do passado, 100ms atrás. Correndo a 11 m/s isso põe a bola 1,1m
+atrás de onde deveria estar, contra os 0,88m que ela fica à frente do pé: a
+bola aparecia **atrás do personagem**. A correção é prever a bola também
+enquanto você conduz, com a mesma conta do `dribbleBall()` do servidor. Quando a
+bola não é sua, a interpolação continua mandando — ela vem de outro jogador e
+*tem* que ser desenhada no passado, senão treme.
+
+Pela mesma razão, o `yaw` local passou a convergir para o do servidor a cada
+snapshot: ele só era escrito na primeira reconciliação e depois divergia em
+silêncio (o servidor gira o corpo em ações que o cliente não prediz, como o
+chute virando para a mira). Agora que a bola é posicionada a partir desse
+ângulo, divergir mandaria a bola para o lado errado.
+
+**Congelamento de saque.** O servidor segura todo mundo por 1,2s no saque e
+depois de cada gol, e mandava isso no snapshot (campo `f`) — que o cliente
+guardava em `mp.frozen` e nunca lia. Resultado: durante o congelamento o
+cliente predizia a corrida, fugia ~0,7m e era puxado de volta pela
+reconciliação **20 vezes por segundo**. Não era um teleporte; era tremida no
+saque e depois de todo gol — o que num 1v1 é o tempo todo.
+
 ### Mecânica das partidas
 
 **Carrinho limpo atordoa.** Se você acerta a bola primeiro e quem estava

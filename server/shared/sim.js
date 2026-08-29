@@ -166,7 +166,7 @@ function dribbleBall(w, e, dt) {
   b.x += (tx - b.x) * k;
   b.z += (tz - b.z) * k;
   b.y = CFG.BALL_R;
-  b.vx = b.vy = b.vz = 0;
+  b.vx = e.vx; b.vy = e.vy; b.vz = e.vz;
 }
 
 // ──────────────────────────── acoes de jogo ────────────────────────────────

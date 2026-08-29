@@ -43,12 +43,89 @@ canvas{display:block;width:100%;height:100%}
   box-shadow:0 10px 35px rgba(0,0,0,0.7),0 0 25px rgba(255,140,0,0.25);
   backdrop-filter:blur(12px);
 }
-.teamBadge{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:900;letter-spacing:1.2px}
-.teamDot{width:10px;height:10px;border-radius:50%;display:inline-block}
-.badgeFla{color:#ff4455;text-shadow:0 0 10px rgba(255,68,85,0.6)}
-.badgeFla .teamDot{background:#ff2b40;box-shadow:0 0 8px #ff2b40}
-.badgeVas{color:#f5f5f7;text-shadow:0 0 10px rgba(255,255,255,0.6)}
-.badgeVas .teamDot{background:#ffffff;box-shadow:0 0 8px #ffffff}
+.teamBadge{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:900;letter-spacing:1px;text-transform:uppercase;user-select:none}
+.hudBadgeIcon{display:flex;align-items:center;justify-content:center;width:24px;height:24px;flex:none;filter:drop-shadow(0 2px 5px rgba(0,0,0,0.7))}
+.hudBadgeIcon svg{width:100%;height:100%}
+.hudTeamName{font-family:'Teko',sans-serif;font-size:22px;letter-spacing:1.2px;line-height:1}
+.teamDot{width:8px;height:8px;border-radius:50%;display:inline-block;flex:none}
+
+/* ═══════════ SELETOR DE TIMES & CONFRONTO (LOBBY) ═══════════ */
+.teamMatchupSelector{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:8px 12px;border-radius:18px;
+  background:linear-gradient(135deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02));
+  border:1.5px solid rgba(255,215,0,0.35);box-shadow:0 6px 20px rgba(0,0,0,0.5);
+  margin-bottom:12px;
+}
+.teamPickCol{
+  flex:1;display:flex;align-items:center;gap:8px;padding:8px 10px;
+  border-radius:14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);
+  cursor:pointer;transition:all .16s ease;user-select:none;
+}
+.teamPickCol:hover{
+  background:rgba(255,215,0,0.15);border-color:#ffd700;
+  transform:translateY(-2px);box-shadow:0 4px 14px rgba(255,215,0,0.25);
+}
+.pickTeamBadge{width:28px;height:28px;display:flex;align-items:center;justify-content:center;flex:none;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.6))}
+.pickTeamBadge svg{width:100%;height:100%}
+.pickTeamInfo{display:flex;flex-direction:column;line-height:1.1;overflow:hidden}
+.pickTeamLabel{font-size:8.5px;font-weight:900;letter-spacing:1px;color:rgba(255,255,255,0.5);text-transform:uppercase}
+.pickTeamName{font-family:'Teko',sans-serif;font-size:18px;font-weight:700;letter-spacing:0.8px;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.teamMatchupVs{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:5px 8px;border-radius:12px;background:rgba(255,215,0,0.12);border:1px solid rgba(255,215,0,0.35);
+  cursor:pointer;transition:all .16s ease;user-select:none;flex:none;
+}
+.teamMatchupVs:hover{
+  background:linear-gradient(135deg,#ffd700,#ff8800);transform:scale(1.05);
+  box-shadow:0 0 16px rgba(255,215,0,0.5);
+}
+.teamMatchupVs span{font-family:'Teko',sans-serif;font-size:17px;font-weight:900;color:#ffd700;line-height:1}
+.teamMatchupVs:hover span{color:#000}
+.teamMatchupVs small{font-size:7px;font-weight:900;letter-spacing:0.5px;color:rgba(255,255,255,0.7);white-space:nowrap}
+.teamMatchupVs:hover small{color:rgba(0,0,0,0.85)}
+
+/* Modal de Escolha de Times */
+#teamPickerModal{
+  position:fixed;inset:0;z-index:60;background:rgba(6,4,12,0.85);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  display:none;align-items:center;justify-content:center;padding:16px;
+}
+#teamPickerModal.show{display:flex;animation:modalFadeIn .20s cubic-bezier(0.16,1,0.3,1) both}
+.teamPickerCard{
+  width:min(94vw,560px);background:linear-gradient(180deg,rgba(28,16,42,0.96),rgba(12,8,20,0.98));
+  border:1.5px solid rgba(255,215,0,0.45);border-radius:26px;
+  box-shadow:0 30px 90px rgba(0,0,0,0.92),0 0 50px rgba(255,215,0,0.22);
+  padding:22px 20px;color:#fff;position:relative;overflow:hidden;
+}
+.teamPickerCard::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:4px;
+  background:linear-gradient(90deg,#ffd700,#ff4455,#00f0b8,#00d2ff);
+}
+.teamPickerHeader{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.teamPickerHeader h3{
+  margin:0;font-family:'Teko',sans-serif;font-size:32px;letter-spacing:1.5px;line-height:1;
+  background:linear-gradient(135deg,#ffd700,#ff9900);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+}
+.teamPickerGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;max-height:380px;overflow-y:auto;padding-right:4px}
+.teamPickerItem{
+  display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:14px;
+  background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);
+  color:#fff;cursor:pointer;transition:all .14s ease;user-select:none;
+}
+.teamPickerItem:hover{
+  background:rgba(255,215,0,0.15);border-color:#ffd700;transform:translateX(4px);
+  box-shadow:0 4px 14px rgba(255,215,0,0.25);
+}
+.teamPickerItem.selected{
+  background:linear-gradient(90deg,rgba(255,215,0,0.25),rgba(255,140,0,0.12));
+  border-color:#ffd700;box-shadow:0 0 16px rgba(255,215,0,0.35);
+}
+.teamPickerItemSvg{width:32px;height:32px;display:flex;align-items:center;justify-content:center;flex:none;filter:drop-shadow(0 2px 6px rgba(0,0,0,0.6))}
+.teamPickerItemSvg svg{width:100%;height:100%}
+.teamPickerItemName{font-family:'Teko',sans-serif;font-size:21px;font-weight:700;letter-spacing:1px;color:#fff;line-height:1}
+.teamPickerItemColors{display:flex;gap:4px;margin-top:3px}
+.teamColorPill{width:10px;height:10px;border-radius:50%;border:1px solid rgba(255,255,255,0.3)}
 
 #score{font-family:'Teko',sans-serif;font-weight:700;font-size:36px;line-height:1;letter-spacing:2px;color:#ffd700;text-shadow:0 2px 12px rgba(255,215,0,0.6);min-width:76px;text-align:center}
 #clock{font-weight:800;font-size:13px;color:#ffaa44;background:rgba(255,140,0,0.18);padding:4px 10px;border-radius:14px;border:1px solid rgba(255,140,0,0.35);font-variant-numeric:tabular-nums}
@@ -1475,6 +1552,28 @@ canvas{display:block;width:100%;height:100%}
         <span id="startText"></span>
       </div>
 
+      <div class="lobbySectionTitle">CONFRONTO DE TIMES</div>
+      <div class="teamMatchupSelector" id="teamMatchupSelector">
+        <div class="teamPickCol" id="pickHomeTeamBtn" title="Escolher Time da Casa">
+          <span class="pickTeamBadge" id="pickHomeBadge"></span>
+          <div class="pickTeamInfo">
+            <span class="pickTeamLabel">CASA (VOCÊ)</span>
+            <span class="pickTeamName" id="pickHomeName">FLAMENGO</span>
+          </div>
+        </div>
+        <div class="teamMatchupVs" id="btnRandomMatchup" title="Sortear Clássico Aleatório">
+          <span>VS</span>
+          <small>🎲 CLÁSSICO</small>
+        </div>
+        <div class="teamPickCol" id="pickAwayTeamBtn" title="Escolher Time Visitante">
+          <span class="pickTeamBadge" id="pickAwayBadge"></span>
+          <div class="pickTeamInfo">
+            <span class="pickTeamLabel">ADVERSÁRIO</span>
+            <span class="pickTeamName" id="pickAwayName">PALMEIRAS</span>
+          </div>
+        </div>
+      </div>
+
       <div class="lobbySectionTitle">MODOS DE JOGO</div>
       
       <button class="lobbyMenuItem primaryHighlight" id="btnPlayMatch">
@@ -1566,6 +1665,19 @@ canvas{display:block;width:100%;height:100%}
     <div style="margin-top:20px;display:flex;justify-content:flex-end">
       <button id="btnResetKeybinds" style="background:transparent;border:1px solid rgba(255,255,255,0.3);color:#fff;padding:8px 16px;border-radius:8px;cursor:pointer;margin-right:10px;font-family:'Outfit'">Padrão</button>
       <button id="btnSaveKeybinds" style="background:#ffd700;color:#000;border:none;padding:8px 24px;border-radius:8px;font-family:'Outfit';font-weight:bold;cursor:pointer">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ MODAL DE ESCOLHA DOS 10 TIMES CLÁSSICOS ═══════════ -->
+<div id="teamPickerModal">
+  <div class="teamPickerCard">
+    <div class="teamPickerHeader">
+      <h3 id="teamPickerTitle">ESCOLHA SEU TIME</h3>
+      <button class="closeCustomBtn" id="btnCloseTeamPicker">✕</button>
+    </div>
+    <div class="teamPickerGrid" id="teamPickerGrid">
+      <!-- 10 Times Gerados Dinamicamente via JS com Escudos SVG -->
     </div>
   </div>
 </div>
@@ -1863,9 +1975,17 @@ canvas{display:block;width:100%;height:100%}
 <div id="hud">
   <div id="topWrap">
     <div id="top">
-      <div class="teamBadge badgeFla"><span class="teamDot"></span><span>FLA CRIA</span></div>
+      <div class="teamBadge" id="hudTeamHome">
+        <span class="hudBadgeIcon" id="hudBadgeHome"></span>
+        <span class="hudTeamName" id="hudNameHome">FLAMENGO</span>
+        <span class="teamDot" id="hudDotHome"></span>
+      </div>
       <div id="score">0 — 0</div>
-      <div class="teamBadge badgeVas"><span>VASCO</span><span class="teamDot"></span></div>
+      <div class="teamBadge" id="hudTeamAway">
+        <span class="teamDot" id="hudDotAway"></span>
+        <span class="hudTeamName" id="hudNameAway">PALMEIRAS</span>
+        <span class="hudBadgeIcon" id="hudBadgeAway"></span>
+      </div>
       <div id="clock">02:00</div>
     </div>
     <div id="voiceHud">
@@ -7020,6 +7140,12 @@ const COMBO_MOVES = [
 const COMBO_WINDOW = 0.18; // segundos de tolerância entre os dois cliques
 let lastDribblePressT = -999, lastKickPressT = -999;
 
+// Repertório do multiplayer, na MESMA ordem de DRIBBLE_MOVES em
+// server/shared/sim.js. A lista local (DRIBBLES) tem cinco movimentos e a do
+// servidor tem seis — usar a lista errada faria a previsão do cliente escolher
+// um drible e o servidor outro, e o boneco trocaria de animação no meio.
+const MP_DRIBBLES = [...DRIBBLES, COMBO_MOVES[1]];
+
 function nowSec(){ return performance.now() / 1000; }
 
 // Chame no momento exato do "press" do botão de drible. Retorna true se o combo
@@ -7266,6 +7392,299 @@ function toggleCelebration(){
   } else {
     openCelebrationMenu();
   }
+}
+
+/* ═══════════════ SISTEMA DOS 10 TIMES CLÁSSICOS & ESCUDOS SVG ═══════════════ */
+const TEAMS = [
+  { id: "psg", name: "PSG", short: "PSG", primary: "#001e40", secondary: "#da291c", accent: "#ffffff", shorts: "#ffffff", socks: "#001e40", gkColor: "#00c853", style: "stripes", icon: "🗼" },
+  { id: "real_madrid", name: "REAL MADRID", short: "REAL", primary: "#ffffff", secondary: "#e0b115", accent: "#2c2a74", shorts: "#ffffff", socks: "#ffffff", gkColor: "#111111", style: "solid", icon: "👑" },
+  { id: "chelsea", name: "CHELSEA", short: "CHELSEA", primary: "#034694", secondary: "#ffffff", accent: "#d1ab3e", shorts: "#034694", socks: "#ffffff", gkColor: "#ff8800", style: "solid", icon: "🦁" },
+  { id: "inter", name: "INTER", short: "INTER", primary: "#010e80", secondary: "#111111", accent: "#cba052", shorts: "#111111", socks: "#010e80", gkColor: "#e91e63", style: "stripes", icon: "🐍" },
+  { id: "bayern", name: "BAYERN", short: "BAYERN", primary: "#dc052d", secondary: "#ffffff", accent: "#0066b2", shorts: "#dc052d", socks: "#dc052d", gkColor: "#263238", style: "solid", icon: "⭐" },
+  { id: "barcelona", name: "BARCELONA", short: "BARÇA", primary: "#a50044", secondary: "#004d98", accent: "#edbb00", shorts: "#004d98", socks: "#a50044", gkColor: "#00e5ff", style: "stripes", icon: "🔵🔴" },
+  { id: "arsenal", name: "ARSENAL", short: "ARSENAL", primary: "#db0007", secondary: "#ffffff", accent: "#9c824a", shorts: "#ffffff", socks: "#db0007", gkColor: "#fbc02d", style: "halves", icon: "💣" },
+  { id: "flamengo", name: "FLAMENGO", short: "FLA", primary: "#c3281e", secondary: "#111111", accent: "#ffffff", shorts: "#ffffff", socks: "#c3281e", gkColor: "#f5f5f5", style: "hoops", icon: "🔴⚫" },
+  { id: "palmeiras", name: "PALMEIRAS", short: "PALMEIRAS", primary: "#006437", secondary: "#ffffff", accent: "#c5a059", shorts: "#ffffff", socks: "#006437", gkColor: "#0288d1", style: "solid", icon: "🐷" },
+  { id: "dortmund", name: "DORTMUND", short: "BVB", primary: "#fde100", secondary: "#111111", accent: "#ffffff", shorts: "#111111", socks: "#fde100", gkColor: "#e040fb", style: "halves", icon: "🐝" }
+];
+
+const CLASSIC_DERBIES = [
+  ["real_madrid", "barcelona"],
+  ["flamengo", "palmeiras"],
+  ["psg", "bayern"],
+  ["arsenal", "chelsea"],
+  ["dortmund", "bayern"],
+  ["inter", "barcelona"],
+  ["real_madrid", "psg"],
+  ["dortmund", "real_madrid"],
+  ["flamengo", "real_madrid"],
+  ["chelsea", "barcelona"]
+];
+
+function getTeamBadgeSvg(id, size=28) {
+  switch(id) {
+    case 'psg':
+      return `<svg width="${size}" height="${size}" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="20" cy="20" r="19" fill="#001e40" stroke="#da291c" stroke-width="2"/>
+        <circle cx="20" cy="20" r="14" fill="#ffffff" fill-opacity="0.15" stroke="#ffd700" stroke-width="1"/>
+        <path d="M20 7L20 33" stroke="#da291c" stroke-width="5" stroke-linecap="round"/>
+        <path d="M17 7L17 33M23 7L23 33" stroke="#ffffff" stroke-width="1.5"/>
+        <path d="M20 10L14 30H26L20 10Z" fill="#da291c" stroke="#ffffff" stroke-width="1"/>
+        <path d="M17 23H23" stroke="#ffffff" stroke-width="1.5"/>
+        <circle cx="20" cy="15" r="1.5" fill="#ffd700"/>
+      </svg>`;
+    case 'real_madrid':
+      return `<svg width="${size}" height="${size}" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 11L14 6L20 9L26 6L28 11H12Z" fill="#e0b115" stroke="#ffffff" stroke-width="1"/>
+        <circle cx="20" cy="5" r="1.5" fill="#ffffff"/>
+        <circle cx="14" cy="5" r="1" fill="#da291c"/>
+        <circle cx="26" cy="5" r="1" fill="#0066b2"/>
+        <circle cx="20" cy="23" r="15" fill="#ffffff" stroke="#e0b115" stroke-width="2"/>
+        <path d="M9 13L29 33" stroke="#2c2a74" stroke-width="4.5" stroke-linecap="round"/>
+        <circle cx="20" cy="23" r="11" fill="none" stroke="#e0b115" stroke-width="1.2"/>
+        <text x="20" y="27" text-anchor="middle" font-family="sans-serif" font-size="9" font-weight="900" fill="#e0b115">RMCF</text>
+      </svg>`;
+    case 'chelsea':
+      return `<svg width="${size}" height="${size}" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="20" cy="20" r="19" fill="#034694" stroke="#d1ab3e" stroke-width="2"/>
+        <circle cx="20" cy="20" r="14" fill="#ffffff" stroke="#d1ab3e" stroke-width="1"/>
+        <path d="M17 12C17 12 21 11 23 14C24 16 22 18 20 19L24 28H21L19 23L17 28H14L16 19C14 18 15 14 17 12Z" fill="#034694" stroke="#d1ab3e" stroke-width="0.8"/>
+        <circle cx="24" cy="14" r="1.2" fill="#da291c"/>
+        <path d="M23 10L25 15" stroke="#d1ab3e" stroke-width="1.5"/>
+      </svg>`;
+    case 'inter':
+      return `<svg width="${size}" height="${size}" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="20" cy="20" r="19" fill="#111111" stroke="#cba052" stroke-width="2"/>
+        <circle cx="20" cy="20" r="15" fill="#010e80" stroke="#ffffff" stroke-width="1"/>
+        <circle cx="20" cy="20" r="12" fill="#111111" stroke="#cba052" stroke-width="1"/>
+        <text x="20" y="24.5" text-anchor="middle" font-family="sans-serif" font-size="10" font-weight="900" fill="#ffffff" letter-spacing="1">IM</text>
+        <circle cx="20" cy="20" r="6" fill="none" stroke="#cba052" stroke-width="1"/>
+      </svg>`;
+    case 'bayern':
+      return `<svg width="${size}" height="${size}" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="20" cy="20" r="19" fill="#dc052d" stroke="#ffffff" stroke-width="2"/>
+        <circle cx="20" cy="20" r="13" fill="#ffffff" stroke="#0066b2" stroke-width="1.5"/>
+        <g transform="translate(13, 13) rotate(45)">
+          <rect x="0" y="0" width="5" height="5" fill="#0066b2"/>
+          <rect x="5" y="0" width="5" height="5" fill="#ffffff"/>
+          <rect x="0" y="5" width="5" height="5" fill="#ffffff"/>
+          <rect x="5" y="5" width="5" height="5" fill="#0066b2"/>
+        </g>
+        <circle cx="20" cy="20" r="13" fill="none" stroke="#dc052d" stroke-width="2"/>
+      </svg>`;
+    case 'barcelona':
+      return `<svg width="${size}" height="${size}" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 8C14 6 26 6 32 8V20C32 28 20 34 20 34C20 34 8 28 8 20V8Z" fill="#a50044" stroke="#edbb00" stroke-width="2"/>
+        <path d="M8 8H20V17H8V8Z" fill="#ffffff"/>
+        <path d="M13 8V17M8 12.5H20" stroke="#da291c" stroke-width="2"/>
+        <path d="M20 8H32V17H20V8Z" fill="#edbb00"/>
+        <path d="M23 8V17M26 8V17M29 8V17" stroke="#da291c" stroke-width="1.5"/>
+        <path d="M8 17H32V19H8V17Z" fill="#edbb00"/>
+        <path d="M12 19V30M16 19V32M24 19V32M28 19V30" stroke="#004d98" stroke-width="2.5"/>
+        <circle cx="20" cy="25" r="2.5" fill="#edbb00" stroke="#ffffff" stroke-width="0.8"/>
+      </svg>`;
+    case 'arsenal':
+      return `<svg width="${size}" height="${size}" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 6C14 5 26 5 32 6V22C32 29 20 35 20 35C20 35 8 29 8 22V6Z" fill="#db0007" stroke="#9c824a" stroke-width="2"/>
+        <path d="M10 8C15 7 25 7 30 8V21C30 27 20 32 20 32C20 32 10 27 10 21V8Z" fill="#db0007" stroke="#ffffff" stroke-width="1"/>
+        <path d="M28 17L14 19L13 21L28 20V17Z" fill="#9c824a" stroke="#ffffff" stroke-width="0.8"/>
+        <circle cx="19" cy="22" r="3.5" fill="#9c824a" stroke="#ffffff" stroke-width="1"/>
+        <circle cx="19" cy="22" r="1.5" fill="#db0007"/>
+      </svg>`;
+    case 'flamengo':
+      return `<svg width="${size}" height="${size}" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 8C14 6 26 6 32 8V20C32 28 20 34 20 34C20 34 8 28 8 20V8Z" fill="#111111" stroke="#c3281e" stroke-width="2"/>
+        <path d="M8 12H32M8 18H32M8 24H32M8 30H28" stroke="#c3281e" stroke-width="3"/>
+        <path d="M8 8H20V18H8V8Z" fill="#c3281e"/>
+        <text x="14" y="15" text-anchor="middle" font-family="serif" font-size="7.5" font-weight="900" fill="#ffffff">CRF</text>
+      </svg>`;
+    case 'palmeiras':
+      return `<svg width="${size}" height="${size}" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="20" cy="20" r="19" fill="#006437" stroke="#ffffff" stroke-width="2"/>
+        <circle cx="20" cy="20" r="14" fill="#ffffff" stroke="#006437" stroke-width="1.5"/>
+        <circle cx="20" cy="20" r="11" fill="#006437" stroke="#c5a059" stroke-width="1"/>
+        <path d="M17 13H22C24 13 25.5 14.5 25.5 16.5C25.5 18.5 24 20 22 20H19V27H17V13ZM19 15V18H21.5C22.3 18 23 17.3 23 16.5C23 15.7 22.3 15 21.5 15H19Z" fill="#ffffff" stroke="#c5a059" stroke-width="0.5"/>
+      </svg>`;
+    case 'dortmund':
+      return `<svg width="${size}" height="${size}" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="20" cy="20" r="19" fill="#fde100" stroke="#111111" stroke-width="2.5"/>
+        <circle cx="20" cy="20" r="15" fill="#fde100" stroke="#111111" stroke-width="1.2"/>
+        <text x="20" y="22" text-anchor="middle" font-family="sans-serif" font-size="8.5" font-weight="900" fill="#111111" letter-spacing="0.5">BVB</text>
+        <text x="20" y="29" text-anchor="middle" font-family="sans-serif" font-size="6.5" font-weight="900" fill="#111111">09</text>
+      </svg>`;
+    default:
+      return `<svg width="${size}" height="${size}" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="18" fill="#ffd700"/></svg>`;
+  }
+}
+
+function getTeamById(id) {
+  return TEAMS.find(t => t.id === id) || TEAMS[7];
+}
+
+let matchTeams = {
+  home: getTeamById("flamengo"),
+  away: getTeamById("palmeiras")
+};
+
+let pickingTeamSide = "home";
+
+function setMatchTeams(homeIdOrObj, awayIdOrObj) {
+  const home = typeof homeIdOrObj === "string" ? getTeamById(homeIdOrObj) : (homeIdOrObj || matchTeams.home);
+  const away = typeof awayIdOrObj === "string" ? getTeamById(awayIdOrObj) : (awayIdOrObj || matchTeams.away);
+  matchTeams.home = home;
+  matchTeams.away = away;
+  try {
+    localStorage.setItem("fut_cria_home_team", home.id);
+    localStorage.setItem("fut_cria_away_team", away.id);
+  } catch(e){}
+  updateMenuMatchupUI();
+  updateHudTeamBadges();
+}
+
+function initSavedMatchTeams() {
+  try {
+    const sHome = localStorage.getItem("fut_cria_home_team");
+    const sAway = localStorage.getItem("fut_cria_away_team");
+    if(sHome) matchTeams.home = getTeamById(sHome);
+    if(sAway) matchTeams.away = getTeamById(sAway);
+  } catch(e){}
+  updateMenuMatchupUI();
+  updateHudTeamBadges();
+}
+
+function updateMenuMatchupUI() {
+  const pHomeBadge = $("#pickHomeBadge"), pHomeName = $("#pickHomeName");
+  const pAwayBadge = $("#pickAwayBadge"), pAwayName = $("#pickAwayName");
+  if(pHomeBadge) pHomeBadge.innerHTML = getTeamBadgeSvg(matchTeams.home.id, 28);
+  if(pHomeName) pHomeName.textContent = matchTeams.home.name;
+  if(pAwayBadge) pAwayBadge.innerHTML = getTeamBadgeSvg(matchTeams.away.id, 28);
+  if(pAwayName) pAwayName.textContent = matchTeams.away.name;
+}
+
+function updateHudTeamBadges(team0 = matchTeams.home, team1 = matchTeams.away) {
+  const hBadge0 = $("#hudBadgeHome"), hName0 = $("#hudNameHome"), hDot0 = $("#hudDotHome");
+  const hBadge1 = $("#hudBadgeAway"), hName1 = $("#hudNameAway"), hDot1 = $("#hudDotAway");
+  if(hBadge0) hBadge0.innerHTML = getTeamBadgeSvg(team0.id, 24);
+  if(hName0) {
+    hName0.textContent = team0.short;
+    hName0.style.color = team0.primary === "#ffffff" ? "#ffd700" : team0.primary;
+  }
+  if(hDot0) hDot0.style.backgroundColor = team0.primary === "#ffffff" ? "#ffd700" : team0.primary;
+
+  if(hBadge1) hBadge1.innerHTML = getTeamBadgeSvg(team1.id, 24);
+  if(hName1) {
+    hName1.textContent = team1.short;
+    hName1.style.color = team1.primary === "#ffffff" ? "#ffd700" : team1.primary;
+  }
+  if(hDot1) hDot1.style.backgroundColor = team1.primary === "#ffffff" ? "#ffd700" : team1.primary;
+}
+
+function openTeamPicker(side = "home") {
+  pickingTeamSide = side;
+  const modal = $("#teamPickerModal");
+  const grid = $("#teamPickerGrid");
+  const title = $("#teamPickerTitle");
+  if(!modal || !grid) return;
+
+  if(title) title.textContent = side === "home" ? "ESCOLHA SEU TIME (CASA)" : "ESCOLHA O TIME ADVERSÁRIO";
+  grid.innerHTML = "";
+
+  const currentSelectedId = side === "home" ? matchTeams.home.id : matchTeams.away.id;
+
+  TEAMS.forEach(team => {
+    const item = document.createElement("div");
+    item.className = "teamPickerItem" + (team.id === currentSelectedId ? " selected" : "");
+    item.innerHTML = `
+      <div class="teamPickerItemSvg">${getTeamBadgeSvg(team.id, 32)}</div>
+      <div>
+        <div class="teamPickerItemName">${team.name}</div>
+        <div class="teamPickerItemColors">
+          <span class="teamColorPill" style="background:${team.primary}"></span>
+          <span class="teamColorPill" style="background:${team.secondary}"></span>
+          <span class="teamColorPill" style="background:${team.shorts}"></span>
+        </div>
+      </div>
+    `;
+    item.addEventListener("click", () => {
+      if(pickingTeamSide === "home") {
+        setMatchTeams(team.id, matchTeams.away.id === team.id ? (team.id === "real_madrid" ? "barcelona" : "real_madrid") : matchTeams.away.id);
+      } else {
+        setMatchTeams(matchTeams.home.id, team.id);
+      }
+      flash(`${team.icon} ${team.name} SELECIONADO!`, team.primary === "#ffffff" ? "#ffd700" : team.primary);
+      closeTeamPicker();
+    });
+    grid.appendChild(item);
+  });
+
+  modal.classList.add("show");
+  modal.style.display = "flex";
+}
+
+function closeTeamPicker() {
+  const modal = $("#teamPickerModal");
+  if(modal) {
+    modal.classList.remove("show");
+    modal.style.display = "none";
+  }
+}
+
+function rollRandomDerby() {
+  const derby = CLASSIC_DERBIES[Math.floor(Math.random() * CLASSIC_DERBIES.length)];
+  setMatchTeams(derby[0], derby[1]);
+  flash(`🏆 CLÁSSICO: ${matchTeams.home.name} vs ${matchTeams.away.name}!`, "#ffd700");
+  try { sfx.init(); sfx.playWhistle(false); } catch(e){}
+}
+
+function applyTeamUniformToHumanoid(char, teamObj, isKeeper=false) {
+  if(!char || !teamObj) return;
+  if(isKeeper) {
+    const gkColor = teamObj.gkColor || (char.team === 0 ? "#10b981" : "#facc15");
+    const gkCfg = {
+      jerseyColor: gkColor,
+      jerseySecColor: "#111111",
+      jerseyStyle: "solid",
+      sleeveType: "long",
+      shortsColor: "#111111",
+      sockColor: gkColor,
+      cleatColor: teamObj.primary,
+      cleatSecColor: "#ffffff",
+      cleatStyle: "mercurial",
+      tattooStyle: "none"
+    };
+    if(char.updateJerseyAndTattoos) char.updateJerseyAndTattoos(gkCfg);
+    if(char.shortsMat) char.shortsMat.color.set(gkCfg.shortsColor);
+    if(char.sockMat) char.sockMat.color.set(gkCfg.sockColor);
+    return;
+  }
+
+  const teamCfg = {
+    jerseyColor: teamObj.primary,
+    jerseySecColor: teamObj.secondary,
+    jerseyStyle: teamObj.style || "solid",
+    sleeveType: "short",
+    shortsColor: teamObj.shorts || teamObj.secondary,
+    sockColor: teamObj.socks || teamObj.primary,
+    cleatColor: teamObj.primary,
+    cleatSecColor: teamObj.secondary,
+    cleatStyle: "mercurial",
+    tattooStyle: "none"
+  };
+
+  if(char.updateJerseyAndTattoos) char.updateJerseyAndTattoos(teamCfg);
+  if(char.shortsMat) char.shortsMat.color.set(teamCfg.shortsColor);
+  if(char.sockMat) char.sockMat.color.set(teamCfg.sockColor);
+}
+
+function applyMatchKitsToTeams(homeTeam = matchTeams.home, awayTeam = matchTeams.away) {
+  if(typeof mateA !== "undefined" && mateA) applyTeamUniformToHumanoid(mateA, homeTeam, false);
+  if(typeof mateB !== "undefined" && mateB) applyTeamUniformToHumanoid(mateB, homeTeam, false);
+  if(typeof gkOwn !== "undefined" && gkOwn) applyTeamUniformToHumanoid(gkOwn, homeTeam, true);
+
+  if(typeof foeA !== "undefined" && foeA) applyTeamUniformToHumanoid(foeA, awayTeam, false);
+  if(typeof foeB !== "undefined" && foeB) applyTeamUniformToHumanoid(foeB, awayTeam, false);
+  if(typeof foeC !== "undefined" && foeC) applyTeamUniformToHumanoid(foeC, awayTeam, false);
+  if(typeof gkFoe !== "undefined" && gkFoe) applyTeamUniformToHumanoid(gkFoe, awayTeam, true);
 }
 
 /* ═══════════════ FÍSICA DA BOLA ═══════════════ */
@@ -8389,6 +8808,19 @@ function showMatchIntro(homeData, awayData, onComplete) {
   matchIntroActive = true;
   clearTimeout(matchIntroTimer);
 
+  const titleEl = $("#introMatchTitle");
+  if(titleEl && homeData.teamTag && awayData.teamTag) {
+    titleEl.textContent = `${homeData.teamTag} VS ${awayData.teamTag}`;
+  }
+  const homeTagEl = $("#introHomeTag");
+  if(homeTagEl && homeData.teamBadge) {
+    homeTagEl.innerHTML = `${homeData.teamBadge} <span>${homeData.teamTag || "TIME DA CASA"}</span>`;
+  }
+  const awayTagEl = $("#introAwayTag");
+  if(awayTagEl && awayData.teamBadge) {
+    awayTagEl.innerHTML = `${awayData.teamBadge} <span>${awayData.teamTag || "VISITANTE"}</span>`;
+  }
+
   const homeMount = $("#introHomeCardMount");
   const awayMount = $("#introAwayCardMount");
   if (homeMount) {
@@ -8693,9 +9125,12 @@ let isDraggingCustomizer = false;
 
 function startMatchMode(){
   const playerName = (window.firebaseUser ? window.firebaseUser.displayName : (document.querySelector("#mpName")?.value || "CRIA")) || "CRIA";
+  const homeTeam = matchTeams.home;
+  const awayTeam = matchTeams.away;
+
   showMatchIntro(
-    { name: playerName, mpGoals: playerStats.mpGoals, customConfig: playerCustomConfig },
-    { name: "CAPITÃO RIVAL", mpGoals: 250, customConfig: { skinColor: "#543018", hairStyle: "mohawk", hairColor: "#f4f4f5", jerseyColor: "#ef4444", jerseySecColor: "#18181b", jerseyStyle: "stripes", foot: -1 } },
+    { name: playerName, mpGoals: playerStats.mpGoals, customConfig: playerCustomConfig, teamTag: homeTeam.name, teamBadge: getTeamBadgeSvg(homeTeam.id, 24) },
+    { name: `CAPITÃO ${awayTeam.short}`, mpGoals: 250, customConfig: { skinColor: "#543018", hairStyle: "mohawk", hairColor: "#f4f4f5", jerseyColor: awayTeam.primary, jerseySecColor: awayTeam.secondary, jerseyStyle: awayTeam.style, shortsColor: awayTeam.shorts, sockColor: awayTeam.socks, foot: -1 }, teamTag: awayTeam.name, teamBadge: getTeamBadgeSvg(awayTeam.id, 24) },
     () => {
       gameMode = "match";
       shake = 0;
@@ -8710,6 +9145,9 @@ function startMatchMode(){
       const mwEl = $("#miniWrap"); if(mwEl) mwEl.style.display = "flex";
       const chEl = $("#crosshairWrap"); if(chEl) chEl.style.display = "flex";
       score = [0,0]; timeLeft = CFG.MATCH; over = false; running = true;
+      
+      applyMatchKitsToTeams(homeTeam, awayTeam);
+      updateHudTeamBadges(homeTeam, awayTeam);
       updateScore(); updateClock(); kickoff(1); drawMini();
       last = performance.now();
       startMouseControl();
@@ -9068,8 +9506,10 @@ function goalScored(team){
 function endMatch(){
   running = false; over = true;
   sfx.playWhistle(true);
-  const res = score[0] > score[1] ? "VITÓRIA DOS CRIAS! 🏆" : score[0] < score[1] ? "FIM DE JOGO • DERROTA" : "EMPATE NA FAVELA!";
-  $("#startText").textContent = `${res} Placar: Flamengo Cria ${score[0]} x ${score[1]} Vascão. Mandou bem no morro!`;
+  const home = matchTeams.home;
+  const away = matchTeams.away;
+  const res = score[0] > score[1] ? `VITÓRIA DO ${home.name}! 🏆` : score[0] < score[1] ? `VITÓRIA DO ${away.name}!` : "EMPATE CLÁSSICO!";
+  $("#startText").textContent = `${res} Placar: ${home.name} ${score[0]} x ${score[1]} ${away.name}. Mandou bem em campo!`;
   const pBtn = $("#btnPlayMatch"); if(pBtn) pBtn.textContent = "⚽ JOGAR NOVAMENTE (4v4)";
   $("#start").style.display = "flex";
 }
@@ -9407,8 +9847,10 @@ const sprintBtn = $("#sprintBtn");
 
 let lastHasBallUI = null;
 
-function updateMobileControlsUI(){
-  const hasBall = (owner === player);
+// `comBola` chega preenchido pelo multiplayer, onde a posse é do servidor e não
+// do objeto `player` local (que fica estacionado fora de campo na partida online).
+function updateMobileControlsUI(comBola){
+  const hasBall = comBola !== undefined ? comBola : (owner === player);
   if(hasBall !== lastHasBallUI){
     lastHasBallUI = hasBall;
     if(hasBall){
@@ -9433,7 +9875,8 @@ function updateMobileControlsUI(){
       if(passTackleBdg) passTackleBdg.textContent = "Q";
 
       if(skillBtn) skillBtn.classList.add("defenseMode");
-      if(skillLbl) skillLbl.textContent = (player.vel.lengthSq() > 0.6 ? "PULO" : "COMEMORAR");
+      if(skillLbl) skillLbl.textContent = gameMode === "multiplayer" ? "PULO"
+        : (player.vel.lengthSq() > 0.6 ? "PULO" : "COMEMORAR");
       if(skillBdg) skillBdg.textContent = "V / C";
     }
   }
@@ -9502,6 +9945,13 @@ if(mainBtn){
     e.preventDefault();
     sfx.init();
     if(!running) return;
+    if(gameMode === "multiplayer"){
+      // Online o boneco é do servidor: o botão vira input de rede. A carga do
+      // chute já viaja por input.charging, o desarme precisava de um toque.
+      if(mpComBola() || mpDistBola() < 3.2){ startCharge(); }
+      else { mpMarcarToque("steal"); mainBtn.classList.add("activeKey"); }
+      return;
+    }
     const dToBall = flat(player.root.position, ball.position);
     if(owner === player || dToBall < 3.2){
       if(!registerKickPress()){ startCharge(); }
@@ -9524,6 +9974,11 @@ if(passTackleBtn){
     e.preventDefault();
     sfx.init();
     if(!running) return;
+    if(gameMode === "multiplayer"){
+      if(mpComBola() || mpDistBola() < 3.5){ startPassCharge(); }
+      else { mpMarcarToque("tackle"); passTackleBtn.classList.add("activeKey"); }
+      return;
+    }
     const dToBall = flat(player.root.position, ball.position);
     if(owner === player || dToBall < 3.5){
       startPassCharge();
@@ -9549,6 +10004,16 @@ if(skillBtn){
     sfx.init();
     if(!running) return;
     skillBtn.classList.add("activeKey");
+    if(gameMode === "multiplayer"){
+      // Sem isto o drible NÃO EXISTIA no celular durante a partida online:
+      // mpInputState.dribble só era alimentado pelo teclado, e este botão
+      // chamava a ação do jogo local — que roda com o boneco estacionado fora
+      // de campo e portanto nunca fazia nada.
+      const d = mpDistBola();
+      const noAlto = ball.position.y > 1.15 && ball.position.y < 3.4 && d < 2.6;
+      mpMarcarToque(noAlto || d > 3.2 ? "jump" : "dribble");
+      return;
+    }
     const dToBall = flat(player.root.position, ball.position);
     const ballAirborneNearby = ball.position.y > 1.15 && ball.position.y < 3.4 && dToBall < 2.6;
     if(ballAirborneNearby){
@@ -9615,6 +10080,11 @@ addEventListener("keydown", e=>{
     return;
   }
 
+  // Na partida online as ações saem de mpGatherInput() lendo mpKeys — o mesmo
+  // keydown já alimentou aquele mapa. Executar também as ações locais aqui só
+  // mexeria no boneco estacionado fora de campo.
+  if(gameMode === "multiplayer") return;
+
   if(k === "1" || k === "numpad1"){ if(owner === player) passToMate(mateA); }
   if(k === "2" || k === "numpad2"){ if(owner === player) passToMate(mateB); }
 
@@ -9670,6 +10140,21 @@ if(btnCloseCustom) btnCloseCustom.addEventListener("click", closeCustomizerStudi
 
 const btnSaveCustom = $("#btnSaveCustom");
 if(btnSaveCustom) btnSaveCustom.addEventListener("click", closeCustomizerStudio);
+
+// Seletor de Confronto e Times Clássicos
+const pickHomeBtn = $("#pickHomeTeamBtn");
+if(pickHomeBtn) pickHomeBtn.addEventListener("click", () => openTeamPicker("home"));
+
+const pickAwayBtn = $("#pickAwayTeamBtn");
+if(pickAwayBtn) pickAwayBtn.addEventListener("click", () => openTeamPicker("away"));
+
+const btnRandomMatch = $("#btnRandomMatchup");
+if(btnRandomMatch) btnRandomMatch.addEventListener("click", rollRandomDerby);
+
+const btnClosePicker = $("#btnCloseTeamPicker");
+if(btnClosePicker) btnClosePicker.addEventListener("click", closeTeamPicker);
+
+initSavedMatchTeams();
 
 const voiceBtn = $("#voiceBtn");
 if(voiceBtn) voiceBtn.addEventListener("click", (e)=>{ e.stopPropagation(); voiceToggleMute(); });
@@ -9836,6 +10321,11 @@ const mp = {
 
 const MP_INTERP = 0.10, MP_MAX_SNAP = 24, MP_ACC_NUM = 1/30;
 const MP_MAX_RETRIES = 12;   // ~48s de tentativas: cobre o cold start do Render free
+
+// Atalhos usados pelos botões de toque: no online a posse e a posição do meu
+// jogador vêm do servidor, não do objeto `player` do jogo local.
+function mpComBola(){ return mp.entId !== 0 && mp.ownerId === mp.entId; }
+function mpDistBola(){ return Math.hypot(ball.position.x - mp.localX, ball.position.z - mp.localZ); }
 
 function mpSetStatus(text, cls){
   const el = document.querySelector("#mpStatus");
@@ -10125,6 +10615,9 @@ function mpClearRoster(){
   mp.snaps.length = 0; mp.history.length = 0; mp.ready = false;
   mp.hudScore = null; mp.hudClock = null;
   mp.localState = "idle"; mp.localAct = 0;
+  mp.dribbleSlot = 0; mp.localDribCd = 0;
+  lastHasBallUI = null;   // força os rótulos dos botões a se refazerem no novo modo
+  mpToque.dribble = mpToque.jump = mpToque.steal = mpToque.tackle = false;
   mpWorld.ents.clear(); mpWorld.ball = null;
 }
 
@@ -10258,10 +10751,25 @@ function mpOnSnapshot(d){
   // para parar de dirigir o boneco enquanto ela dura.
   if(mineEl){
     const st = MP_STATE_NAME[mineEl[5]] || "idle";
-    if(st !== mp.localState){
+    // Ação prevista aqui e ainda rodando, com o servidor mandando locomoção: o
+    // fluxo está uns 100 ms atrasado e ainda não viu o clique. Aceitar esse
+    // "parado" apagaria o drible que acabou de começar na tela. Quando a ação
+    // prevista acaba sem o servidor confirmar (ele recusou, por cooldown), o
+    // próximo snapshot corrige sozinho.
+    const locoAtrasada = (mp.localAct || 0) > 0 &&
+      (st === "idle" || st === "run" || st === "sprint" || st === "kick_charge");
+    if(st !== mp.localState && !locoAtrasada){
       mp.localState = st;
       mp.localAct = MP_STATE_DUR[st] || 0;
     }
+
+    // Ressincroniza o revezamento com o servidor. Se ele recusou um clique (por
+    // cooldown), o contador local ficaria um passo à frente e o próximo drible
+    // previsto sairia diferente do que o servidor vai executar de fato.
+    // Só valem os quatro primeiros: chapéu e carretilha também saem do combo e
+    // da marcação colada, que não mexem no revezamento.
+    const iMov = MP_DRIBBLES.findIndex(m => m.id === st);
+    if(iMov >= 0 && iMov < 4) mp.dribbleSlot = iMov;
   }
   if(mineEl && mp.chars.has(mp.entId)){
     mpReconcile(mineEl);
@@ -10292,14 +10800,22 @@ function mpApplyLocalInput(input, dt, hasBall){
   mp.localAct = Math.max(0, (mp.localAct || 0) - dt);
   const st = mp.localState || "idle";
 
+  // Drible: o servidor solta um impulso pra frente e ignora o teclado enquanto
+  // a ação dura. Isso não dava pra prever enquanto o movimento saía de um
+  // sorteio só do servidor; agora que a escolha é a mesma dos dois lados
+  // (mpPreverDrible espelha doDribbleMove), o cliente acompanha a arrancada em
+  // vez de continuar andando na direção do teclado e apanhar da reconciliação.
+  if(st.startsWith("dribble_") && (mp.localAct || 0) > 0){
+    const fx = Math.sin(mp.localYaw), fz = Math.cos(mp.localYaw);
+    mp.localVx = mpDamp(mp.localVx, fx * 13.5, 12, dt);
+    mp.localVz = mpDamp(mp.localVz, fz * 13.5, 12, dt);
+    mpIntegrarLocal(dt);
+    return;
+  }
+
   // Carrinho, desarme e tombo: sem direção, só o atrito levando o corpo. O
   // servidor apenas PARA de dirigir e aplica atrito, e isso o cliente espelha
   // exatamente — medido, a fuga da posição cai de 0,48m para 0,17m no deslize.
-  //
-  // O drible NÃO entra aqui de propósito: lá o servidor dá um impulso que o
-  // cliente não tem como prever (a força varia com o movimento sorteado), e
-  // adivinhar 13,5 m/s ficou PIOR que continuar seguindo o teclado — medido,
-  // 0,20m viravam 0,35m. Nesse caso a reconciliação sozinha se sai melhor.
   if(st === "tackle" || st === "steal" || st === "fall"){
     let lambda = 5;
     if(st === "tackle"){
@@ -10344,7 +10860,13 @@ function mpReconcile(serverEnt){
   mp.localVx = svx; mp.localVz = svz;
   mp.serverYaw = serverEnt[4];   // convergido so quando o jogador esta parado
   const hasBall = mp.ownerId === mp.entId;
+  // O cronômetro da ação prevista conta tempo REAL, não passos de
+  // reconciliação. Deixar a repetição consumi-lo queimava a previsão inteira
+  // antes de o servidor confirmar: são ~20 reconciliações por segundo, cada uma
+  // repetindo os inputs ainda não confirmados.
+  const actAntes = mp.localAct;
   for(const h of mp.history) mpApplyLocalInput(h.input, h.dt, hasBall);
+  mp.localAct = actAntes;
   const err = Math.hypot(mp.localX - startX, mp.localZ - startZ);
   if(err < 1.2){
     mp.localX = startX + (mp.localX - startX)*0.35;
@@ -10428,6 +10950,68 @@ let mpMouseShoot = false, mpMousePass = false;
 let mpPrevShoot = false, mpPrevPass = false;
 const mpKeys = {};
 let mpAccum = 0;
+
+// Botões de toque único ficam retidos até entrarem num pacote. Um toque pode
+// nascer e morrer dentro do mesmo quadro — o dedo na tela, principalmente — e
+// aí ele nunca chegava ao servidor: o jogador apertava DRIBLE e não acontecia
+// nada, sem nada na tela explicando o porquê.
+const mpToque = { dribble:false, jump:false, steal:false, tackle:false };
+const mpBruto = { dribble:false, jump:false, steal:false, tackle:false };
+function mpMarcarToque(k){ mpToque[k] = true; }
+function mpAplicarToques(){
+  mpInputState.dribble = mpBruto.dribble || mpToque.dribble;
+  mpInputState.jump    = mpBruto.jump    || mpToque.jump;
+  mpInputState.steal   = mpBruto.steal   || mpToque.steal;
+  mpInputState.tackle  = mpBruto.tackle  || mpToque.tackle;
+}
+function mpConsumirToques(){
+  if(!(mpToque.dribble || mpToque.jump || mpToque.steal || mpToque.tackle)) return;
+  mpToque.dribble = mpToque.jump = mpToque.steal = mpToque.tackle = false;
+  mpAplicarToques();
+}
+
+// Adversários vindos do snapshot, num buffer reaproveitado: esta lista é
+// montada a cada clique de drible e não vale virar lixo para o coletor.
+const mpFoesBuf = [];
+function mpAdversarios(){
+  mpFoesBuf.length = 0;
+  for(const c of mp.chars.values()) if(c.team !== mp.team) mpFoesBuf.push(c);
+  return mpFoesBuf;
+}
+
+// Espelha doDribbleMove() + burstDribble() de server/shared/sim.js. Com a
+// escolha do movimento determinística nos dois lados, o drible aparece no
+// quadro do clique em vez de só quando o snapshot volta — uns 100-200 ms
+// depois, que é o que fazia o botão parecer duro no online.
+function mpPreverDrible(){
+  const c = mp.chars.get(mp.entId);
+  if(!c || mp.frozen || !mp.ready) return;
+  if((mp.localDribCd || 0) > 0) return;
+  const dBola = Math.hypot(ball.position.x - mp.localX, ball.position.z - mp.localZ);
+  if(dBola > 3.2) return;
+
+  const marcado = foeParaChapeu(mp.localX, mp.localZ, mp.localYaw,
+                                ball.position.x, ball.position.z, mpAdversarios());
+  let info;
+  if(marcado){
+    info = DRIBBLE_CHAPEU;
+  } else {
+    mp.dribbleSlot = ((mp.dribbleSlot || 0) + 1) % MP_DRIBBLES.length;
+    info = MP_DRIBBLES[mp.dribbleSlot];
+  }
+
+  mp.localState = info.id;
+  mp.localAct = info.duration;
+  mp.localDribCd = info.duration + 0.10;
+  mp.localVx = Math.sin(mp.localYaw) * (9.0 + info.boost);
+  mp.localVz = Math.cos(mp.localYaw) * (9.0 + info.boost);
+
+  mpPreverAcao(info.id);
+  flash(info.name, "#ffd700", info.sub);
+  sfx.playSteal();
+  shake = marcado ? 0.20 : 0.15;
+}
+
 function mpGatherInput(){
   let kx=0, ky=0;
   if(mpKeys[userKeyBindings.left]||mpKeys.arrowleft) kx-=1;
@@ -10448,10 +11032,11 @@ function mpGatherInput(){
     mpInputState.dx/=dl; mpInputState.dz/=dl;
   } else { mpInputState.dx = 0; mpInputState.dz = 0; }
   mpInputState.sprint = !!mpKeys[userKeyBindings.sprint] || !!input.sprint;
-  mpInputState.steal = !!mpKeys[userKeyBindings.steal];
-  mpInputState.tackle = !!mpKeys[userKeyBindings.tackle];
-  mpInputState.dribble = !!mpKeys[userKeyBindings.dribble] || !!mpKeys.g;
-  mpInputState.jump = !!mpKeys[userKeyBindings.jump];
+  mpBruto.steal   = !!mpKeys[userKeyBindings.steal];
+  mpBruto.tackle  = !!mpKeys[userKeyBindings.tackle];
+  mpBruto.dribble = !!mpKeys[userKeyBindings.dribble] || !!mpKeys.g;
+  mpBruto.jump    = !!mpKeys[userKeyBindings.jump];
+  mpAplicarToques();
   mpInputState.dance = !!mpKeys[userKeyBindings.dance];
   mpInputState.shoot = mpMouseShoot || !!mpKeys[userKeyBindings.shoot] || !!input.charging;
   mpInputState.pass = mpMousePass || !!mpKeys[userKeyBindings.pass] || !!input.passCharging;
@@ -10481,7 +11066,9 @@ function mpGatherInput(){
     sfx.playTackle();
     mpPreverAcao("tackle");        // o servidor recusa se estiver com a bola — igual aqui
   }
+  if(mpInputState.dribble && !mpKeys._dribblePressed) mpPreverDrible();
   if(mpInputState.jump && !mpKeys._jumpPressed) mpPularOuCabecear();
+  mpKeys._dribblePressed = mpInputState.dribble;
   mpKeys._jumpPressed = mpInputState.jump;
   mpKeys._stealPressed = mpInputState.steal;
   mpKeys._tacklePressed = mpInputState.tackle;
@@ -10595,9 +11182,12 @@ function mpUpdate(dt){
     if(mp.history.length > 120) mp.history.shift();
     mpSend(C2S.INPUT, packet);
     mpApplyLocalInput(packet, step, mp.ownerId === mp.entId && (mp.localKickCooldown || 0) <= 0);
+    // O toque já viajou: solta o latch para o próximo pacote não repetir a borda
+    mpConsumirToques();
   }
 
   if(mp.localKickCooldown > 0) mp.localKickCooldown = Math.max(0, mp.localKickCooldown - dt);
+  if(mp.localDribCd > 0) mp.localDribCd = Math.max(0, mp.localDribCd - dt);
 
   const world = mpInterpolate();
   const myChar = mp.chars.get(mp.entId);
@@ -10659,7 +11249,12 @@ function mpUpdate(dt){
   }
 
   // 2. Condução e Sincronização da Bola
-  const euConduzo = mp.ownerId === mp.entId && mp.entId !== 0 && (mp.localKickCooldown || 0) <= 0;
+  // O drible previsto localmente também conduz: o servidor só confirma a posse
+  // uns 100 ms depois, e sem isto a bola ficava presa na posição do snapshot
+  // enquanto o boneco já executava a finta — o chapéu subia sem bola.
+  const dribleLocal = (mp.localAct || 0) > 0 && (mp.localState || "").startsWith("dribble_");
+  const euConduzo = (mp.ownerId === mp.entId || dribleLocal) &&
+                    mp.entId !== 0 && (mp.localKickCooldown || 0) <= 0;
   if(euConduzo && myChar){
     // Jogador local conduzindo: biomecânica completa, fintas e toques rítmicos sincronizados
     dribble(myChar, dt);
@@ -10680,6 +11275,8 @@ function mpUpdate(dt){
     ring.position.set(myChar.root.position.x, 0.04, myChar.root.position.z);
     ring.material.opacity = mp.ownerId === mp.entId ? 0.9 : 0.35;
   }
+
+  updateMobileControlsUI(mp.ownerId === mp.entId);
 
   const s = mp.score;
   const placar = `${s[mp.team]} — ${s[1-mp.team]}`;

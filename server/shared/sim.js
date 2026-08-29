@@ -8,7 +8,7 @@
 // Os numeros foram portados do jogo single-player (frontend/index.html) para que a
 // sensacao de jogo seja a mesma.
 
-import { CFG, HW, HH, GHW, FORMATIONS, STATE } from "./constants.js";
+import { CFG, KICK, HW, HH, GHW, FORMATIONS, STATE } from "./constants.js";
 
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 const damp = (a, b, lambda, dt) => b + (a - b) * Math.exp(-lambda * dt);
@@ -30,7 +30,14 @@ const TACKLE = {
   brake:      3.2,  // multiplicador de atrito na levantada
   glideEnd:  0.62,  // fracao da acao em que o corpo sai do chao
   reachBall: 2.05,  // alcance da perna esticada na bola
-  reachFoe:  1.85   // alcance do corpo no adversario
+  reachFoe:  1.85,  // alcance do corpo no adversario
+  // Carrinho limpo: quem estava conduzindo leva um susto curto em vez de cair.
+  // Nao derruba (derrubar e falta), mas tira o proximo movimento dele — e o
+  // que paga o risco de se jogar no chao para tirar a bola.
+  reachOwner: 2.40, // alcance do susto em quem conduzia
+  stunOwner:  0.30, // atordoamento (s) de quem perdeu a bola no carrinho limpo
+  shoveOwner: 3.2,  // empurrao no sentido do deslize
+  stunFoul:   1.6   // tombo completo de quem sofreu falta
 };
 
 // ─────────────────────────── criacao de entidades ───────────────────────────
@@ -164,10 +171,18 @@ function dribbleBall(w, e, dt) {
 
 // ──────────────────────────── acoes de jogo ────────────────────────────────
 
-function doShoot(w, e, power) {
+function doShoot(w, e, power, over = 0) {
   const b = w.ball;
   if (dist2(e.x, e.z, b.x, b.z) > 3.8 || b.y > 2.8) return false;
   const p = clamp(power, 0, 1);
+
+  // Segurar alem da carga cheia nao adiciona forca: o pe passa por baixo da
+  // bola. Ela sobe (loft) e perde velocidade horizontal (drag) — o chute vai
+  // por cima do gol. A punicao e deterministica de proposito: o jogador precisa
+  // conseguir aprender o ponto certo de soltar, e nao apostar num dado.
+  const o = clamp(over, 0, 1);
+  const loft = 1 + o * KICK.overLoft;
+  const drag = 1 - o * KICK.overPower;
 
   // Direcao: mira enviada pelo cliente, com fallback para a frente do jogador
   let dx = (e.aimx ?? 0) - b.x;
@@ -181,15 +196,15 @@ function doShoot(w, e, power) {
   const hf = targetY / CFG.GOAL_H;
 
   if (p >= 0.65) {
-    const sp = 26 + 22 * p;
+    const sp = (26 + 22 * p) * drag;
     b.vx = dx * sp; b.vz = dz * sp;
-    b.vy = (2.2 + 5.2 * p) * (0.60 + 0.80 * hf);
+    b.vy = (2.2 + 5.2 * p) * (0.60 + 0.80 * hf) * loft;
     b.spinY = (Math.random() - 0.5) * 2.0;
     e.state = STATE.SHOT_POWER; e.act = 0.30; e.cool = 0.34;
   } else {
-    const sp = 18 + 14 * p;
+    const sp = (18 + 14 * p) * drag;
     b.vx = dx * sp; b.vz = dz * sp;
-    b.vy = (1.8 + 3.6 * p) * (0.70 + 0.70 * hf);
+    b.vy = (1.8 + 3.6 * p) * (0.70 + 0.70 * hf) * loft;
     // Efeito Magnus buscando o canto
     b.spinY = ((e.aimx ?? 0) > b.x ? -1 : 1) * (5.5 + p * 4.5);
     e.state = STATE.SHOT_TECHNIQUE; e.act = 0.24; e.cool = 0.28;
@@ -292,6 +307,10 @@ function resolveTackleContact(w, e) {
   const b = w.ball;
   const fx = Math.sin(e.yaw), fz = Math.cos(e.yaw);
 
+  // Quem estava conduzindo no momento do contato: e ele que leva o susto se a
+  // bola for tirada limpa.
+  const dono = w.ownerId ? getEnt(w, w.ownerId) : null;
+
   const dBall = dist2(e.x, e.z, b.x, b.z);
   let foe = null, dFoe = 999;
   for (const o of w.ents) {
@@ -311,15 +330,22 @@ function resolveTackleContact(w, e) {
   if (hitBall) {
     w.ownerId = e.id;
     b.vx = fx * 8.5; b.vz = fz * 8.5; b.vy = 0.8;
-    if (foe) {
-      foe.state = STATE.FALL; foe.act = 1.25; foe.cool = 1.4; foe.stunned = 1.25;
-      let ox = foe.x - e.x, oz = foe.z - e.z;
-      const ol = Math.hypot(ox, oz) || 1;
-      foe.vx = (ox / ol) * 4.8; foe.vz = (oz / ol) * 4.8; foe.vy = 2.4;
+
+    // Bola tirada limpa de quem conduzia: atordoa por instantes em vez de
+    // derrubar. Como findOwner() ignora quem esta atordoado, ele nao recupera a
+    // bola no mesmo passo — e essa janela que faz o carrinho valer a pena.
+    if (dono && dono.team !== e.team && dono.id !== e.id &&
+        dono.state !== STATE.FALL && dono.stunned <= 0 &&
+        dist2(e.x, e.z, dono.x, dono.z) < TACKLE.reachOwner) {
+      dono.stunned = TACKLE.stunOwner;
+      dono.charge = 0; dono.passCharge = 0;   // perde o chute que carregava
+      dono.state = STATE.IDLE; dono.act = 0;
+      dono.vx += fx * TACKLE.shoveOwner;
+      dono.vz += fz * TACKLE.shoveOwner;
     }
   } else if (foe) {
     // Falta: quem cometeu fica penalizado e a bola fica parada no local
-    foe.state = STATE.FALL; foe.act = 1.6; foe.cool = 1.8; foe.stunned = 1.6;
+    foe.state = STATE.FALL; foe.act = TACKLE.stunFoul; foe.cool = 1.8; foe.stunned = TACKLE.stunFoul;
     let ox = foe.x - e.x, oz = foe.z - e.z;
     const ol = Math.hypot(ox, oz) || 1;
     foe.vx = (ox / ol) * 5.5; foe.vz = (oz / ol) * 5.5; foe.vy = 2.0;
@@ -427,14 +453,16 @@ function applyInput(w, e, input, dt) {
 
   // Carregamento de chute
   if (input.shoot) {
-    e.charge = Math.min(1, e.charge + dt * 1.2);
+    e.charge = Math.min(KICK.max, e.charge + dt * KICK.rate);
     if (e.act <= 0 && e.state !== STATE.KICK_CHARGE && w.ownerId === e.id) {
       e.state = STATE.KICK_CHARGE;
     }
   }
   if (pressed("shoot")) e.lastKickT = w.tick;
   if (released("shoot")) {
-    const p = 0.3 + e.charge * 0.7;
+    const held = e.charge;
+    const p = 0.3 + Math.min(1, held) * 0.7;
+    const over = (held - 1) / (KICK.max - 1);
     e.charge = 0;
     e.state = STATE.IDLE;
     // Combo (drible + chute na janela): vira um drible de vitrine, nao um chute
@@ -446,7 +474,7 @@ function applyInput(w, e, input, dt) {
       e.prev = { ...input };
       return;
     }
-    doShoot(w, e, p);
+    doShoot(w, e, p, over);
   }
 
   // Carregamento de passe
@@ -742,6 +770,15 @@ function stepBall(w, dt) {
   } else {
     const f = Math.pow(0.996, dt * 60);
     b.vx *= f; b.vz *= f;
+  }
+
+  // Teto da gaiola: o chute furado volta para o jogo em vez de sumir da tela.
+  const ceil = CFG.CEIL - CFG.BALL_R;
+  if (b.y > ceil) {
+    b.y = ceil;
+    if (b.vy > 0) b.vy *= -0.55;
+    b.vx *= 0.86; b.vz *= 0.86;   // a rede no alto tira velocidade
+    b.spinY *= 0.5;
   }
 
   // Laterais

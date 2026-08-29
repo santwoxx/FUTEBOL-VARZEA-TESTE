@@ -4,12 +4,26 @@
 
 export const CFG = {
   W: 46, H: 76,
+  // Teto da gaiola. As laterais e os fundos ja devolviam a bola; sem um teto,
+  // um chute furado sumia da partida por varios segundos ate a gravidade
+  // trazer de volta. 14m fica bem acima de qualquer chute normal (o mais alto
+  // com carga cheia sobe ~3m), entao so a bola escangalhada bate la em cima.
+  CEIL: 14,
   GOAL_W: 16, GOAL_H: 4.0, GOAL_D: 3.2,
   MATCH: 180,
   BALL_R: 0.28,
   TICK_HZ: 30,      // passos de simulacao por segundo no servidor
   SNAP_HZ: 20,      // snapshots enviados por segundo para cada cliente
   MAX_TEAM: 4
+};
+
+// Carga do chute. Segurar ate 1.0 e forca; passar disso e o pe entrando por
+// baixo da bola — ela sobe e perde direcao. E o risco que paga encher o pe.
+export const KICK = {
+  rate:      1.2,   // carga por segundo
+  max:       1.6,   // teto da carga: ~0,5s de risco depois da forca maxima
+  overLoft:  1.9,   // multiplicador maximo na componente vertical
+  overPower: 0.28   // fracao da forca horizontal perdida no chute furado
 };
 
 export const HW = CFG.W / 2;

@@ -858,12 +858,32 @@ canvas{display:block;width:100%;height:100%}
       </div>
     </div>
 
-    <!-- Aba 2: Camisa -->
+    <!-- Aba 2: Camisa & Tatuagens -->
     <div class="tabPanel" id="tabJersey">
       <div class="customSection">
-        <label>Cor Principal da Camisa</label>
-        <div class="swatchesRow" id="jerseyColorSwatches"></div>
+        <label>Tipo de Peça / Manga</label>
+        <div class="choiceGrid" id="sleeveTypeChoices">
+          <button class="choiceBtn selected" data-sleeve="short">👕 Manga Curta</button>
+          <button class="choiceBtn" data-sleeve="long">🧥 Manga Longa</button>
+          <button class="choiceBtn" data-sleeve="sleeveless">🎽 Regata de Cria</button>
+          <button class="choiceBtn" data-sleeve="shirtless">🏖️ Sem Camisa</button>
+          <button class="choiceBtn" data-sleeve="thermal" style="grid-column: span 2">🥋 Térmica Manga Longa</button>
+        </div>
       </div>
+
+      <div class="customSection">
+        <label>Tatuagens de Cria no Corpo</label>
+        <div class="choiceGrid" id="tattooStyleChoices">
+          <button class="choiceBtn selected" data-tattoo="none">🚫 Nenhuma</button>
+          <button class="choiceBtn" data-tattoo="sleeve_left">🦾 Fechamento Esq.</button>
+          <button class="choiceBtn" data-tattoo="sleeve_right">💪 Fechamento Dir.</button>
+          <button class="choiceBtn" data-tattoo="sleeves_both">🦾 2 Braços Fechados</button>
+          <button class="choiceBtn" data-tattoo="chest_wings">🦅 Asas no Peito</button>
+          <button class="choiceBtn" data-tattoo="chest_cross">✝️ Cruz & Fé Peito</button>
+          <button class="choiceBtn" data-tattoo="full_cria" style="grid-column: span 2">🐉 Tatuagem Completa de Cria</button>
+        </div>
+      </div>
+
       <div class="customSection">
         <label>Estilo do Uniforme</label>
         <div class="choiceGrid" id="jerseyStyleChoices">
@@ -875,8 +895,17 @@ canvas{display:block;width:100%;height:100%}
           <button class="choiceBtn" data-style="halves">Meio a Meio</button>
           <button class="choiceBtn" data-style="hoops">Listras Horiz.</button>
           <button class="choiceBtn" data-style="camo">Camuflado Urb.</button>
+          <button class="choiceBtn" data-style="flames">🔥 Chamas Cria</button>
+          <button class="choiceBtn" data-style="lightning">⚡ Raios Neon</button>
+          <button class="choiceBtn" data-style="pinstripes" style="grid-column: span 2">👔 Retrô Gola V</button>
         </div>
       </div>
+
+      <div class="customSection">
+        <label>Cor Principal da Camisa</label>
+        <div class="swatchesRow" id="jerseyColorSwatches"></div>
+      </div>
+
       <div class="customSection">
         <label>Cor dos Detalhes / Listras</label>
         <div class="swatchesRow" id="jerseySecSwatches"></div>
@@ -2493,8 +2522,10 @@ const defaultCustomConfig = {
   hairColor: "#18181b",
   faceShape: "oval", // "oval", "angular", "round", "jaw"
   accessory: 0, // 0=None, 1=Ninja, 2=Zorro, 3=Juliet, 4=Skull (Caveira), 5=Ghost, 6=Crown, 7=Cap, 8=Headset, 9=Headband, 10=CyberVisor, 11=Mustache
+  sleeveType: "short", // "short", "long", "sleeveless", "shirtless", "thermal"
+  tattooStyle: "none", // "none", "sleeve_left", "sleeve_right", "sleeves_both", "chest_wings", "chest_cross", "full_cria"
   jerseyColor: "#18181b",
-  jerseyStyle: "solid", // "solid", "stripes", "sash", "gradient", "checkered", "halves", "hoops", "camo"
+  jerseyStyle: "solid", // "solid", "stripes", "sash", "gradient", "checkered", "halves", "hoops", "camo", "flames", "lightning", "pinstripes"
   jerseySecColor: "#ef4444",
   shortsColor: "#f4f4f5",
   sockColor: "#18181b",
@@ -2561,7 +2592,181 @@ function makeCustomJerseyTexture(color1, color2, style="solid"){
       const rh = 20 + ((i * 17) % 24);
       g.fillRect(rx, ry, rw, rh);
     }
+  } else if(style === "flames"){
+    // Chamas de cria subindo da barra da camisa
+    g.fillStyle = color2;
+    for(let fx = 0; fx < 256; fx += 32){
+      g.beginPath();
+      g.moveTo(fx, 256);
+      g.lineTo(fx + 16, 75 + ((fx * 13) % 55));
+      g.lineTo(fx + 32, 256);
+      g.closePath();
+      g.fill();
+    }
+    g.fillStyle = color1;
+    for(let fx = 0; fx < 256; fx += 32){
+      g.beginPath();
+      g.moveTo(fx + 6, 256);
+      g.lineTo(fx + 16, 140 + ((fx * 13) % 40));
+      g.lineTo(fx + 26, 256);
+      g.closePath();
+      g.fill();
+    }
+  } else if(style === "lightning"){
+    // Raios neon eletrizantes
+    g.fillStyle = color2;
+    g.beginPath();
+    g.moveTo(40, 0); g.lineTo(90, 90); g.lineTo(60, 90); g.lineTo(110, 180); g.lineTo(75, 180); g.lineTo(140, 256);
+    g.lineTo(120, 256); g.lineTo(60, 160); g.lineTo(90, 160); g.lineTo(40, 70); g.lineTo(70, 70);
+    g.closePath();
+    g.fill();
+    g.beginPath();
+    g.moveTo(170, 0); g.lineTo(220, 90); g.lineTo(190, 90); g.lineTo(240, 180); g.lineTo(205, 180); g.lineTo(256, 256);
+    g.lineTo(236, 256); g.lineTo(180, 160); g.lineTo(210, 160); g.lineTo(160, 70); g.lineTo(190, 70);
+    g.closePath();
+    g.fill();
+  } else if(style === "pinstripes"){
+    // Listras finas elegantes retrô
+    g.fillStyle = color2;
+    for(let x=12; x<256; x+=24){
+      g.fillRect(x, 0, 3, 256);
+    }
+    g.beginPath();
+    g.moveTo(128, 90); g.lineTo(80, 0); g.lineTo(176, 0);
+    g.closePath();
+    g.fill();
   }
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+function makeTattooChestTexture(skinHex, tattooStyle="none", pixelTattoo=null, isShirtless=false){
+  const c = document.createElement("canvas"); c.width = 256; c.height = 256;
+  const g = c.getContext("2d");
+  g.fillStyle = skinHex;
+  g.fillRect(0, 0, 256, 256);
+
+  if(isShirtless){
+    // Definição muscular anatômica sutil
+    g.strokeStyle = "rgba(0, 0, 0, 0.16)";
+    g.lineWidth = 4;
+    // Peitorais
+    g.beginPath();
+    g.arc(80, 80, 36, 0.1, Math.PI * 0.9);
+    g.stroke();
+    g.beginPath();
+    g.arc(176, 80, 36, 0.1, Math.PI * 0.9);
+    g.stroke();
+    // Abdômen (Linha alba e gominhos)
+    g.beginPath();
+    g.moveTo(128, 70); g.lineTo(128, 220);
+    g.moveTo(96, 130); g.lineTo(160, 130);
+    g.moveTo(96, 170); g.lineTo(160, 170);
+    g.stroke();
+  }
+
+  // Tatuagens no peitoral
+  const ink = "rgba(18, 18, 24, 0.88)";
+  g.fillStyle = ink;
+  g.strokeStyle = ink;
+  g.lineWidth = 3;
+
+  if(tattooStyle === "chest_cross" || tattooStyle === "full_cria"){
+    g.fillRect(123, 35, 10, 65);
+    g.fillRect(108, 50, 40, 10);
+    g.beginPath();
+    g.arc(128, 65, 22, 0, Math.PI*2);
+    g.stroke();
+    g.font = "900 16px Outfit, sans-serif";
+    g.textAlign = "center";
+    g.fillText("FÉ 10", 128, 120);
+  }
+
+  if(tattooStyle === "chest_wings" || tattooStyle === "full_cria"){
+    g.beginPath();
+    g.moveTo(128, 55);
+    g.quadraticCurveTo(70, 15, 20, 45);
+    g.lineTo(40, 75);
+    g.lineTo(70, 70);
+    g.lineTo(95, 90);
+    g.lineTo(128, 75);
+    g.quadraticCurveTo(186, 90, 161, 70);
+    g.lineTo(186, 75);
+    g.lineTo(236, 45);
+    g.quadraticCurveTo(186, 15, 128, 55);
+    g.fill();
+  }
+
+  if(pixelTattoo && Array.isArray(pixelTattoo)){
+    const sz = 4;
+    const startX = 128 - (8 * sz);
+    const startY = 135;
+    for(let y=0; y<16; y++){
+      for(let x=0; x<16; x++){
+        const col = pixelTattoo[y*16 + x];
+        if(col && col !== "transparent"){
+          g.fillStyle = col;
+          g.fillRect(startX + x*sz, startY + y*sz, sz, sz);
+        }
+      }
+    }
+  }
+
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  return tex;
+}
+
+function makeTattooArmTexture(skinHex, side, tattooStyle="none", pixelTattoo=null){
+  const hasArmTat = (tattooStyle === "full_cria" || tattooStyle === "sleeves_both" ||
+                    (tattooStyle === "sleeve_left" && side === -1) ||
+                    (tattooStyle === "sleeve_right" && side === 1));
+
+  if(!hasArmTat && (!pixelTattoo || side !== 1)) return null;
+
+  const c = document.createElement("canvas"); c.width = 128; c.height = 256;
+  const g = c.getContext("2d");
+  g.fillStyle = skinHex;
+  g.fillRect(0, 0, 128, 256);
+
+  if(hasArmTat){
+    const ink = "rgba(18, 18, 24, 0.90)";
+    g.fillStyle = ink;
+    g.strokeStyle = ink;
+    g.lineWidth = 2.5;
+
+    for(let y=20; y<240; y+=28){
+      g.beginPath();
+      g.moveTo(0, y);
+      g.lineTo(64, y + 14);
+      g.lineTo(128, y);
+      g.lineTo(64, y - 14);
+      g.closePath();
+      g.stroke();
+
+      g.fillRect(16, y - 4, 32, 8);
+      g.fillRect(80, y - 4, 32, 8);
+    }
+    g.fillRect(0, 80, 128, 12);
+    g.fillRect(0, 180, 128, 10);
+  }
+
+  if(side === 1 && pixelTattoo && Array.isArray(pixelTattoo)){
+    const sz = 3;
+    const startX = 64 - (8 * sz);
+    const startY = 120;
+    for(let y=0; y<16; y++){
+      for(let x=0; x<16; x++){
+        const col = pixelTattoo[y*16 + x];
+        if(col && col !== "transparent"){
+          g.fillStyle = col;
+          g.fillRect(startX + x*sz, startY + y*sz, sz, sz);
+        }
+      }
+    }
+  }
+
   const tex = new THREE.CanvasTexture(c);
   tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
@@ -3144,7 +3349,7 @@ function createHumanoidCria(team, role, skinIdx=0, foot=1, customConfig=null){
       hand.add(finger);
     });
 
-    return { shoulder, upperArm, lowerArm, hand };
+    return { shoulder, deltoid, upperArm, upperArmMesh, lowerArm, forearmSkin, hand };
   };
 
   const armLObj = buildArm(-1);
@@ -3216,6 +3421,89 @@ function createHumanoidCria(team, role, skinIdx=0, foot=1, customConfig=null){
   const legLObj = buildLeg(-1);
   const legRObj = buildLeg(1);
 
+  let chestTattooMat = null;
+
+  function updateJerseyAndTattoos(c){
+    if(!c) return;
+    const sleeve = c.sleeveType || "short";
+    const tat = c.tattooStyle || "none";
+    const skin = c.skinColor || "#864f30";
+
+    // 1. Textura da Camisa
+    const jTex = makeCustomJerseyTexture(c.jerseyColor, c.jerseySecColor, c.jerseyStyle);
+    if(jerseyMat){
+      jerseyMat.map = jTex;
+      jerseyMat.color.set(jTex ? 0xffffff : c.jerseyColor);
+      jerseyMat.flatShading = !jTex;
+      jerseyMat.needsUpdate = true;
+    }
+
+    // 2. Textura do Peitoral / Tronco com Tatuagem
+    const isShirtless = (sleeve === "shirtless");
+    const chestTex = makeTattooChestTexture(skin, tat, c.pixelTattoo, isShirtless);
+    if(!chestTattooMat){
+      chestTattooMat = new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        map: chestTex,
+        roughness: 0.65,
+        flatShading: false
+      });
+    } else {
+      chestTattooMat.map = chestTex;
+      chestTattooMat.needsUpdate = true;
+    }
+
+    // 3. Texturas dos Braços com Tatuagem
+    const armLTex = makeTattooArmTexture(skin, -1, tat, c.pixelTattoo);
+    const armRTex = makeTattooArmTexture(skin, 1, tat, c.pixelTattoo);
+
+    // 4. Aplica materiais no Torso
+    if(isShirtless){
+      chestMesh.material = chestTattooMat;
+      waistMesh.material = chestTattooMat;
+    } else {
+      chestMesh.material = jerseyMat;
+      waistMesh.material = jerseyMat;
+    }
+
+    // 5. Ombros / Deltoides
+    if(sleeve === "shirtless" || sleeve === "sleeveless"){
+      armLObj.deltoid.material = skinMat;
+      armRObj.deltoid.material = skinMat;
+    } else {
+      armLObj.deltoid.material = jerseyMat;
+      armRObj.deltoid.material = jerseyMat;
+    }
+
+    // 6. Braço Superior
+    if(sleeve === "long"){
+      armLObj.upperArmMesh.material = jerseyMat;
+      armRObj.upperArmMesh.material = jerseyMat;
+    } else if(sleeve === "thermal"){
+      armLObj.upperArmMesh.material = solidBlackMat;
+      armRObj.upperArmMesh.material = solidBlackMat;
+    } else {
+      armLObj.upperArmMesh.material = armLTex ? new THREE.MeshStandardMaterial({color:0xffffff, map:armLTex, roughness:0.65}) : skinMat;
+      armRObj.upperArmMesh.material = armRTex ? new THREE.MeshStandardMaterial({color:0xffffff, map:armRTex, roughness:0.65}) : skinMat;
+    }
+
+    // 7. Antebraço
+    if(sleeve === "long"){
+      armLObj.forearmSkin.material = jerseyMat;
+      armRObj.forearmSkin.material = jerseyMat;
+    } else if(sleeve === "thermal"){
+      armLObj.forearmSkin.material = solidBlackMat;
+      armRObj.forearmSkin.material = solidBlackMat;
+    } else {
+      armLObj.forearmSkin.material = armLTex ? new THREE.MeshStandardMaterial({color:0xffffff, map:armLTex, roughness:0.65}) : skinMat;
+      armRObj.forearmSkin.material = armRTex ? new THREE.MeshStandardMaterial({color:0xffffff, map:armRTex, roughness:0.65}) : skinMat;
+    }
+  }
+
+  if(cfg){
+    updateJerseyAndTattoos(cfg);
+  }
+
   const initialHeight = (cfg && cfg.heightScale) ? cfg.heightScale : 1.22;
   root.scale.set(initialHeight, initialHeight, initialHeight);
   scene.add(root);
@@ -3232,6 +3520,7 @@ function createHumanoidCria(team, role, skinIdx=0, foot=1, customConfig=null){
     rebuildHairMeshes,
     accessoryGroup,
     rebuildAccessoryMeshes,
+    updateJerseyAndTattoos,
     skinMat,
     hairLowPolyMat,
     jerseyMat,
@@ -3239,6 +3528,23 @@ function createHumanoidCria(team, role, skinIdx=0, foot=1, customConfig=null){
     sockMat,
     cleatMat,
     tattooMesh,
+    leftShoulder: armLObj.shoulder,
+    leftUpperArm: armLObj.upperArm,
+    leftLowerArm: armLObj.lowerArm,
+    leftHand: armLObj.hand,
+    rightShoulder: armRObj.shoulder,
+    rightUpperArm: armRObj.upperArm,
+    rightLowerArm: armRObj.lowerArm,
+    rightHand: armRObj.hand,
+    leftUpperLeg: legLObj.upperLeg,
+    leftLowerLeg: legLObj.lowerLeg,
+    leftFoot: legLObj.foot,
+    rightUpperLeg: legRObj.upperLeg,
+    rightLowerLeg: legRObj.lowerLeg,
+    rightFoot: legRObj.foot,
+
+    torsoGroup: chest,
+    headGroup: head,
     leftShoulder: armLObj.shoulder,
     leftUpperArm: armLObj.upperArm,
     leftLowerArm: armLObj.lowerArm,
@@ -5383,8 +5689,10 @@ function applyPlayerCustomization(){
     else if(cfg.faceShape === "jaw") player.headMesh.scale.set(1.02, 1.18, 0.90);
     else player.headMesh.scale.set(0.92, 1.15, 1.0);
   }
-  // 4. Camisa
-  if(player.jerseyMat){
+  // 4. Camisa, Mangas e Tatuagens
+  if(player.updateJerseyAndTattoos){
+    player.updateJerseyAndTattoos(cfg);
+  } else if(player.jerseyMat){
     const jTex = makeCustomJerseyTexture(cfg.jerseyColor, cfg.jerseySecColor, cfg.jerseyStyle);
     if(jTex){
       player.jerseyMat.map = jTex;
@@ -5602,6 +5910,8 @@ function setupCustomizerUI(){
   setupChoices("hairStyleChoices", "data-hair", playerCustomConfig.hairStyle, val => playerCustomConfig.hairStyle = val);
   setupChoices("faceShapeChoices", "data-face", playerCustomConfig.faceShape, val => playerCustomConfig.faceShape = val);
   setupChoices("accessoryChoices", "data-acc", playerCustomConfig.accessory, val => playerCustomConfig.accessory = parseInt(val));
+  setupChoices("sleeveTypeChoices", "data-sleeve", playerCustomConfig.sleeveType || "short", val => playerCustomConfig.sleeveType = val);
+  setupChoices("tattooStyleChoices", "data-tattoo", playerCustomConfig.tattooStyle || "none", val => playerCustomConfig.tattooStyle = val);
   setupChoices("jerseyStyleChoices", "data-style", playerCustomConfig.jerseyStyle, val => playerCustomConfig.jerseyStyle = val);
   setupChoices("bodyTypeChoices", "data-body", playerCustomConfig.bodyType, val => playerCustomConfig.bodyType = val);
   setupChoices("footChoices", "data-foot", playerCustomConfig.foot, val => playerCustomConfig.foot = parseInt(val));
@@ -5641,8 +5951,10 @@ function setupCustomizerUI(){
       playerCustomConfig.hairColor = hairColorsHex[Math.floor(Math.random()*hairColorsHex.length)];
       playerCustomConfig.faceShape = ["oval", "angular", "round", "jaw"][Math.floor(Math.random()*4)];
       playerCustomConfig.accessory = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11][Math.floor(Math.random()*12)];
+      playerCustomConfig.sleeveType = ["short", "long", "sleeveless", "shirtless", "thermal"][Math.floor(Math.random()*5)];
+      playerCustomConfig.tattooStyle = ["none", "sleeve_left", "sleeve_right", "sleeves_both", "chest_wings", "chest_cross", "full_cria"][Math.floor(Math.random()*7)];
       playerCustomConfig.jerseyColor = jerseyColorsHex[Math.floor(Math.random()*jerseyColorsHex.length)];
-      const jerseyStyles = ["solid", "stripes", "sash", "gradient", "checkered", "halves", "hoops", "camo"];
+      const jerseyStyles = ["solid", "stripes", "sash", "gradient", "checkered", "halves", "hoops", "camo", "flames", "lightning", "pinstripes"];
       playerCustomConfig.jerseyStyle = jerseyStyles[Math.floor(Math.random()*jerseyStyles.length)];
       playerCustomConfig.jerseySecColor = jerseyColorsHex[Math.floor(Math.random()*jerseyColorsHex.length)];
       playerCustomConfig.shortsColor = shortsColorsHex[Math.floor(Math.random()*shortsColorsHex.length)];

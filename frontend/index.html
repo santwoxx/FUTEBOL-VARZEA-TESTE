@@ -118,7 +118,12 @@ canvas{display:block;width:100%;height:100%}
   border:2px solid rgba(255,215,0,0.7);border-radius:14px;padding:3px;
   background:rgba(0,0,0,0.75);box-shadow:0 0 20px rgba(255,140,0,0.5);display:none;
 }
-#power{position:absolute;left:3px;right:3px;bottom:3px;height:0;border-radius:8px;background:linear-gradient(to top,#ff2200,#ff9900,#ffff44);box-shadow:0 0 14px #ff6600}
+#power{position:absolute;left:3px;right:3px;bottom:3px;height:0;border-radius:8px;background:linear-gradient(to top,#ff2200,#ff9900,#ffff44);box-shadow:0 0 14px #ff6600;transition:background .12s}
+/* Marca onde a forca cheia acaba: dali pra cima o pe passa por baixo da bola. */
+#powerSafe{position:absolute;left:0;right:0;height:2px;background:#fff;box-shadow:0 0 6px #fff;opacity:0.85;pointer-events:none;z-index:2}
+#powerWrap.over{border-color:#ff3348;box-shadow:0 0 22px rgba(255,51,72,0.85);animation:powerDanger .18s steps(2) infinite}
+#powerWrap.over #power{background:linear-gradient(to top,#ff2200,#ff3348,#fff)}
+@keyframes powerDanger{0%{opacity:1}50%{opacity:0.55}100%{opacity:1}}
 
 /* ═══════════ JOYSTICK ═══════════ */
 #joy{
@@ -927,8 +932,27 @@ canvas{display:block;width:100%;height:100%}
     <!-- Aba 4: Chuteiras -->
     <div class="tabPanel" id="tabCleats">
       <div class="customSection">
-        <label>Cor da Chuteira</label>
+        <label>Modelo & Estilo da Chuteira</label>
+        <div class="choiceGrid" id="cleatStyleChoices">
+          <button class="choiceBtn selected" data-cleat="mercurial">⚡ Mercurial Speed</button>
+          <button class="choiceBtn" data-cleat="predator">🦖 Predator Control</button>
+          <button class="choiceBtn" data-cleat="copa">👑 Copa Couro Clássica</button>
+          <button class="choiceBtn" data-cleat="gold_r10">🏆 Chuteira de Ouro R10</button>
+          <button class="choiceBtn" data-cleat="future">🤖 Future Cyberpunk</button>
+          <button class="choiceBtn" data-cleat="futsal_gum">⚽ Futsal / Calçadão</button>
+          <button class="choiceBtn" data-cleat="phantom">🥷 Phantom Blackout</button>
+          <button class="choiceBtn" data-cleat="hypervenom">🔥 Hypervenom Chamas</button>
+        </div>
+      </div>
+
+      <div class="customSection">
+        <label>Cor Principal da Chuteira</label>
         <div class="swatchesRow" id="cleatColorSwatches"></div>
+      </div>
+
+      <div class="customSection">
+        <label>Cor dos Detalhes / Travas</label>
+        <div class="swatchesRow" id="cleatSecSwatches"></div>
       </div>
     </div>
 
@@ -1007,7 +1031,7 @@ canvas{display:block;width:100%;height:100%}
     <span class="voiceBtnLabel">B</span>
   </button>
 
-  <div id="powerWrap"><div id="power"></div></div>
+  <div id="powerWrap"><div id="power"></div><div id="powerSafe"></div></div>
   <div id="joy"><div id="knob"></div></div>
 
   <div id="btnGrid">
@@ -1105,25 +1129,38 @@ async function loadFirebaseConfig() {
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
       const data = docSnap.data();
-      if (data.customConfig) {
-        localStorage.setItem("fut_cria_custom_v1", JSON.stringify(data.customConfig));
-        applyPlayerCustomization();
+      if (data && data.customConfig) {
+        Object.assign(playerCustomConfig, data.customConfig);
+        try {
+          localStorage.setItem("fut_cria_custom_v1", JSON.stringify(playerCustomConfig));
+        } catch(e){}
+        if(typeof setupCustomizerUI === "function") setupCustomizerUI();
+        if(typeof applyPlayerCustomization === "function") applyPlayerCustomization();
+        console.log("Firebase: customização carregada e sincronizada da nuvem com sucesso!", playerCustomConfig);
       }
     }
-  } catch(e) { console.error("Error loading profile:", e); }
+  } catch(e) { console.error("Error loading profile from Firebase:", e); }
 }
 
 async function saveFirebaseConfig(cfg) {
   if (!window.firebaseUid) return;
   try {
     const docRef = doc(fbDb, "users", window.firebaseUid);
-    await setDoc(docRef, { customConfig: cfg }, { merge: true });
-  } catch(e) { console.error("Error saving profile:", e); }
+    await setDoc(docRef, { customConfig: cfg, updatedAt: Date.now() }, { merge: true });
+    console.log("Firebase: perfil salvo na nuvem com sucesso!");
+  } catch(e) { console.error("Error saving profile to Firebase:", e); }
 }
+window.saveFirebaseConfig = saveFirebaseConfig;
 
 function loadLocalConfig() {
-  // Triggers visual refresh of local config
-  applyPlayerCustomization();
+  try {
+    const saved = localStorage.getItem("fut_cria_custom_v1");
+    if(saved){
+      Object.assign(playerCustomConfig, JSON.parse(saved));
+    }
+  } catch(e){}
+  if(typeof setupCustomizerUI === "function") setupCustomizerUI();
+  if(typeof applyPlayerCustomization === "function") applyPlayerCustomization();
 }
 
 /* ═══════════════ ÁUDIO PROCEDURAL (WEB AUDIO API) ═══════════════ */
@@ -1288,8 +1325,25 @@ const CFG = {
   W: 46, H: 76,
   GOAL_W: 16, GOAL_H: 4.0,
   GOAL_D: 3.2,
+  // Teto da gaiola: as laterais e os fundos ja devolviam a bola, mas por cima
+  // ela sumia da partida ate a gravidade trazer de volta.
+  CEIL: 14,
   MATCH: 120
 };
+
+// Carga do chute — os mesmos numeros de server/shared/constants.js, para o
+// single-player e o online terem exatamente a mesma sensacao de pe.
+const KICK = {
+  rate:      1.2,   // carga por segundo
+  safe:      1.15,  // folga depois da forca cheia antes de comecar a furar
+  max:       1.6,   // teto da carga
+  overLoft:  1.9,   // multiplicador maximo na componente vertical
+  overPower: 0.28   // fracao da forca horizontal perdida no chute furado
+};
+// Quanto da barra e "seguro" (o resto e zona de risco)
+const KICK_SAFE_PCT = (KICK.safe / KICK.max) * 100;
+// Converte carga acumulada em fator de chute furado (0 = no ponto, 1 = furou feio)
+const kickOver = (carga) => clamp((carga - KICK.safe) / (KICK.max - KICK.safe), 0, 1);
 const HW = CFG.W/2, HH = CFG.H/2, GHW = CFG.GOAL_W/2;
 const TW = CFG.W + 18, TH = CFG.H + 18;
 const BASE_YAW = Math.PI;
@@ -2433,49 +2487,168 @@ function buildGoal(sign){
 buildGoal(-1); buildGoal(1);
 
 /* ═══════════════ MODELAGEM HUMANOIDE SÊNIOR HIPER-ORGÂNICA ═══════════════ */
-function makeCleatTexture(colorHex="#ff2b40"){
+function makeCleatTexture(colorHex="#ef4444", secColorHex="#ffffff", style="mercurial"){
   const c = document.createElement("canvas"); c.width = 512; c.height = 512;
   const g = c.getContext("2d");
-  // Fundo fibra de carbono
-  g.fillStyle = "#0c0c10"; g.fillRect(0,0,512,512);
-  for(let y=0; y<512; y+=8){
-    for(let x=0; x<512; x+=8){
-      if((x+y)%16 === 0){
-        g.fillStyle = "#181822";
-        g.fillRect(x, y, 6, 6);
+
+  if(style === "gold_r10"){
+    // Ouro maciço reluzente com reflexos metálicos (Estilo R10 / Chuteira de Ouro)
+    const grad = g.createLinearGradient(0, 0, 512, 512);
+    grad.addColorStop(0, "#ffd700");
+    grad.addColorStop(0.25, "#fff8db");
+    grad.addColorStop(0.55, "#d4af37");
+    grad.addColorStop(0.80, "#facc15");
+    grad.addColorStop(1, "#b48a14");
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 512, 512);
+
+    // Detalhes brancos / assinatura R10
+    g.fillStyle = secColorHex || "#ffffff";
+    g.beginPath();
+    g.moveTo(60, 200); g.quadraticCurveTo(250, 160, 460, 180); g.lineTo(440, 230); g.quadraticCurveTo(240, 200, 50, 240);
+    g.closePath(); g.fill();
+
+    g.fillStyle = "#18181b";
+    g.font = "900 32px Outfit, sans-serif";
+    g.fillText("10", 240, 218);
+
+  } else if(style === "copa"){
+    // Couro legítimo clássico preto com costuras acolchoadas
+    g.fillStyle = colorHex || "#18181b";
+    g.fillRect(0, 0, 512, 512);
+
+    // Costuras acolchoadas em diamante
+    g.strokeStyle = "rgba(255, 255, 255, 0.20)";
+    g.lineWidth = 3;
+    for(let i=-256; i<512; i+=48){
+      g.beginPath(); g.moveTo(i, 0); g.lineTo(i + 512, 512); g.stroke();
+      g.beginPath(); g.moveTo(i + 512, 0); g.lineTo(i, 512); g.stroke();
+    }
+
+    // Três listras clássicas
+    g.fillStyle = secColorHex || "#ffffff";
+    for(let s=0; s<3; s++){
+      g.beginPath();
+      g.moveTo(140 + s*42, 60); g.lineTo(210 + s*42, 60);
+      g.lineTo(130 + s*42, 340); g.lineTo(60 + s*42, 340);
+      g.closePath(); g.fill();
+    }
+
+    // Lingueta dobrada branca
+    g.fillStyle = secColorHex || "#ffffff";
+    g.fillRect(160, 20, 140, 45);
+
+  } else if(style === "predator"){
+    // Borracha com escamas de controle 3D
+    g.fillStyle = colorHex || "#18181b";
+    g.fillRect(0, 0, 512, 512);
+
+    // Escamas / Spikes de controle
+    g.fillStyle = secColorHex || "#ef4444";
+    for(let py=80; py<420; py+=36){
+      for(let px=40; px<460; px+=36){
+        g.beginPath();
+        g.moveTo(px, py); g.lineTo(px + 18, py - 12); g.lineTo(px + 24, py + 12);
+        g.closePath(); g.fill();
       }
     }
-  }
 
-  // Linhas aerodinâmicas de velocidade (Speedlines Mercurial)
-  const grad = g.createLinearGradient(0, 80, 512, 320);
-  grad.addColorStop(0, colorHex);
-  grad.addColorStop(0.5, "#ffd700");
-  grad.addColorStop(1, "#00ffcc");
-  g.fillStyle = grad;
-  g.beginPath();
-  g.moveTo(30, 90); g.lineTo(480, 140); g.lineTo(450, 280); g.lineTo(20, 240);
-  g.closePath(); g.fill();
-
-  // Swoosh / Asa esportiva
-  g.fillStyle = "#ffffff";
-  g.beginPath();
-  g.moveTo(80, 200); g.quadraticCurveTo(280, 220, 440, 150);
-  g.quadraticCurveTo(260, 260, 80, 200);
-  g.fill();
-
-  // Cadarços estilizados
-  g.strokeStyle = "#ffffff"; g.lineWidth = 6;
-  for(let i=0; i<6; i++){
+    // Faixas de agressividade predator
+    g.fillStyle = secColorHex || "#ef4444";
     g.beginPath();
-    g.moveTo(160, 280 + i*28);
-    g.lineTo(320, 280 + i*28);
-    g.stroke();
-  }
+    g.moveTo(40, 120); g.lineTo(460, 220); g.lineTo(440, 280); g.lineTo(30, 180);
+    g.closePath(); g.fill();
 
-  // Solado reforçado
-  g.fillStyle = "#ffd700";
-  g.fillRect(30, 450, 452, 45);
+  } else if(style === "future"){
+    // Cyberpunk futurista com malha tecnológica neon
+    const grad = g.createLinearGradient(0, 0, 512, 512);
+    grad.addColorStop(0, colorHex || "#00f0ff");
+    grad.addColorStop(1, secColorHex || "#a855f7");
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 512, 512);
+
+    g.strokeStyle = "rgba(255, 255, 255, 0.4)";
+    g.lineWidth = 2.5;
+    for(let y=0; y<512; y+=32){
+      g.beginPath(); g.moveTo(0, y); g.lineTo(512, y); g.stroke();
+    }
+    for(let x=0; x<512; x+=32){
+      g.beginPath(); g.moveTo(x, 0); g.lineTo(x, 512); g.stroke();
+    }
+
+  } else if(style === "futsal_gum"){
+    // Camurça com solado de borracha âmbar (Gum Sole)
+    g.fillStyle = colorHex || "#3b82f6";
+    g.fillRect(0, 0, 512, 370);
+    g.fillStyle = "#c8853a";
+    g.fillRect(0, 370, 512, 142);
+
+    g.fillStyle = secColorHex || "#ffffff";
+    g.beginPath();
+    g.moveTo(40, 160); g.lineTo(480, 190); g.lineTo(470, 240); g.lineTo(30, 210);
+    g.closePath(); g.fill();
+
+  } else if(style === "phantom"){
+    // Blackout Stealth Furtivo
+    g.fillStyle = "#121216";
+    g.fillRect(0, 0, 512, 512);
+    g.strokeStyle = "rgba(255, 255, 255, 0.08)";
+    g.lineWidth = 2;
+    for(let y=0; y<512; y+=16){
+      for(let x=0; x<512; x+=16){
+        g.strokeRect(x, y, 12, 12);
+      }
+    }
+    g.fillStyle = colorHex || "#00f0ff";
+    g.fillRect(40, 200, 160, 6);
+
+  } else if(style === "hypervenom"){
+    // Chamas / Dentes de tubarão
+    g.fillStyle = colorHex || "#18181b";
+    g.fillRect(0, 0, 512, 512);
+
+    g.fillStyle = secColorHex || "#ff6b00";
+    for(let fx=20; fx<480; fx+=48){
+      g.beginPath();
+      g.moveTo(fx, 400); g.lineTo(fx + 24, 120); g.lineTo(fx + 48, 400);
+      g.closePath(); g.fill();
+    }
+
+  } else {
+    // Default: Mercurial Speed (Fibra de carbono com Speedlines)
+    g.fillStyle = "#0c0c10"; g.fillRect(0,0,512,512);
+    for(let y=0; y<512; y+=8){
+      for(let x=0; x<512; x+=8){
+        if((x+y)%16 === 0){
+          g.fillStyle = "#181822";
+          g.fillRect(x, y, 6, 6);
+        }
+      }
+    }
+
+    const grad = g.createLinearGradient(0, 80, 512, 320);
+    grad.addColorStop(0, colorHex || "#ef4444");
+    grad.addColorStop(0.5, secColorHex || "#ffd700");
+    grad.addColorStop(1, "#00ffcc");
+    g.fillStyle = grad;
+    g.beginPath();
+    g.moveTo(30, 90); g.lineTo(480, 140); g.lineTo(450, 280); g.lineTo(20, 240);
+    g.closePath(); g.fill();
+
+    g.fillStyle = "#ffffff";
+    g.beginPath();
+    g.moveTo(80, 200); g.quadraticCurveTo(280, 220, 440, 150);
+    g.quadraticCurveTo(260, 260, 80, 200);
+    g.fill();
+
+    g.strokeStyle = "#ffffff"; g.lineWidth = 6;
+    for(let i=0; i<6; i++){
+      g.beginPath();
+      g.moveTo(160, 280 + i*28);
+      g.lineTo(320, 280 + i*28);
+      g.stroke();
+    }
+  }
 
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; return t;
 }
@@ -2529,7 +2702,9 @@ const defaultCustomConfig = {
   jerseySecColor: "#ef4444",
   shortsColor: "#f4f4f5",
   sockColor: "#18181b",
+  cleatStyle: "mercurial", // "mercurial", "predator", "copa", "gold_r10", "future", "futsal_gum", "phantom", "hypervenom"
   cleatColor: "#ef4444",
+  cleatSecColor: "#ffffff",
   heightScale: 1.22,
   bodyType: "athletic", // "athletic", "muscular", "slim"
   foot: 1, // 1 = Destro, -1 = Canhoto
@@ -3613,7 +3788,13 @@ const TACKLE = {
   brake:      3.2,  // multiplicador de atrito na levantada (freia pra ficar de pé)
   glideEnd:  0.62,  // fração da animação em que o corpo sai do chão
   reachBall: 2.05,  // alcance da perna esticada na bola enquanto desliza
-  reachFoe:  1.85   // alcance do corpo no adversário enquanto desliza
+  reachFoe:  1.85,  // alcance do corpo no adversário enquanto desliza
+  // Carrinho limpo: quem conduzia leva um susto curto em vez de cair. Não
+  // derruba (derrubar é falta), mas tira o próximo movimento dele — é o que
+  // paga o risco de se jogar no chão pra tirar a bola.
+  reachOwner: 2.40, // alcance do susto em quem conduzia
+  stunOwner:  0.30, // atordoamento (s) de quem perdeu a bola no carrinho limpo
+  shoveOwner: 3.2   // empurrão no sentido do deslize
 };
 
 // O "act" do jogador e dos bots é decrementado duas vezes por frame (no update de
@@ -4689,7 +4870,7 @@ function passToMate(targetMate, power=0.5){
   if(passTackleBtn) passTackleBtn.classList.add("activeKey");
 }
 
-function kick(power, type){
+function kick(power, type, over = 0){
   // Passe tem um alcance um pouco mais generoso que o chute — evita falhar por
   // causa da bola "escapar" alguns centímetros durante um sprint, por exemplo.
   const maxRange = type === "pass" ? 4.2 : 3.8;
@@ -4718,6 +4899,13 @@ function kick(power, type){
     }
     
     ball.position.y = Math.max(ball.position.y, 0.30);
+    // Segurar além da carga cheia não adiciona força: o pé passa por baixo da
+    // bola. Ela sobe (loft) e perde velocidade horizontal (drag) — o chute vai
+    // por cima do gol. A punição é determinística de propósito: dá pra aprender
+    // o ponto de soltar, não é sorteio.
+    const o = clamp(over, 0, 1);
+    const loft = 1 + o * KICK.overLoft;
+    const drag = 1 - o * KICK.overPower;
     const isPowerShot = p >= 0.65;
     
     if(isPowerShot){
@@ -4830,6 +5018,9 @@ function resolveTackleContact(){
   player.tackleResolved = true;
   facing(tA);
 
+  // Quem estava conduzindo quando a perna chegou: é ele que leva o susto.
+  const donoAntes = owner;
+
   // Pegou a bola antes (ou junto) do adversário = desarme limpo
   if(ballInReach && dToBall <= dToFoe + 0.35){
     // ════════════ CARRINHO LIMPO NA BOLA ════════════
@@ -4840,15 +5031,17 @@ function resolveTackleContact(){
     shake = 0.22;
     flash("CARRINHO NA BOLA! ⚡", "#00ffcc", "DESARME PERFEITO — NA BOLA!");
 
-    // Se houver adversário disputando ou conduzindo a bola, ele perde o equilíbrio e cai
-    if(hitFoe){
-      hitFoe.state = "fall";
-      hitFoe.act = 1.25;
-      hitFoe.cool = 1.4;
-      tB.copy(hitFoe.root.position).sub(player.root.position); tB.y = 0;
-      if(tB.length() < 0.1) tB.set(-tA.z, 0, tA.x);
-      hitFoe.vel.copy(tB.normalize()).multiplyScalar(4.8);
-      hitFoe.vel.y = 2.4;
+    // Bola tirada limpa de quem conduzia: atordoa por instantes em vez de
+    // derrubar. Como findOwner() ignora quem está atordoado, ele não recupera a
+    // bola no mesmo quadro — é essa janela que faz o carrinho valer a pena.
+    if(donoAntes && donoAntes !== player && donoAntes.team !== player.team &&
+       donoAntes.state !== "fall" && donoAntes.state !== "foul" &&
+       !(donoAntes.stunned > 0) &&
+       flat(player.root.position, donoAntes.root.position) < TACKLE.reachOwner){
+      donoAntes.stunned = TACKLE.stunOwner;
+      donoAntes.state = "idle"; donoAntes.act = 0;
+      donoAntes.vel.x += tA.x * TACKLE.shoveOwner;
+      donoAntes.vel.z += tA.z * TACKLE.shoveOwner;
     }
   } else if(hitFoe){
     // ════════════ CARRINHO FALTOSO (ATINGIU O JOGADOR SEM TOCAR NA BOLA PRIMEIRO) ════════════
@@ -5081,6 +5274,16 @@ function updateBall(dt){
     ballVel.x *= f; ballVel.z *= f;
   }
 
+  // Teto da gaiola: o chute furado volta pro jogo em vez de sumir da tela.
+  const ceil = CFG.CEIL - 0.28;
+  if(ball.position.y > ceil){
+    ball.position.y = ceil;
+    if(ballVel.y > 0) ballVel.y *= -0.55;
+    ballVel.x *= 0.86; ballVel.z *= 0.86;   // a rede no alto tira velocidade
+    ballSpin.y *= 0.5;
+    sfx.playPostClank();
+  }
+
   const bx = HW - 0.28;
   if(Math.abs(ball.position.x) > bx){
     ball.position.x = Math.sign(ball.position.x)*bx; ballVel.x *= -0.62; ballSpin.y *= 0.5;
@@ -5168,7 +5371,7 @@ function findOwner(){
   }
 
   // 3. Se o possuidor atual ainda está com ela na zona de controle
-  if(owner && owner.state !== "fall" && owner.state !== "foul" && owner.state !== "tackle"){
+  if(owner && owner.state !== "fall" && owner.state !== "foul" && owner.state !== "tackle" && !(owner.stunned > 0)){
     const d = flat(owner.root.position, ball.position);
     if(d < 1.85 && ball.position.y < 1.6){
       return owner;
@@ -5181,6 +5384,7 @@ function findOwner(){
 
   for(const c of chars){
     if(c.state === "fall" || c.state === "foul" || c.state === "tackle" || c.state === "dance") continue;
+    if(c.stunned > 0) continue;
     const d = flat(c.root.position, ball.position);
     if(d < bestDist && ball.position.y < 1.6){
       bestDist = d;
@@ -5281,6 +5485,21 @@ function dribble(c, dt){
 
 /* ═══════════════ IA ═══════════════ */
 function moveChar(c, target, speed, dt){
+  // Atordoado pelo carrinho: escorrega com o empurrão e não decide nada.
+  if(c.stunned > 0){
+    c.stunned = Math.max(0, c.stunned - dt);
+    c.act = Math.max(0, c.act - dt);
+    c.cool = Math.max(0, c.cool - dt);
+    c.vel.x = THREE.MathUtils.damp(c.vel.x, 0, 5.0, dt);
+    c.vel.z = THREE.MathUtils.damp(c.vel.z, 0, 5.0, dt);
+    c.vel.y -= 22*dt;
+    c.root.position.addScaledVector(c.vel, dt);
+    c.root.position.x = clamp(c.root.position.x, -HW+0.8, HW-0.8);
+    c.root.position.z = clamp(c.root.position.z, -HH+0.8, HH-0.8);
+    if(c.root.position.y <= 0){ c.root.position.y = 0; c.vel.y = 0; }
+    animateHumanoid(c, dt, Math.hypot(c.vel.x, c.vel.z) > 0.5);
+    return;
+  }
   if(c.state === "fall" || c.state === "foul" || c.state === "tackle" || c.state.startsWith("dive") || c.state.startsWith("catch")){
     c.act = Math.max(0, c.act - dt);
     c.cool = Math.max(0, c.cool - dt);
@@ -5344,6 +5563,10 @@ function nearestOpponentDist(c){
 }
 
 function updateField(c, dt, isChaser){
+  // Atordoado pelo carrinho: escorrega e nao disputa nada. Sem esta saida o bot
+  // continuaria roubando a bola no mesmo quadro em que levou o carrinho.
+  if(c.stunned > 0){ moveChar(c, c.root.position, 0, dt); return; }
+
   const atk = c.team === 0 ? -1 : 1;
   let sp = 8.4;
 
@@ -5716,7 +5939,25 @@ function applyPlayerCustomization(){
   }
   // 6. Chuteiras
   if(player.cleatMat){
-    player.cleatMat.color.set(cfg.cleatColor);
+    const cTex = makeCleatTexture(cfg.cleatColor || "#ef4444", cfg.cleatSecColor || "#ffffff", cfg.cleatStyle || "mercurial");
+    if(cTex){
+      player.cleatMat.map = cTex;
+      player.cleatMat.color.set(0xffffff);
+      player.cleatMat.flatShading = false;
+      if(cfg.cleatStyle === "gold_r10"){
+        player.cleatMat.metalness = 0.85;
+        player.cleatMat.roughness = 0.22;
+      } else {
+        player.cleatMat.metalness = 0.25;
+        player.cleatMat.roughness = 0.40;
+      }
+    } else {
+      player.cleatMat.map = null;
+      player.cleatMat.color.set(cfg.cleatColor || "#ef4444");
+      player.cleatMat.flatShading = true;
+      player.cleatMat.metalness = 0.15;
+      player.cleatMat.roughness = 0.40;
+    }
     player.cleatMat.needsUpdate = true;
   }
   // 7. Altura do Jogador
@@ -5886,9 +6127,13 @@ function setupCustomizerUI(){
   // 6. Meião
   buildSwatches("sockColorSwatches", shortsColorsHex, playerCustomConfig.sockColor, val => playerCustomConfig.sockColor = val);
 
-  // 7. Chuteiras
-  const cleatColorsHex = ["#ef4444", "#06b6d4", "#eab308", "#ffd700", "#18181b", "#f4f4f5", "#ec4899", "#10b981", "#a855f7"];
-  buildSwatches("cleatColorSwatches", cleatColorsHex, playerCustomConfig.cleatColor, val => playerCustomConfig.cleatColor = val);
+  // 7. Chuteiras - Cor Principal
+  const cleatColorsHex = ["#ef4444", "#06b6d4", "#eab308", "#ffd700", "#18181b", "#f4f4f5", "#ec4899", "#10b981", "#a855f7", "#ff6b00"];
+  buildSwatches("cleatColorSwatches", cleatColorsHex, playerCustomConfig.cleatColor || "#ef4444", val => playerCustomConfig.cleatColor = val);
+
+  // 7.1 Chuteiras - Detalhes / Travas
+  const cleatSecColorsHex = ["#ffffff", "#ffd700", "#18181b", "#00f0ff", "#ef4444", "#a855f7", "#00ffcc", "#ff6b00"];
+  buildSwatches("cleatSecSwatches", cleatSecColorsHex, playerCustomConfig.cleatSecColor || "#ffffff", val => playerCustomConfig.cleatSecColor = val);
 
   // Choice Buttons Setup
   function setupChoices(containerId, attrName, currentVal, onChange){
@@ -5913,6 +6158,7 @@ function setupCustomizerUI(){
   setupChoices("sleeveTypeChoices", "data-sleeve", playerCustomConfig.sleeveType || "short", val => playerCustomConfig.sleeveType = val);
   setupChoices("tattooStyleChoices", "data-tattoo", playerCustomConfig.tattooStyle || "none", val => playerCustomConfig.tattooStyle = val);
   setupChoices("jerseyStyleChoices", "data-style", playerCustomConfig.jerseyStyle, val => playerCustomConfig.jerseyStyle = val);
+  setupChoices("cleatStyleChoices", "data-cleat", playerCustomConfig.cleatStyle || "mercurial", val => playerCustomConfig.cleatStyle = val);
   setupChoices("bodyTypeChoices", "data-body", playerCustomConfig.bodyType, val => playerCustomConfig.bodyType = val);
   setupChoices("footChoices", "data-foot", playerCustomConfig.foot, val => playerCustomConfig.foot = parseInt(val));
 
@@ -5959,7 +6205,10 @@ function setupCustomizerUI(){
       playerCustomConfig.jerseySecColor = jerseyColorsHex[Math.floor(Math.random()*jerseyColorsHex.length)];
       playerCustomConfig.shortsColor = shortsColorsHex[Math.floor(Math.random()*shortsColorsHex.length)];
       playerCustomConfig.sockColor = shortsColorsHex[Math.floor(Math.random()*shortsColorsHex.length)];
+      const cleatStyles = ["mercurial", "predator", "copa", "gold_r10", "future", "futsal_gum", "phantom", "hypervenom"];
+      playerCustomConfig.cleatStyle = cleatStyles[Math.floor(Math.random()*cleatStyles.length)];
       playerCustomConfig.cleatColor = cleatColorsHex[Math.floor(Math.random()*cleatColorsHex.length)];
+      playerCustomConfig.cleatSecColor = cleatSecColorsHex[Math.floor(Math.random()*cleatSecColorsHex.length)];
       playerCustomConfig.bodyType = ["athletic", "muscular", "slim"][Math.floor(Math.random()*3)];
       setupCustomizerUI();
       applyPlayerCustomization();
@@ -6076,6 +6325,12 @@ function openCustomizerStudio(){
 
 function closeCustomizerStudio(){
   applyPlayerCustomization();
+  try {
+    localStorage.setItem("fut_cria_custom_v1", JSON.stringify(playerCustomConfig));
+    if (window.saveFirebaseConfig) {
+      window.saveFirebaseConfig(playerCustomConfig);
+    }
+  } catch(e){}
   $("#customizerModal").style.display = "none";
   $("#start").style.display = "flex";
   gameMode = "menu";
@@ -6381,8 +6636,8 @@ function loop(now){
     // A barreira fica firme até a bola sair. Se quem cobra é o jogador, ele
     // ganha o controle normal (mirar/carregar/chutar) com todos parados.
     if(input.charging){
-      input.charge = Math.min(1, input.charge + dt*1.2);
-      $("#power").style.height = `${input.charge*100}%`;
+      input.charge = Math.min(KICK.max, input.charge + dt*KICK.rate);
+      renderPowerBar(input.charge);
     }
     updateSetPiece(dt);
     updateBall(dt);
@@ -6397,8 +6652,8 @@ function loop(now){
     }
 
     if(input.charging){
-      input.charge = Math.min(1, input.charge + dt*1.2);
-      $("#power").style.height = `${input.charge*100}%`;
+      input.charge = Math.min(KICK.max, input.charge + dt*KICK.rate);
+      renderPowerBar(input.charge);
     }
     if(input.passCharging){
       input.passCharge = Math.min(1, input.passCharge + dt*1.6);
@@ -6696,6 +6951,23 @@ function updateMobileControlsUI(){
   }
 }
 
+// Desenha a barra de forca. A altura mostra a carga inteira (inclusive a parte
+// perigosa), e a marca branca fica onde a forca cheia acaba: passou dali, o
+// chute comeca a subir. Sem isso a punicao por segurar demais seria injusta —
+// o jogador precisa VER que passou do ponto.
+let powerSafeMarcada = false;
+function renderPowerBar(carga){
+  const el = $("#power");
+  if(!el) return;
+  if(!powerSafeMarcada){
+    const marca = $("#powerSafe");
+    if(marca){ marca.style.bottom = `calc(3px + (100% - 6px) * ${KICK_SAFE_PCT / 100})`; }
+    powerSafeMarcada = true;
+  }
+  el.style.height = `${(carga / KICK.max) * 100}%`;
+  if(pw) pw.classList.toggle("over", carga > KICK.safe);
+}
+
 function startCharge(){
   sfx.init();
   if(!running) return;
@@ -6707,10 +6979,10 @@ function startCharge(){
 
 function releaseCharge(){
   if(!input.charging) return;
-  kick(0.3 + input.charge*0.7, "shot");
+  kick(0.3 + Math.min(1, input.charge)*0.7, "shot", kickOver(input.charge));
   // Se o kick() não saiu (fora de alcance da bola), sai do estado de carregamento
   if(player.state === "kick_charge") player.state = "idle";
-  input.charging = false; pw.style.display = "none"; $("#power").style.height = "0";
+  input.charging = false; pw.style.display = "none"; $("#power").style.height = "0"; pw.classList.remove("over");
   if(mainBtn) mainBtn.classList.remove("activeKey");
   if(crosshairWrap) crosshairWrap.classList.remove("charging");
 }
@@ -6718,7 +6990,7 @@ function releaseCharge(){
 function cancelCharge(){
   input.charging = false; input.charge = 0;
   if(player.state === "kick_charge") player.state = "idle";
-  if(pw) pw.style.display = "none";
+  if(pw){ pw.style.display = "none"; pw.classList.remove("over"); }
   const powerEl = $("#power"); if(powerEl) powerEl.style.height = "0";
   if(mainBtn) mainBtn.classList.remove("activeKey");
   if(crosshairWrap) crosshairWrap.classList.remove("charging");
@@ -7325,6 +7597,9 @@ function mpBuildRoster(d){
 
 function mpEndMatch(){
   voiceStop();
+  mp.charge = 0;
+  if(pw){ pw.style.display = "none"; pw.classList.remove("over"); }
+  if(crosshairWrap) crosshairWrap.classList.remove("charging");
   mpClearRoster();
   running = false; over = true; gameMode = "menu"; shake = 0;
   stopMouseControl();
@@ -7497,6 +7772,24 @@ function mpGatherInput(){
   mpInputState.aimx = aim.x; mpInputState.aimy = aim.y; mpInputState.aimz = aim.z;
 }
 
+// Predicao local da carga do chute. O servidor e quem manda no resultado; isto
+// existe so para a barra aparecer no mesmo instante em que o pe arma, sem
+// esperar o snapshot voltar.
+function mpUpdateCharge(dt){
+  const carregando = mpInputState.shoot;
+  if(carregando){
+    mp.charge = Math.min(KICK.max, (mp.charge || 0) + dt * KICK.rate);
+    if(pw && pw.style.display !== "block") pw.style.display = "block";
+    renderPowerBar(mp.charge);
+    if(crosshairWrap) crosshairWrap.classList.add("charging");
+  } else if(mp.charge){
+    mp.charge = 0;
+    if(pw){ pw.style.display = "none"; pw.classList.remove("over"); }
+    const el = $("#power"); if(el) el.style.height = "0";
+    if(crosshairWrap) crosshairWrap.classList.remove("charging");
+  }
+}
+
 const mpAimDir = new THREE.Vector3();
 const mpAimOut = new THREE.Vector3();
 function mpAimPoint(){
@@ -7548,6 +7841,7 @@ function mpCamera(dt, target){
 function mpUpdate(dt){
   if(!mp.running) return;
   mpGatherInput();
+  mpUpdateCharge(dt);
 
   mpAccum += dt;
   const step = MP_ACC_NUM;

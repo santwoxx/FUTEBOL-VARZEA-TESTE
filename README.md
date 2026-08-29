@@ -156,6 +156,37 @@ desenha o resultado ◄───── 20x/s ────────  manda o e
 - **Interpolação** — os outros jogadores e a bola são desenhados ~100ms no
   passado, entre dois estados recebidos, o que elimina tremida.
 
+### Mecânica das partidas
+
+**Carrinho limpo atordoa.** Se você acerta a bola primeiro e quem estava
+conduzindo está a menos de 2,4m, ele leva um susto de **0,3s**: não cai, mas
+perde o carregamento de chute e leva um empurrão no sentido do deslize. Como
+`findOwner()` ignora quem está atordoado, ele não recupera a bola no mesmo tique —
+é essa janela que paga o risco de se jogar no chão. Errar a bola e pegar o
+jogador continua sendo **falta**: tombo de 1,6s e o infrator travado por 2s.
+
+**Segurar o chute demais estraga o chute.** A carga chega ao máximo em ~0,83s.
+Daí em diante existe uma folga de ~0,12s (o `safe`) e depois a bola começa a
+subir: o pé passa por baixo dela. No limite, a componente vertical é **2,9x**
+maior e a horizontal cai 28% — o chute vai por cima do gol. A punição é
+**determinística**, não sorteada: dá pra aprender o ponto de soltar.
+
+A barra de força mostra a carga inteira, com uma **marca branca** onde a força
+cheia acaba; passou dali, a barra pisca em vermelho. O online também ganhou a
+barra (antes não tinha nenhuma), com a carga predita localmente pela mesma
+fórmula do servidor — sem isso, a punição seria adivinhação.
+
+**A bola não sai: é gaiola.** Laterais e fundos já devolviam a bola; o que
+faltava era **teto, a 14m**. Sem ele, um chute estragado sumia da partida por
+vários segundos até a gravidade trazer de volta. Agora bate na rede de cima,
+perde 45% da velocidade vertical e 14% da horizontal, e volta pro jogo. A
+única forma de a bola passar da linha continua sendo entrando no gol.
+
+> Os números vivem em dois lugares de propósito — `server/shared/constants.js`
+> (autoritativo) e `frontend/index.html` (single-player) — porque o single-player
+> não importa módulos do servidor. Se você mexer em um, mexa no outro: o
+> README promete que os dois têm a mesma sensação de pé.
+
 ### Preenchimento com bots
 
 As vagas vazias viram bots, então dá para jogar 4v4 mesmo com dois amigos só. A
@@ -172,7 +203,7 @@ a partida continua.
 | `WASD` | mover |
 | `Mouse` | girar a câmera / mirar |
 | `Shift` | pique |
-| `Clique Esquerdo` ou `Espaço` | chute (segure para carregar a força) |
+| `Clique Esquerdo` ou `Espaço` | chute (segure para carregar — **mas não demais**, veja [Mecânica das partidas](#mecânica-das-partidas)) |
 | `Clique Direito` ou `E` | passe (segure para carregar a força) |
 | `R` | desarme |
 | `Q` | carrinho |

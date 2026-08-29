@@ -21,7 +21,8 @@ export const CFG = {
 // baixo da bola — ela sobe e perde direcao. E o risco que paga encher o pe.
 export const KICK = {
   rate:      1.2,   // carga por segundo
-  max:       1.6,   // teto da carga: ~0,5s de risco depois da forca maxima
+  safe:      1.15,  // folga (~0,12s) depois da forca cheia antes de comecar a furar
+  max:       1.6,   // teto da carga: ~0,37s de risco depois da folga
   overLoft:  1.9,   // multiplicador maximo na componente vertical
   overPower: 0.28   // fracao da forca horizontal perdida no chute furado
 };

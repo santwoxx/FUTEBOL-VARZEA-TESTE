@@ -462,7 +462,7 @@ function applyInput(w, e, input, dt) {
   if (released("shoot")) {
     const held = e.charge;
     const p = 0.3 + Math.min(1, held) * 0.7;
-    const over = (held - 1) / (KICK.max - 1);
+    const over = (held - KICK.safe) / (KICK.max - KICK.safe);
     e.charge = 0;
     e.state = STATE.IDLE;
     // Combo (drible + chute na janela): vira um drible de vitrine, nao um chute

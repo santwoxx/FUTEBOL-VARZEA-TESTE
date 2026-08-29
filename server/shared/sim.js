@@ -40,6 +40,23 @@ const TACKLE = {
   stunFoul:   1.6   // tombo completo de quem sofreu falta
 };
 
+// Chapeu / lambreta. Espelhado em frontend/index.html — os dois lados precisam
+// escolher o MESMO movimento para o cliente conseguir prever o drible sem
+// esperar o snapshot voltar.
+//
+// O arco e alto de proposito: um jogador em pe tem ~1,8m, entao a bola so passa
+// "por cima do marcador" se o apice ficar bem acima disso.
+const CHAPEU = {
+  altura:     3.60, // apice do arco acima do gramado
+  avanco:     2.60, // quanto a bola avanca alem do pe durante o arco
+  subida:     7.20, // velocidade vertical enquanto sobe/desce
+  raioFoe:    3.60, // adversario ate aqui, em QUALQUER direcao, pede chapeu
+  ballMax:    2.60, // bola dentro do alcance de controle
+  ballPe:     1.20, // bola colada no pe: a direcao nao importa
+  ballFrente: 0.15, // senao ela precisa estar a frente do corpo
+  stun:       0.50  // atordoamento de quem levou o chapeu
+};
+
 // ─────────────────────────── criacao de entidades ───────────────────────────
 
 let nextEntId = 1;
@@ -132,8 +149,18 @@ export function getEnt(w, id) {
 
 // ──────────────────────────── posse de bola ────────────────────────────────
 
+function emDrible(e) {
+  return e.act > 0 && e.state >= STATE.DRIBBLE_STEPOVER && e.state <= STATE.DRIBBLE_CARRETILHA;
+}
+
 function findOwner(w) {
   const b = w.ball;
+
+  // Quem esta executando um drible fica com a bola colada. Tem que vir ANTES do
+  // corte de altura: no chapeu a bola passa dos 1,8m e, sem isto, o servidor
+  // tirava a posse no meio do proprio movimento — a bola virava bola solta e o
+  // marcador chapelado a recuperava. E a mesma regra do single-player.
+  for (const e of w.ents) if (emDrible(e)) return e.id;
 
   // Bola chutada forte ou muito alta: ninguem conduz
   const speedSq = b.vx * b.vx + b.vy * b.vy + b.vz * b.vz;
@@ -156,17 +183,94 @@ function findOwner(w) {
   return best;
 }
 
-// Cola a bola no pe de quem conduz (mesma cadencia do single-player)
+// Progresso 0→1 da acao de drible corrente.
+function dribProg(e, padrao) {
+  return clamp(1 - e.act / (e.dribDur || padrao), 0, 1);
+}
+
+// Cola a bola no pe de quem conduz.
+//
+// Cada drible tem a sua propria trajetoria de bola — as mesmas do single-player.
+// Antes o servidor prendia a bola num ponto fixo a 0,88m do pe em TODOS eles: o
+// cliente desenhava o chapeu subindo 3m enquanto a bola que valia (posse, chute,
+// gol) continuava rolando no chao. Agora a bola da fisica e a mesma da tela.
 function dribbleBall(w, e, dt) {
   w.lastTouchEntId = e.id;
   const b = w.ball;
   const fx = Math.sin(e.yaw), fz = Math.cos(e.yaw);
-  const lead = 0.88;
-  const tx = e.x + fx * lead;
-  const tz = e.z + fz * lead;
-  const k = smooth(24, dt);
-  b.x += (tx - b.x) * k;
-  b.z += (tz - b.z) * k;
+  const sx = -fz, sz = fx;   // lateral do corpo
+
+  let tx, tz, k = 24;        // alvo no gramado + rigidez do lerp, por movimento
+
+  switch (e.state) {
+    case STATE.DRIBBLE_RAINBOW: {
+      // Chapeu: sobe por cima do marcador e cai ja na frente, em movimento.
+      const q = dribProg(e, 0.80);
+      b.x = e.x + fx * (0.30 + q * CHAPEU.avanco);
+      b.z = e.z + fz * (0.30 + q * CHAPEU.avanco);
+      b.y = CFG.BALL_R + Math.sin(q * Math.PI) * CHAPEU.altura;
+      b.vx = fx * 6.5; b.vz = fz * 6.5;
+      b.vy = Math.cos(q * Math.PI) * CHAPEU.subida;
+      return;
+    }
+    case STATE.DRIBBLE_CARRETILHA: {
+      // Sola gira a bola de lado e depois enfia ela pra frente.
+      const q = dribProg(e, 0.62);
+      let lead, lado;
+      if (q < 0.60) {
+        const r = q / 0.60;
+        lead = 0.55 - r * 0.25;
+        lado = Math.sin(r * Math.PI) * 0.42;
+      } else {
+        const r = (q - 0.60) / 0.40;
+        lead = 0.30 + r * 1.55;
+        lado = (1 - r) * 0.20;
+      }
+      tx = e.x + fx * lead + sx * lado;
+      tz = e.z + fz * lead + sz * lado;
+      k = 30;
+      break;
+    }
+    case STATE.DRIBBLE_ELASTICO: {
+      const q = dribProg(e, 0.55);
+      const lado = q < 0.42 ? 0.75 : -0.55;
+      tx = e.x + fx * 1.15 + sx * lado;
+      tz = e.z + fz * 1.15 + sz * lado;
+      k = 28;
+      break;
+    }
+    case STATE.DRIBBLE_STEPOVER: {
+      const q = dribProg(e, 0.70);
+      const lado = Math.sin(q * Math.PI * 4) * 0.38;
+      tx = e.x + fx * 1.12 + sx * lado;
+      tz = e.z + fz * 1.12 + sz * lado;
+      k = 28;
+      break;
+    }
+    case STATE.DRIBBLE_ROULETTE: {
+      tx = e.x + fx * 0.95;
+      tz = e.z + fz * 0.95;
+      k = 28;
+      break;
+    }
+    case STATE.DRIBBLE_DRAGBACK: {
+      const q = dribProg(e, 0.60);
+      const lead = q < 0.45 ? 0.60 : 1.30;
+      tx = e.x + fx * lead;
+      tz = e.z + fz * lead;
+      k = 26;
+      break;
+    }
+    default: {
+      tx = e.x + fx * 0.88;
+      tz = e.z + fz * 0.88;
+      break;
+    }
+  }
+
+  const a = smooth(k, dt);
+  b.x += (tx - b.x) * a;
+  b.z += (tz - b.z) * a;
   b.y = CFG.BALL_R;
   b.vx = e.vx; b.vy = e.vy; b.vz = e.vz;
 }
@@ -378,21 +482,59 @@ const COMBO_MOVES = [
 ];
 const COMBO_WINDOW = 0.22;   // segundos de tolerancia entre drible e chute
 
+const MOVE_CHAPEU = DRIBBLE_MOVES.find((m) => m.key === "rainbow");
+
 function burstDribble(w, e, m) {
   w.ownerId = e.id;
   e.state = m.state; e.act = m.duration; e.cool = m.duration + 0.10;
+  e.dribDur = m.duration;   // usado por dribbleBall para saber o progresso do arco
   const fx = Math.sin(e.yaw), fz = Math.cos(e.yaw);
   e.vx = fx * (9.0 + m.boost); e.vz = fz * (9.0 + m.boost);
   dribbleBall(w, e, 0.02);
+
+  // O chapeu joga a bola POR CIMA do marcador, entao quem foi passado fica um
+  // instante sem reacao em vez de so levar um empurrao. Como findOwner() ignora
+  // quem esta atordoado, ele nao pega a bola na queda do arco — e essa janela
+  // que faz o movimento valer o risco. O goleiro nao entra: atordoar ele dentro
+  // da area viraria gol de graca.
+  const chapelou = m.state === STATE.DRIBBLE_RAINBOW;
+  const raio = chapelou ? CHAPEU.raioFoe : 2.6;
+
   for (const o of w.ents) {
     if (o.team === e.team) continue;
-    if (dist2(e.x, e.z, o.x, o.z) < 2.6) {
-      o.cool = 0.8;
-      let ox = o.x - e.x, oz = o.z - e.z;
-      const ol = Math.hypot(ox, oz) || 1;
-      o.vx += (ox / ol) * 4.2; o.vz += (oz / ol) * 4.2;
+    if (dist2(e.x, e.z, o.x, o.z) >= raio) continue;
+    o.cool = 0.8;
+    let ox = o.x - e.x, oz = o.z - e.z;
+    const ol = Math.hypot(ox, oz) || 1;
+    o.vx += (ox / ol) * 4.2; o.vz += (oz / ol) * 4.2;
+    if (chapelou && o.role !== "keeper") {
+      if (o.stunned < CHAPEU.stun) o.stunned = CHAPEU.stun;
+      o.charge = 0; o.passCharge = 0;
+      o.state = STATE.IDLE; o.act = 0;
     }
   }
+}
+
+// Marcador colado que justifica o chapeu: adversario dentro do raio em QUALQUER
+// direcao — frente, costas ou lado — com a bola no alcance do pe. A mesma conta
+// roda no cliente, que precisa prever o mesmo movimento sem esperar o snapshot.
+function foeParaChapeu(w, e) {
+  const b = w.ball;
+  const d = dist2(e.x, e.z, b.x, b.z);
+  if (d > CHAPEU.ballMax) return null;
+  if (d > CHAPEU.ballPe) {
+    // Longe do pe, a bola precisa estar caindo A FRENTE do jogador.
+    const dot = ((b.x - e.x) * Math.sin(e.yaw) + (b.z - e.z) * Math.cos(e.yaw)) / d;
+    if (dot < CHAPEU.ballFrente) return null;
+  }
+  let perto = null, melhor = CHAPEU.raioFoe;
+  for (const o of w.ents) {
+    if (o.team === e.team || o.role === "keeper") continue;
+    if (o.stunned > 0 || o.state === STATE.FALL) continue;
+    const dd = dist2(e.x, e.z, o.x, o.z);
+    if (dd < melhor) { melhor = dd; perto = o; }
+  }
+  return perto;
 }
 
 function doDribbleMove(w, e) {
@@ -400,16 +542,23 @@ function doDribbleMove(w, e) {
   const b = w.ball;
   if (dist2(e.x, e.z, b.x, b.z) > 3.2) return;
 
-  // Combo (drible + chute na janela) sobrepoe e dispara um movimento de vitrine
+  // Combo (drible + chute na janela) sobrepoe e dispara um movimento de vitrine.
+  // O sorteio sai do tick, e nao de Math.random(): assim o cliente que apertou
+  // consegue prever qual movimento vai sair e desenhar ele no mesmo quadro do
+  // clique, sem esperar o snapshot confirmar.
   const tickNow = w.tick;
   if (Math.abs(tickNow - (e.lastKickT ?? -1e9)) <= COMBO_WINDOW * CFG.TICK_HZ) {
-    const m = COMBO_MOVES[Math.floor(Math.random() * COMBO_MOVES.length)];
-    burstDribble(w, e, m);
+    burstDribble(w, e, COMBO_MOVES[tickNow % COMBO_MOVES.length]);
     e.lastKickT = -1e9;
     return;
   }
 
-  // Alterna o drible a cada toque
+  // Bola no pe com marcador colado (frente, costas ou lado): sai chapeu, por
+  // cima dele. Fura a ordem do repertorio de proposito — e a jogada que a
+  // situacao pede.
+  if (foeParaChapeu(w, e)) { burstDribble(w, e, MOVE_CHAPEU); return; }
+
+  // Sem ninguem por perto, alterna o repertorio a cada toque
   const slot = (e.dribbleSlot = (e.dribbleSlot || 0) + 1) % DRIBBLE_MOVES.length;
   burstDribble(w, e, DRIBBLE_MOVES[slot]);
 }
@@ -445,6 +594,18 @@ function headerContact(w, e) {
 
 // ─────────────────────────── movimentacao ──────────────────────────────────
 
+// Copia o input para e.prev SEM alocar. Antes era `e.prev = { ...input }`, um
+// objeto novo por jogador por tick — 240 objetos por segundo num 4v4, so para o
+// coletor recolher no meio da partida.
+const BOTOES_PREV = ["shoot", "pass", "steal", "tackle", "dribble", "jump", "dance"];
+function guardarPrev(e, input) {
+  const d = e.prev || (e.prev = {});
+  for (let i = 0; i < BOTOES_PREV.length; i++) {
+    const k = BOTOES_PREV[i];
+    d[k] = !!input[k];
+  }
+}
+
 function applyInput(w, e, input, dt) {
   const prev = e.prev || {};
 
@@ -472,10 +633,9 @@ function applyInput(w, e, input, dt) {
     // Combo (drible + chute na janela): vira um drible de vitrine, nao um chute
     if (dist2(e.x, e.z, w.ball.x, w.ball.z) <= 3.2 &&
         Math.abs(w.tick - (e.lastDribT ?? -1e9)) <= COMBO_WINDOW * CFG.TICK_HZ) {
-      const m = COMBO_MOVES[Math.floor(Math.random() * COMBO_MOVES.length)];
-      burstDribble(w, e, m);
+      burstDribble(w, e, COMBO_MOVES[w.tick % COMBO_MOVES.length]);
       e.lastDribT = -1e9;
-      e.prev = { ...input };
+      guardarPrev(e, input);
       return;
     }
     doShoot(w, e, p, over);
@@ -500,7 +660,7 @@ function applyInput(w, e, input, dt) {
     }
   }
 
-  e.prev = { ...input };
+  guardarPrev(e, input);
 
   // Movimento
   const inDrib = e.state >= STATE.DRIBBLE_STEPOVER && e.state <= STATE.DRIBBLE_CARRETILHA;
@@ -554,11 +714,13 @@ function applyInput(w, e, input, dt) {
 function botThink(w, e, dt) {
   const b = w.ball;
   const atk = e.team === 0 ? -1 : 1;   // direcao do gol adversario
-  const input = {
-    dx: 0, dz: 0, sprint: false, shoot: false, pass: false,
-    tackle: false, steal: false, dribble: false, jump: false,
-    aimx: 0, aimy: 1.2, aimz: atk * HH
-  };
+  // Objeto reaproveitado entre ticks pelo mesmo motivo de guardarPrev(): um
+  // literal novo por bot por tick e lixo garantido a 30 Hz.
+  const input = e.botInput || (e.botInput = {});
+  input.dx = 0; input.dz = 0;
+  input.sprint = false; input.shoot = false; input.pass = false;
+  input.tackle = false; input.steal = false; input.dribble = false; input.jump = false;
+  input.aimx = 0; input.aimy = 1.2; input.aimz = atk * HH;
 
   if (e.role === "keeper") {
     botKeeper(w, e, dt);

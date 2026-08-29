@@ -157,6 +157,10 @@ export class Room {
   tick(dt) {
     const event = step(this.world, dt, this.inputs);
 
+    // O tick leu os inputs: dali para frente um pacote novo pode sobrescrever
+    // os botoes sem risco. Ver setInput().
+    for (const i of this.inputs.values()) i.consumido = true;
+
     if (event?.type === "goal") {
       this.broadcast(S2C.GOAL, { team: event.team, score: this.world.score, scorerEntId: event.scorerEntId });
       // Comemoracao: time que marcou dança brevemente (até a bola voltar ao jogo)
@@ -205,6 +209,7 @@ export class Room {
     // Sanitiza: o cliente so manda direcao e botoes; velocidade e do servidor
     const dl = Math.hypot(input.dx || 0, input.dz || 0) || 1;
     const safe = {
+      consumido: false,
       dx: (input.dx || 0) / (dl > 1 ? dl : 1),
       dz: (input.dz || 0) / (dl > 1 ? dl : 1),
       sprint: !!input.sprint,
@@ -218,6 +223,23 @@ export class Room {
       aimy: clampNum(input.aimy, 0, 12),
       aimz: clampNum(input.aimz, -60, 60)
     };
+
+    // Botoes de toque unico (drible, carrinho, desarme, pulo) sao uma BORDA: a
+    // simulacao so dispara a acao no tick em que o botao acabou de descer. Com
+    // cliente e servidor a 30 Hz, dois pacotes chegando entre dois ticks eram
+    // suficientes para o segundo apagar o toque do primeiro — e o drible
+    // simplesmente nao saia, sem nada na tela explicando por que.
+    //
+    // Enquanto o tick nao le o pacote, o toque fica retido: nenhum clique se
+    // perde por jitter de rede.
+    const pendente = this.inputs.get(client.entId);
+    if (pendente && !pendente.consumido) {
+      safe.dribble = safe.dribble || pendente.dribble;
+      safe.tackle  = safe.tackle  || pendente.tackle;
+      safe.steal   = safe.steal   || pendente.steal;
+      safe.jump    = safe.jump    || pendente.jump;
+    }
+
     this.inputs.set(client.entId, safe);
   }
 

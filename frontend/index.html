@@ -429,23 +429,136 @@ canvas{display:block;width:100%;height:100%}
   letter-spacing:1px;color:#fff;text-transform:uppercase;min-width:48px;
 }
 
-/* Botão 5: Pedir a bola. Fica na linha de cima, longe do polegar em repouso —
-   é um pedido, não uma ação de disputa, e não pode sair sem querer no meio de
-   um carrinho. */
+/* ═══════════ BOTÃO PEDIR BOLA (COLUNA 1, LINHA 1) ═══════════ */
 .btnCall{
-  width:100%;height:48px;border-radius:16px;
-  grid-column:1 / span 2;grid-row:1;
+  width:72px;height:48px;border-radius:16px;
+  grid-column:1;grid-row:1;
   background:linear-gradient(135deg,rgba(255,215,0,0.90),rgba(190,130,0,0.98));
   border:1.8px solid rgba(255,235,120,0.7);box-shadow:0 6px 18px rgba(255,190,0,0.38);
-  flex-direction:row;gap:7px;color:#231800;
+  flex-direction:column;gap:2px;color:#231800;
 }
-.btnCall .kLabel{font-size:12px}
-.btnCall .kBadge{background:rgba(0,0,0,0.22);border-color:rgba(0,0,0,0.3);color:#231800}
+.btnCall .kLabel{font-size:9px}
+.btnCall .kBadge{background:rgba(0,0,0,0.22);border-color:rgba(0,0,0,0.3);color:#231800;font-size:8px;padding:1px 4px}
 .btnCall.asked{
   background:linear-gradient(135deg,rgba(0,240,200,0.92),rgba(0,140,120,0.98));
   border-color:rgba(120,255,230,0.8);box-shadow:0 6px 20px rgba(0,230,190,0.5);color:#00231c;
 }
 .btnCall.asked .kBadge{color:#00231c}
+
+/* ═══════════ BOTÃO 6: SUPER CHUTE FLAMEJANTE (COLUNA 2, LINHA 1) ═══════════ */
+.btnSuperShot{
+  width:86px;height:48px;border-radius:16px;
+  grid-column:2;grid-row:1;
+  background:linear-gradient(135deg,rgba(50,15,10,0.92),rgba(25,6,6,0.96));
+  border:1.5px solid rgba(255,100,40,0.4);
+  box-shadow:0 6px 18px rgba(0,0,0,0.6);
+  position:relative;overflow:hidden;
+  transition:all .25s ease;
+}
+.btnSuperShot .superShotFillBg{
+  position:absolute;bottom:0;left:0;right:0;height:0%;
+  background:linear-gradient(180deg,rgba(255,120,0,0.4),rgba(255,50,0,0.25));
+  pointer-events:none;transition:height 0.15s ease-out;z-index:0;
+}
+.btnSuperShot .kBadge{background:rgba(255,100,0,0.25);border-color:rgba(255,140,0,0.5);color:#ffaa44;font-size:8px;padding:1px 4px;position:relative;z-index:1}
+.btnSuperShot .kLabel{font-size:9.5px;color:#ffaa44;position:relative;z-index:1}
+.btnSuperShot.ready{
+  background:linear-gradient(135deg,#ff3300,#ff9900,#ffd700);
+  border-color:#fff;
+  box-shadow:0 0 25px rgba(255,120,0,0.85),0 0 40px rgba(255,215,0,0.5);
+  animation:superBtnPulse .7s infinite alternate ease-in-out;
+}
+.btnSuperShot.ready .kBadge{background:#000;color:#ffd700;border-color:#ffd700;box-shadow:0 0 8px #ffd700}
+.btnSuperShot.ready .kLabel{color:#000;font-weight:900;text-shadow:0 1px 2px rgba(255,255,255,0.7)}
+@keyframes superBtnPulse{
+  0%{transform:scale(1);filter:brightness(1)}
+  100%{transform:scale(1.08);filter:brightness(1.35)}
+}
+
+/* ═══════════ HUD DE SUPER CHUTE FLAMEJANTE (TOPO / CENTRO) ═══════════ */
+#superShotHud{
+  position:absolute;top:calc(max(14px,env(safe-area-inset-top)) + 52px);
+  left:50%;transform:translateX(-50%);
+  display:none;align-items:center;gap:10px;
+  background:linear-gradient(135deg,rgba(35,12,10,0.94),rgba(16,6,8,0.96));
+  border:1.5px solid rgba(255,120,0,0.45);border-radius:22px;
+  padding:5px 16px;box-shadow:0 8px 30px rgba(0,0,0,0.7),0 0 20px rgba(255,100,0,0.25);
+  backdrop-filter:blur(12px);z-index:4;pointer-events:none;
+  transition:all .25s ease;
+}
+#superShotHud.show{display:flex}
+#superShotHud.ready{
+  border-color:#ffd700;
+  box-shadow:0 8px 35px rgba(255,100,0,0.5),0 0 35px rgba(255,215,0,0.6);
+  animation:hudSuperPulse .7s infinite alternate ease-in-out;
+}
+@keyframes hudSuperPulse{
+  0%{transform:translateX(-50%) scale(1)}
+  100%{transform:translateX(-50%) scale(1.05)}
+}
+.superShotFlameIcon{font-size:16px;line-height:1;animation:flameFlicker .4s infinite alternate}
+@keyframes flameFlicker{
+  0%{transform:scale(0.9) rotate(-3deg);filter:drop-shadow(0 0 4px #ff4400)}
+  100%{transform:scale(1.25) rotate(3deg);filter:drop-shadow(0 0 10px #ffd700)}
+}
+.superShotTitle{
+  font-family:'Teko',sans-serif;font-size:20px;font-weight:700;letter-spacing:1px;
+  color:#ffaa44;line-height:1;
+}
+#superShotHud.ready .superShotTitle{color:#ffd700;text-shadow:0 0 10px rgba(255,215,0,0.8)}
+.superShotKeyBadge{
+  font-size:9px;font-weight:900;background:rgba(255,140,0,0.25);border:1px solid rgba(255,140,0,0.5);
+  color:#ffd700;padding:2px 6px;border-radius:6px;
+}
+.superShotTrack{
+  width:140px;height:9px;background:rgba(255,255,255,0.12);
+  border-radius:6px;overflow:hidden;position:relative;
+}
+.superShotFill{
+  height:100%;width:0%;
+  background:linear-gradient(90deg,#ff4400,#ff9900,#ffd700);
+  border-radius:6px;transition:width .15s ease-out;
+  box-shadow:0 0 10px rgba(255,120,0,0.8);
+}
+#superShotHud.ready .superShotFill{
+  background:linear-gradient(90deg,#ff1100,#ff7700,#ffd700,#ffffff);
+  box-shadow:0 0 16px rgba(255,215,0,1);
+}
+.superShotPct{
+  font-family:'Outfit',sans-serif;font-size:10px;font-weight:900;
+  letter-spacing:.8px;color:#fff;min-width:32px;
+}
+
+/* ═══════════ BULLET TIME / CÂMERA LENTA OVERLAY ═══════════ */
+#bulletTimeOverlay{
+  position:fixed;inset:0;pointer-events:none;z-index:8;
+  display:none;flex-direction:column;align-items:center;justify-content:space-between;
+  padding:30px 20px;
+  background:radial-gradient(circle,transparent 40%,rgba(255,80,0,0.35) 90%,rgba(180,20,0,0.65) 100%);
+  animation:bulletTimeFade .25s ease-out forwards;
+}
+#bulletTimeOverlay.active{display:flex}
+@keyframes bulletTimeFade{from{opacity:0}to{opacity:1}}
+.bulletTimeBanner{
+  background:linear-gradient(135deg,rgba(20,10,5,0.95),rgba(40,15,5,0.98));
+  border:2px solid #ffd700;border-radius:30px;
+  padding:10px 30px;box-shadow:0 10px 40px rgba(255,100,0,0.8),0 0 30px rgba(255,215,0,0.6);
+  text-align:center;animation:bannerFloat 1.2s infinite alternate ease-in-out;
+}
+@keyframes bannerFloat{0%{transform:translateY(0)}100%{transform:translateY(-4px)}}
+.bulletTimeTitle{
+  font-family:'Teko',sans-serif;font-size:38px;font-weight:900;letter-spacing:2px;line-height:1;
+  background:linear-gradient(135deg,#ffd700,#ff5500,#ffffff);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+}
+.bulletTimeSub{
+  font-size:13px;font-weight:900;letter-spacing:1px;color:#fff;
+  text-transform:uppercase;margin-top:2px;text-shadow:0 0 8px rgba(255,120,0,0.9);
+}
+.bulletTimeTimer{
+  font-family:'Teko',sans-serif;font-size:46px;font-weight:900;color:#ffd700;
+  text-shadow:0 0 20px #ff4400;line-height:1;margin-top:4px;
+}
 
 /* ═══════════ LOBBY PRINCIPAL ESTILO EA FC / UFL VOLTA ═══════════ */
 #start{
@@ -2220,13 +2333,31 @@ canvas{display:block;width:100%;height:100%}
     <span class="staminaLabel" id="staminaText">FÔLEGO</span>
   </div>
 
+  <!-- HUD Dinâmico de Super Chute Flamejante -->
+  <div id="superShotHud">
+    <span class="superShotFlameIcon">🔥</span>
+    <span class="superShotTitle">SUPER CHUTE</span>
+    <span class="superShotKeyBadge" id="superShotHudBadge">[ X ]</span>
+    <div class="superShotTrack">
+      <div class="superShotFill" id="superShotFill"></div>
+    </div>
+    <span class="superShotPct" id="superShotPct">0%</span>
+  </div>
+
   <div id="joy"><div id="knob"></div></div>
 
   <div id="btnGrid">
-    <!-- 0. Linha de cima: Pedir a bola (vale para bots e para o time no online) -->
+    <!-- 0.1 Linha de Cima Esq: Pedir a bola -->
     <button class="btn btnCall" id="callPassBtn">
-      <span class="kBadge" id="callPassBadge">X</span>
+      <span class="kBadge" id="callPassBadge">Z</span>
       <span class="kLabel">PEDIR BOLA</span>
+    </button>
+
+    <!-- 0.2 Linha de Cima Dir: Super Chute Flamejante -->
+    <button class="btn btnSuperShot" id="superShotBtn">
+      <div class="superShotFillBg" id="btnSuperShotFill"></div>
+      <span class="kBadge" id="superShotBadge">X</span>
+      <span class="kLabel" id="superShotBtnLabel">🔥 SUPER</span>
     </button>
 
     <!-- 1. Topo Esquerda: Pique (Arrancada) com Barra de Estamina -->
@@ -2253,6 +2384,15 @@ canvas{display:block;width:100%;height:100%}
       <span class="kBadge" id="mainActionBadge">ESQ / R</span>
       <span class="kLabel" id="mainActionLabel">CHUTE</span>
     </button>
+  </div>
+</div>
+
+<!-- ═══════════ OVERLAY DE CÂMERA LENTA / BULLET TIME ═══════════ -->
+<div id="bulletTimeOverlay">
+  <div class="bulletTimeBanner">
+    <div class="bulletTimeTitle">⚡ CÂMERA LENTA ATIVADA! 🔥</div>
+    <div class="bulletTimeSub">🎯 ESCOLHA O CANTO E SOLTE A BOMBA FLAMEJANTE!</div>
+    <div class="bulletTimeTimer" id="bulletTimeClock">2.2s</div>
   </div>
 </div>
 
@@ -2923,6 +3063,46 @@ class SoundEngine {
         osc.start(t); osc.stop(t + 0.4);
       }, i * 220);
     }
+  }
+  playSuperShotReady(){
+    if(!this.enabled || !this.ctx) return;
+    const t = this.ctx.currentTime;
+    [440, 554, 659, 880, 1108].forEach((freq, idx)=>{
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.setValueAtTime(freq, t + idx * 0.06);
+      gain.gain.setValueAtTime(0.35, t + idx * 0.06);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.06 + 0.35);
+      osc.connect(gain); gain.connect(this.ctx.destination);
+      osc.start(t + idx * 0.06); osc.stop(t + idx * 0.06 + 0.35);
+    });
+  }
+  playBulletTime(){
+    if(!this.enabled || !this.ctx) return;
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(400, t);
+    osc.frequency.exponentialRampToValueAtTime(65, t + 0.55);
+    gain.gain.setValueAtTime(0.45, t);
+    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.55);
+    osc.connect(gain); gain.connect(this.ctx.destination);
+    osc.start(t); osc.stop(t + 0.55);
+  }
+  playSuperShotBlast(){
+    if(!this.enabled || !this.ctx) return;
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(140, t);
+    osc.frequency.exponentialRampToValueAtTime(30, t + 0.6);
+    gain.gain.setValueAtTime(0.95, t);
+    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.6);
+    osc.connect(gain); gain.connect(this.ctx.destination);
+    osc.start(t); osc.stop(t + 0.6);
   }
 }
 const sfx = new SoundEngine();
@@ -5648,6 +5828,72 @@ function vfxSpawnBallFireTrail(ballPos, ballVel){
   });
 }
 
+// ════════════ 2.1 EFEITO SUPREMO: SUPER CHUTE EM CHAMAS ════════════
+function vfxSpawnSuperShotFire(ballPos, ballVel){
+  if(!scene) return;
+  const speed = ballVel.length();
+
+  // 1. Bola de fogo densa (múltiplas camadas de fogo e plasma)
+  const colors = [0xff2200, 0xff7700, 0xffd700, 0xffffff];
+  for(let i = 0; i < 4; i++){
+    const mat = new THREE.SpriteMaterial({
+      map: VFX.sparkTex,
+      color: colors[i],
+      transparent: true,
+      opacity: 0.95,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    const s = new THREE.Sprite(mat);
+    s.position.set(
+      ballPos.x + (Math.random()-0.5)*0.25,
+      ballPos.y + (Math.random()-0.5)*0.25,
+      ballPos.z + (Math.random()-0.5)*0.25
+    );
+    const sz = 0.55 + Math.random() * 0.45;
+    s.scale.set(sz, sz, sz);
+    scene.add(s);
+
+    VFX.particles.push({
+      mesh: s,
+      vel: new THREE.Vector3(
+        -ballVel.x * 0.12 + (Math.random()-0.5)*1.8,
+        -ballVel.y * 0.12 + 0.8 + (Math.random()-0.5)*1.2,
+        -ballVel.z * 0.12 + (Math.random()-0.5)*1.8
+      ),
+      life: 0.35 + Math.random() * 0.20,
+      maxLife: 0.55,
+      type: "fire_trail"
+    });
+  }
+
+  // 2. Anéis de plasma e calor a cada poucos frames
+  if(Math.random() < 0.45){
+    const ringGeo = new THREE.RingGeometry(0.12, 0.45, 16);
+    const ringMat = new THREE.MeshBasicMaterial({
+      color: 0xffaa00,
+      transparent: true,
+      opacity: 0.85,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending
+    });
+    const ring = new THREE.Mesh(ringGeo, ringMat);
+    ring.position.copy(ballPos);
+    ring.lookAt(ballPos.clone().add(ballVel));
+    scene.add(ring);
+
+    VFX.particles.push({
+      mesh: ring,
+      vel: new THREE.Vector3(0, 0, 0),
+      life: 0.22,
+      maxLife: 0.22,
+      expandSpeed: 8.0,
+      type: "shockwave"
+    });
+  }
+}
+
 // ════════════ 3. EFEITO DE CARRINHO: RACHADURA NO CHÃO, FAÍSCAS E CASCALHO ════════════
 function vfxSpawnTackleTrail(char, footSign){
   if(!scene) return;
@@ -5809,9 +6055,15 @@ function animateHumanoid(char, dt, isMoving){
   char.kick = Math.max(0, char.kick - dt);
   char.act = Math.max(0, char.act - dt);
   if(char.noBall > 0) char.noBall = Math.max(0, char.noBall - dt);
-  if(char.callT > 0){
-    char.callT = Math.max(0, char.callT - dt);
-    if(char.callT === 0 && char.callMark) char.callMark.visible = false;
+  // Relógio do pedido de bola. Só corre no jogo local (callLocal): no online
+  // quem conta o tempo é o servidor, e o marcador segue a bandeira do snapshot
+  // — se este bloco mexesse nele lá também, os dois ficariam brigando.
+  //
+  // Some tanto por vencer o tempo quanto por ser ATENDIDO: quem toca a bola
+  // zera o callT de quem pediu, e é por aqui que o marcador apaga.
+  if(char.callLocal){
+    char.callT = Math.max(0, (char.callT || 0) - dt);
+    if(char.callT <= 0){ char.callLocal = false; mostrarPedido(char, false); }
   }
   if(char.callMark && char.callMark.visible){
     // Balança de leve para puxar o olho de quem está conduzindo
@@ -6781,7 +7033,8 @@ const defaultKeyBindings = {
   dribble: "f",
   jump: "c",
   dance: "v",
-  callPass: "x",
+  superShot: "x",
+  callPass: "z",
   reset: "t",
   voice: "b"
 };
@@ -6790,6 +7043,15 @@ try {
   const savedKeys = localStorage.getItem("fut_cria_keybinds");
   if (savedKeys) userKeyBindings = { ...defaultKeyBindings, ...JSON.parse(savedKeys) };
 } catch(e) {}
+
+/* ═══════════════ SISTEMA DE SUPER CHUTE & BULLET TIME ═══════════════ */
+let superShotEnergy = 0; // 0 a 100
+let isSuperShotFlying = false;
+const bulletTimeState = {
+  active: false,
+  timeLeft: 0,
+  totalTime: 2.2
+};
 
 const camF = new THREE.Vector3(0,0,-1), camR = new THREE.Vector3(1,0,0);
 const tA = new THREE.Vector3(), tB = new THREE.Vector3(), tC = new THREE.Vector3();
@@ -6815,6 +7077,8 @@ fitCamera();
 function kickoff(dir){
   player.root.position.set(0,0,7.0); player.vel.set(0,0,0); player.yaw = Math.PI; player.state = "idle"; player.act = 0;
   player.stamina = 100; player.isExhausted = false; updateStaminaHUD(0);
+  bulletTimeState.active = false; isSuperShotFlying = false; updateSuperShotHUD();
+  const btOverlay = $("#bulletTimeOverlay"); if(btOverlay) btOverlay.classList.remove("active");
   mateA.root.position.set(-11.5, 0, 3.5); mateA.vel.set(0,0,0); mateA.state = "idle";
   mateB.root.position.set( 11.5, 0, 3.5); mateB.vel.set(0,0,0); mateB.state = "idle";
   foeA.root.position.set(8.5, 0, -8.0);   foeA.vel.set(0,0,0);  foeA.state = "idle";
@@ -6845,6 +7109,16 @@ function updatePlayer(dt){
     if(kx || ky){ const l = Math.hypot(kx,ky); ix = kx/l; iy = ky/l; }
   }
   const mag = Math.min(1, Math.hypot(ix,iy));
+
+  // Direção de caminhada no mundo, guardada para o chute ler no instante do
+  // disparo: empurrar o direcional pro lado ao soltar é o que curva a bola.
+  if(mag > 0.001){
+    dirMovMundo.set(0,0,0).addScaledVector(camF, -iy).addScaledVector(camR, ix);
+    dirMovMundo.y = 0;
+    if(dirMovMundo.lengthSq() > 1e-6) dirMovMundo.normalize().multiplyScalar(mag);
+  } else {
+    dirMovMundo.set(0,0,0);
+  }
 
   if(player.state && player.state.startsWith("dribble_")){
     // ════════════ EXECUÇÃO DE DRIBLE ATIVO ════════════
@@ -7033,6 +7307,66 @@ function getAimWorldPoint(){
   return aimWorldPoint;
 }
 
+/* ═══════════════ CHUTE: CANTO, CURVA E CHUTE FURADO ═══════════════ */
+// Espelhado em server/shared/sim.js.
+//
+// A conta antiga tirava a altura de saída de uma escala grosseira da mira
+// (targetY/GOAL_H) em vez de resolver a balística: mirando no ângulo (y=3,4m) a
+// bola cruzava a linha entre 1,1m e 2,9m — errava o canto por até 2,3m, e não
+// dava pra escolher altura nenhuma. E o giro rendia 11 CENTÍMETROS de curva em
+// 18m, ou seja, curva nenhuma.
+//
+// Agora o chute resolve três coisas de uma vez:
+//   1. tempo de voo real até o ponto mirado (contando o arrasto do ar);
+//   2. a altura de saída que faz a bola PASSAR naquele ponto;
+//   3. o quanto o efeito vai entortar a trajetória, pra sair aberto e voltar no
+//      canto em vez de simplesmente errar o alvo.
+const CHUTE = {
+  corte:        0.65, // p a partir daqui é bomba; abaixo, colocado
+  bombaBase:    27.0, // m/s da bomba, antes da carga
+  bombaCarga:   23.0,
+  tecBase:      21.0, // colocado: mais lento, mas cirúrgico e com muita curva
+  tecCarga:     12.0,
+  curvaTec:     30.0, // giro máximo do colocado (direcional no disparo)
+  curvaBomba:   12.0, // a bomba entorta menos: é força, não capricho
+  aberturaMax:   0.52, // rad: teto do quanto o chute sai aberto pra curvar
+  espalhaTec:   0.10, // erro lateral (m) na linha do gol
+  espalhaBomba: 0.55, // encher o pé custa pontaria
+  alturaMin:     0.35 // nunca sai tão rasteiro a ponto de raspar no gramado
+};
+
+// Arrasto do ar e decaimento do giro, iguais aos de updateBall(). Ter os dois
+// aqui permite PREVER onde a bola vai passar em vez de chutar números.
+const AR_LAMBDA   = -Math.log(0.996) * 60;   // ~0,2405 /s
+const SPIN_LAMBDA = -Math.log(0.2);          // ~1,609 /s
+
+// Tempo para percorrer `d` metros na horizontal saindo a `sp` m/s.
+function tempoDeVoo(d, sp){
+  const r = 1 - (AR_LAMBDA * d) / sp;
+  if(r <= 0.05) return d / sp;   // alcance curto pra conta fechada: aproxima
+  return -Math.log(r) / AR_LAMBDA;
+}
+
+// Desvio lateral que o efeito Magnus acumula em `t` segundos: a integral dupla
+// da aceleração lateral de updateBall() com o giro decaindo.
+function desvioCurva(spin, sp, t){
+  const a = spin * 0.055 * sp;
+  const k = SPIN_LAMBDA;
+  return a * (t / k - (1 - Math.exp(-k * t)) / (k * k));
+}
+
+// Última direção de caminhada, em coordenadas do mundo. É lida no instante do
+// disparo: empurrar o direcional PRO LADO é o que curva a bola — sem botão novo.
+const dirMovMundo = new THREE.Vector3();
+
+// Quanto o jogador empurrava pro lado da linha do chute (-1 a 1).
+function lateralDoDirecional(dirChuteX, dirChuteZ){
+  const mag = Math.hypot(dirMovMundo.x, dirMovMundo.z);
+  if(mag < 0.20) return 0;
+  const sx = -dirChuteZ, sz = dirChuteX;   // lateral da linha do chute
+  return clamp(((dirMovMundo.x / mag) * sx + (dirMovMundo.z / mag) * sz) * Math.min(1, mag / 0.85), -1, 1);
+}
+
 /* ═══════════════ PASSE & PEDIDO DE BOLA ═══════════════ */
 // Espelhado em server/shared/sim.js.
 //
@@ -7111,6 +7445,7 @@ function mostrarPedido(c, ligado){
 function marcarPedido(c){
   if(!c) return;
   c.callT = CALL.dur;
+  c.callLocal = true;      // ver animateHumanoid: é quem apaga o marcador depois
   mostrarPedido(c, true);
 }
 
@@ -7164,6 +7499,7 @@ function passToMate(targetMate, power=0.5){
   shake = 0.05 + p * 0.10;
   sfx.playKick(0.35 + p * 0.5);
   owner = null;
+  addSuperShotEnergy(15, "Passe Preciso");
 
   if(passTackleBtn) passTackleBtn.classList.add("activeKey");
 }
@@ -7209,18 +7545,39 @@ function kick(power, type, over = 0){
     const o = clamp(over, 0, 1);
     const loft = 1 + o * KICK.overLoft;
     const drag = 1 - o * KICK.overPower;
-    const isPowerShot = p >= 0.65;
-    
+    const isPowerShot = p >= CHUTE.corte;
+
+    // Distância real até o ponto mirado e velocidade de saída
+    const dAlvo = Math.max(0.1, Math.hypot(target.x - ball.position.x, target.z - ball.position.z));
+    const horizSpeed = (isPowerShot ? CHUTE.bombaBase + CHUTE.bombaCarga*p
+                                    : CHUTE.tecBase + CHUTE.tecCarga*p) * drag;
+
+    // Curva escolhida no direcional. O colocado entorta muito mais que a bomba.
+    const spin = lateralDoDirecional(tA.x, tA.z) * (isPowerShot ? CHUTE.curvaBomba : CHUTE.curvaTec);
+
+    // Tempo de voo até o alvo e o desvio que o efeito vai provocar nesse tempo.
+    // A saída abre pro lado CONTRÁRIO ao desvio: a bola sai aberta e o efeito a
+    // traz de volta no canto mirado — é isso que torna a curva útil em vez de só
+    // um erro bonito.
+    const tVoo = tempoDeVoo(dAlvo, horizSpeed);
+    const abertura = clamp(Math.atan2(desvioCurva(spin, horizSpeed, tVoo), dAlvo),
+                           -CHUTE.aberturaMax, CHUTE.aberturaMax);
+    // Erro do pé: a bomba é menos precisa que o colocado.
+    const espalha = isPowerShot ? CHUTE.espalhaBomba : CHUTE.espalhaTec;
+    const angFinal = Math.atan2(tA.x, tA.z) + abertura +
+                     (Math.random() - 0.5) * 2 * espalha / Math.max(1, dAlvo);
+    tA.set(Math.sin(angFinal), 0, Math.cos(angFinal));
+
+    ballVel.copy(tA).multiplyScalar(horizSpeed);
+    // Altura de saída resolvida para a bola PASSAR na altura mirada: é isto que
+    // faz "escolher o canto" existir de verdade.
+    const targetHeight = clamp(target.y, 0.3, CFG.GOAL_H);
+    ballVel.y = Math.max(CHUTE.alturaMin,
+                         (targetHeight - ball.position.y) / tVoo + 0.5 * 18 * tVoo) * loft;
+    ballSpin.set(0, spin, 0);
+
     if(isPowerShot){
       // ════════════ CHUTE FORTE / BOMBA DE PEITO DE PÉ ════════════
-      const horizSpeed = 26 + 22*p; // 40.3 a 48.0 m/s
-      ballVel.copy(tA).multiplyScalar(horizSpeed);
-      
-      const targetHeight = clamp(target.y, 0.3, CFG.GOAL_H);
-      const heightFactor = targetHeight / CFG.GOAL_H;
-      ballVel.y = (2.2 + 5.2*p) * (0.60 + 0.80 * heightFactor);
-      ballSpin.set(0, (Math.random() - 0.5)*2.0, 0);
-
       player.state = "shot_power";
       player.cool = 0.34; player.act = 0.30; shake = 0.22 + p*0.16;
       flash("BOMBA! 💣⚡", "#ff3b4e", "FOGUETE NO ÂNGULO!");
@@ -7230,17 +7587,6 @@ function kick(power, type, over = 0){
       }
     } else {
       // ════════════ CHUTE COM TÉCNICA / COLOCADO DE CHAPA COM CURVA ════════════
-      const horizSpeed = 18 + 14*p; // 23.6 a 27.1 m/s
-      ballVel.copy(tA).multiplyScalar(horizSpeed);
-      
-      const targetHeight = clamp(target.y, 0.4, CFG.GOAL_H);
-      const heightFactor = targetHeight / CFG.GOAL_H;
-      ballVel.y = (1.8 + 3.6*p) * (0.70 + 0.70 * heightFactor);
-
-      // Efeito Magnus: curva calculada para buscar o canto
-      const curveDir = target.x > ball.position.x ? -1 : 1;
-      ballSpin.set(0, curveDir * (5.5 + p*4.5), 0);
-
       player.state = "shot_technique";
       player.cool = 0.28; player.act = 0.24; shake = 0.10 + p*0.10;
       flash("CHUTE COLOCADO! 🎯", "#00ffcc", "CHAPA COM CATEGORIA NO ÂNGULO");
@@ -7249,6 +7595,7 @@ function kick(power, type, over = 0){
         vfxSpawnKickFire(ball.position, tA, 0.85 + p * 0.35);
       }
     }
+    addSuperShotEnergy(30, "Chute ao Gol");
   }
   player.noBall = RECUO_TOQUE;
   owner = null;
@@ -7273,6 +7620,7 @@ function doSteal(){
       sfx.playSteal();
       shake = 0.15;
       flash("ROUBOU A BOLA! ⚡", "#00ffcc", "DESARME LIMPO DO CRIA");
+      addSuperShotEnergy(35, "Roubada de Bola");
 
       for(const o of foes){
         if(flat(player.root.position, o.root.position) < 2.6){
@@ -7340,6 +7688,7 @@ function resolveTackleContact(){
     ballVel.y = 0.8;
     shake = 0.22;
     flash("CARRINHO NA BOLA! ⚡", "#00ffcc", "DESARME PERFEITO — NA BOLA!");
+    addSuperShotEnergy(35, "Carrinho no Lance");
 
     // Bola tirada limpa de quem conduzia: atordoa por instantes em vez de
     // derrubar. Como findOwner() ignora quem está atordoado, ele não recupera a
@@ -7487,6 +7836,7 @@ function doDribble(){
   flash(dribbleInfo.name, "#ffd700", dribbleInfo.sub);
   sfx.playSteal();
   shake = marcado ? 0.20 : 0.15;
+  addSuperShotEnergy(25, "Drible de Cria");
 
   empurraoDrible(player, foes, dribbleInfo.id === "dribble_rainbow");
 }
@@ -7661,6 +8011,133 @@ function updateStaminaHUD(dt){
   if(sprintBtnEl){
     sprintBtnEl.classList.toggle("exhausted", isExh);
   }
+}
+
+/* ═══════════════ LÓGICA DO SUPER CHUTE & CÂMERA LENTA ═══════════════ */
+function addSuperShotEnergy(amount, reason = ""){
+  if(superShotEnergy >= 100) return;
+  const prev = superShotEnergy;
+  superShotEnergy = Math.min(100, Math.max(0, superShotEnergy + amount));
+  updateSuperShotHUD();
+
+  if(prev < 100 && superShotEnergy >= 100){
+    sfx.playSuperShotReady();
+    shake = 0.25;
+    flash("🔥 SUPER CHUTE CARREGADO! 🔥", "#ffd700", `Aperte [${(userKeyBindings.superShot || "X").toUpperCase()}] com a bola para ativar a Câmera Lenta!`);
+  }
+}
+
+function updateSuperShotHUD(){
+  const pct = Math.round(superShotEnergy);
+  const isReady = pct >= 100;
+
+  const hudEl = $("#superShotHud");
+  const fillEl = $("#superShotFill");
+  const pctEl = $("#superShotPct");
+  const badgeEl = $("#superShotHudBadge");
+  const btnEl = $("#superShotBtn");
+  const btnFillEl = $("#btnSuperShotFill");
+  const btnBadgeEl = $("#superShotBadge");
+
+  const keyName = (userKeyBindings.superShot || "X").toUpperCase();
+  if(badgeEl) badgeEl.textContent = `[ ${keyName} ]`;
+  if(btnBadgeEl) btnBadgeEl.textContent = keyName;
+
+  if(fillEl) fillEl.style.width = `${pct}%`;
+  if(pctEl) pctEl.textContent = `${pct}%`;
+
+  if(hudEl){
+    const inActiveMatch = (gameMode === "match" || gameMode === "training" || gameMode === "multiplayer") && (running || (mp && mp.running));
+    hudEl.classList.toggle("show", inActiveMatch);
+    hudEl.classList.toggle("ready", isReady);
+  }
+
+  if(btnFillEl) btnFillEl.style.height = `${pct}%`;
+  if(btnEl){
+    btnEl.classList.toggle("ready", isReady);
+  }
+}
+
+function triggerSuperShot(){
+  if(!running || gameMode === "menu" || gameMode === "customizer") return;
+  if(superShotEnergy < 100){
+    flash(`⚡ SUPER CHUTE: ${Math.round(superShotEnergy)}%`, "#ff8800", "Faça desarmes, dribles ou chutes para carregar!");
+    return;
+  }
+
+  // Checa proximidade com a bola
+  const dBall = flat(player.root.position, ball.position);
+  if(owner !== player && dBall > 3.2){
+    flash("⚽ APROXIME-SE DA BOLA!", "#ff4444", "Domine a bola para disparar o Super Chute!");
+    return;
+  }
+
+  // Garante a posse para o jogador
+  owner = player;
+  ball.position.set(player.root.position.x, 0.28, player.root.position.z + 0.6);
+  ballVel.set(0, 0, 0);
+
+  // Ativa a Câmera Lenta (Bullet Time)
+  bulletTimeState.active = true;
+  bulletTimeState.timeLeft = bulletTimeState.totalTime;
+
+  // Zoom cinematográfico na mira
+  targetDist = 6.0;
+  shake = 0.20;
+  sfx.playBulletTime();
+
+  const overlay = $("#bulletTimeOverlay");
+  if(overlay) overlay.classList.add("active");
+
+  flash("⏱️ CÂMERA LENTA! 🎯", "#ffd700", "ESCOLHA O CANTO E SOLTE A BOMBA!");
+}
+
+function executeSuperShotLaunch(){
+  if(!bulletTimeState.active) return;
+  bulletTimeState.active = false;
+
+  const overlay = $("#bulletTimeOverlay");
+  if(overlay) overlay.classList.remove("active");
+
+  targetDist = 8.5;
+  superShotEnergy = 0;
+  updateSuperShotHUD();
+
+  // Ponto exato da mira
+  const target = getAimWorldPoint();
+  tA.set(target.x - ball.position.x, 0, target.z - ball.position.z);
+  if(tA.lengthSq() < 0.1) facing(tA); else tA.normalize();
+
+  ball.position.y = Math.max(ball.position.y, 0.35);
+
+  // Velocidade supersônica devastadora: 46.0 m/s
+  const horizSpeed = 46.0;
+  ballVel.copy(tA).multiplyScalar(horizSpeed);
+
+  const targetHeight = clamp(target.y, 0.6, CFG.GOAL_H - 0.2);
+  const heightFactor = targetHeight / CFG.GOAL_H;
+  ballVel.y = 3.6 * (0.8 + 0.8 * heightFactor);
+
+  // Curva intensa com Efeito Magnus / Trivela de Fogo
+  const curveDir = target.x > 0 ? -1 : 1;
+  ballSpin.set(0, curveDir * 14.0, 0);
+
+  player.state = "shot_power";
+  player.cool = 0.45;
+  player.act = 0.35;
+  player.noBall = RECUO_TOQUE * 1.5;
+  owner = null;
+  lastToucher = player;
+  isSuperShotFlying = true;
+
+  shake = 0.45;
+  flash("☄️ SUPER CHUTE FLAMEJANTE! 🔥💥", "#ff3300", "BOMBA DESTRUIDORA NO ÂNGULO!");
+  sfx.playKick(1.4);
+  sfx.playSuperShotBlast();
+
+  // VFX de explosão térmica imediata e rastro
+  if(typeof vfxSpawnKickFire === "function") vfxSpawnKickFire(ball.position, tA, 2.8);
+  if(typeof vfxSpawnSuperShotFire === "function") vfxSpawnSuperShotFire(ball.position, ballVel);
 }
 
 /* ═══════════════ SISTEMA DE COMEMORAÇÕES & SELEÇÃO INTERATIVA (5 COMEMORAÇÕES) ═══════════════ */
@@ -8208,8 +8685,13 @@ function updateBall(dt){
   ballSpin.multiplyScalar(Math.pow(0.2, dt));
   ball.position.addScaledVector(ballVel, dt);
 
-  // Spawna rastro incandescente quando o chute for veloz
-  if(typeof vfxSpawnBallFireTrail === "function" && ballVel.length() > 16.0){
+  // Spawna rastro supremo do Super Chute quando ativo
+  if(isSuperShotFlying){
+    if(typeof vfxSpawnSuperShotFire === "function") vfxSpawnSuperShotFire(ball.position, ballVel);
+    if(ballVel.length() < 10.0){
+      isSuperShotFlying = false;
+    }
+  } else if(typeof vfxSpawnBallFireTrail === "function" && ballVel.length() > 16.0){
     vfxSpawnBallFireTrail(ball.position, ballVel);
   }
 
@@ -8281,6 +8763,19 @@ function keeperSweptSave(){
     if(gk.state === "dive_left") { reachCenter -= 1.1; reach = 2.5; }
     if(gk.state === "catch_center") reach = 2.0;
     if(Math.abs(xAt - reachCenter) > reach) continue;
+
+    // Super Chute: se for chute supremo e o goleiro adversário tentar pegar, ele é arremessado
+    if(isSuperShotFlying && gk === gkFoe){
+      gk.state = "fall";
+      gk.act = 1.0;
+      gk.cool = 2.0;
+      gk.stunned = 1.5;
+      gk.vel.set(ballVel.x * 0.25, 2.0, ballVel.z * 0.25);
+      shake = 0.40;
+      flash("💥 BOMBA INSUPERÁVEL! O GOLEIRO NÃO AGUENTOU! 🔥", "#ffd700");
+      sfx.playPostClank();
+      continue;
+    }
 
     // Defendeu: posiciona a bola no ponto exato do contato
     ball.position.set(xAt, Math.max(yAt, 0.28), plane);
@@ -9700,7 +10195,7 @@ function startMatchMode(){
       
       applyMatchKitsToTeams(homeTeam, awayTeam);
       updateHudTeamBadges(homeTeam, awayTeam);
-      updateScore(); updateClock(); kickoff(1); drawMini();
+      updateScore(); updateClock(); updateSuperShotHUD(); kickoff(1); drawMini();
       last = performance.now();
       startMouseControl();
     }
@@ -9721,6 +10216,8 @@ function startTrainingMode(){
   const mwEl = $("#miniWrap"); if(mwEl) mwEl.style.display = "flex";
   const chEl = $("#crosshairWrap"); if(chEl) chEl.style.display = "flex";
   score = [0,0]; timeLeft = CFG.MATCH; over = false; running = true;
+  superShotEnergy = 100; // No treino, começa carregado para testar imediatamente!
+  updateSuperShotHUD();
   
   // Posicionamento ideal para treino de chute e finalização
   player.root.position.set(0, 0, 7.0); player.vel.set(0,0,0); player.yaw = Math.PI; player.state = "idle";
@@ -9747,6 +10244,10 @@ function resetTrainingBall(){
   player.vel.set(0,0,0);
   player.yaw = Math.PI;
   owner = player;
+  bulletTimeState.active = false;
+  isSuperShotFlying = false;
+  const btOverlay = $("#bulletTimeOverlay"); if(btOverlay) btOverlay.classList.remove("active");
+  updateSuperShotHUD();
   camFocus.set(player.root.position.x, player.root.position.y + 1.45, player.root.position.z);
 }
 
@@ -10052,6 +10553,10 @@ function goalScored(team){
   sfx.playFireworks();
   sfx.playWhistle(true);
   setPiece = null;
+  if(lastToucher === player && team === 0){
+    addSuperShotEnergy(50, "Gol Marcado");
+  }
+  isSuperShotFlying = false;
   startCelebration(team);
 }
 
@@ -10069,8 +10574,20 @@ function endMatch(){
 /* ═══════════════ LOOP PRINCIPAL ═══════════════ */
 function loop(now){
   requestAnimationFrame(loop);
-  const dt = Math.min(0.033, (now - last)/1000);
+  const realDt = Math.min(0.033, (now - last)/1000);
   last = now;
+
+  // Câmera Lenta (Bullet Time): quando ativo, desacelera a física do mundo para 0.12x!
+  if(bulletTimeState.active){
+    bulletTimeState.timeLeft -= realDt;
+    const clockEl = $("#bulletTimeClock");
+    if(clockEl) clockEl.textContent = `${Math.max(0, bulletTimeState.timeLeft).toFixed(1)}s`;
+    if(bulletTimeState.timeLeft <= 0){
+      executeSuperShotLaunch();
+    }
+  }
+
+  const dt = bulletTimeState.active ? realDt * 0.12 : realDt;
 
   if(gameMode === "multiplayer"){
     mpUpdate(dt);
@@ -10233,6 +10750,10 @@ window.addEventListener("mousedown", e=>{
 
   if(e.button === 0){
     isLeftMouseDown = true;
+    if(bulletTimeState.active){
+      executeSuperShotLaunch();
+      return;
+    }
     if(running && gameMode === "multiplayer"){
       const isLocked = (document.pointerLockElement === renderer.domElement || document.pointerLockElement === document.body);
       if(!isLocked){ startMouseControl(); }
@@ -10610,6 +11131,19 @@ if(callPassBtn){
   });
 }
 
+const superShotBtn = $("#superShotBtn");
+if(superShotBtn){
+  superShotBtn.addEventListener("pointerdown", (e)=>{
+    e.preventDefault();
+    sfx.init();
+    if(bulletTimeState.active){
+      executeSuperShotLaunch();
+    } else {
+      triggerSuperShot();
+    }
+  });
+}
+
 if(sprintBtn){
   sprintBtn.addEventListener("pointerdown", (e)=>{
     e.preventDefault();
@@ -10666,6 +11200,17 @@ addEventListener("keydown", e=>{
   // mesmo keydown já alimentou aquele mapa. Executar também as ações locais
   // aqui só mexeria no boneco estacionado fora de campo.
   if(gameMode === "multiplayer") return;
+
+  // Se estiver em Câmera Lenta (Bullet Time), qualquer tecla de chute ou super chute dispara na hora:
+  if(bulletTimeState.active && (k === userKeyBindings.shoot || k === userKeyBindings.superShot || k === "x" || k === " " || k === "enter")){
+    executeSuperShotLaunch();
+    return;
+  }
+
+  if(k === userKeyBindings.superShot || (k === "x" && !userKeyBindings.superShot)){
+    triggerSuperShot();
+    return;
+  }
 
   if(k === "1" || k === "numpad1"){ if(owner === player) passToMate(mateA); }
   if(k === "2" || k === "numpad2"){ if(owner === player) passToMate(mateB); }
@@ -10785,8 +11330,8 @@ const actionLabels = {
   up: "Movimentar P/ Cima", down: "Movimentar P/ Baixo", left: "Movimentar P/ Esquerda", right: "Movimentar P/ Direita",
   sprint: "Pique / Arrancada", shoot: "Chutar / Encher o pé", pass: "Tocar a bola",
   tackle: "Carrinho", steal: "Desarme em pé", dribble: "Drible de Cria",
-  jump: "Pular / Cabecear", dance: "Dancinha / Emoji", callPass: "Pedir a bola",
-  reset: "Resetar bola (Treino)",
+  jump: "Pular / Cabecear", dance: "Dancinha / Emoji", superShot: "🔥 Super Chute Flamejante",
+  callPass: "Pedir a bola", reset: "Resetar bola (Treino)",
   voice: "Falar (voz do time)"
 };
 let activeBindAction = null;
@@ -10912,7 +11457,8 @@ const MP_STATE_DUR = {
 };
 
 const mpInputState = { dx:0, dz:0, sprint:false, shoot:false, pass:false, tackle:false,
-                       steal:false, dribble:false, jump:false, aimx:0, aimy:1, aimz:0 };
+                       steal:false, dribble:false, jump:false, callPass:false,
+                       aimx:0, aimy:1, aimz:0 };
 
 const mp = {
   ws: null, connected: false, clientId: 0, entId: 0, team: 0,
@@ -11220,7 +11766,7 @@ function mpClearRoster(){
   mp.localState = "idle"; mp.localAct = 0;
   mp.dribbleSlot = 0; mp.localDribCd = 0;
   lastHasBallUI = null;   // força os rótulos dos botões a se refazerem no novo modo
-  mpToque.dribble = mpToque.jump = mpToque.steal = mpToque.tackle = false;
+  for(let i = 0; i < MP_TOQUES.length; i++) mpToque[MP_TOQUES[i]] = false;
   mpWorld.ents.clear(); mpWorld.ball = null;
 }
 
@@ -11555,7 +12101,7 @@ function mpInterpolate(){
     const dy = ((eb[4]-ea[4]+Math.PI*3)%(Math.PI*2)) - Math.PI;
     // Mutação no lugar: o objeto da entidade sobrevive de um frame para o outro.
     let o = out.ents.get(ea[0]);
-    if(!o){ o = { x:0, y:0, z:0, yaw:0, state:0, vx:0, vz:0, charge:0 }; out.ents.set(ea[0], o); }
+    if(!o){ o = { x:0, y:0, z:0, yaw:0, state:0, vx:0, vz:0, charge:0, call:0 }; out.ents.set(ea[0], o); }
     o.x = ea[1]+(eb[1]-ea[1])*t;
     o.y = ea[2]+(eb[2]-ea[2])*t;
     o.z = ea[3]+(eb[3]-ea[3])*t;
@@ -11564,6 +12110,7 @@ function mpInterpolate(){
     o.vx = ea[6]+(eb[6]-ea[6])*t;
     o.vz = ea[7]+(eb[7]-ea[7])*t;
     o.charge = (ea[8]||0)+((eb[8]||0)-(ea[8]||0))*t;
+    o.call = eb[9] || 0;      // pedido de bola: bandeira, nao interpola
   }
   return out;
 }
@@ -11578,18 +12125,21 @@ let mpAccum = 0;
 // nascer e morrer dentro do mesmo quadro — o dedo na tela, principalmente — e
 // aí ele nunca chegava ao servidor: o jogador apertava DRIBLE e não acontecia
 // nada, sem nada na tela explicando o porquê.
-const mpToque = { dribble:false, jump:false, steal:false, tackle:false };
-const mpBruto = { dribble:false, jump:false, steal:false, tackle:false };
+const MP_TOQUES = ["dribble", "jump", "steal", "tackle", "callPass"];
+const mpToque = { dribble:false, jump:false, steal:false, tackle:false, callPass:false };
+const mpBruto = { dribble:false, jump:false, steal:false, tackle:false, callPass:false };
 function mpMarcarToque(k){ mpToque[k] = true; }
 function mpAplicarToques(){
-  mpInputState.dribble = mpBruto.dribble || mpToque.dribble;
-  mpInputState.jump    = mpBruto.jump    || mpToque.jump;
-  mpInputState.steal   = mpBruto.steal   || mpToque.steal;
-  mpInputState.tackle  = mpBruto.tackle  || mpToque.tackle;
+  for(let i = 0; i < MP_TOQUES.length; i++){
+    const k = MP_TOQUES[i];
+    mpInputState[k] = mpBruto[k] || mpToque[k];
+  }
 }
 function mpConsumirToques(){
-  if(!(mpToque.dribble || mpToque.jump || mpToque.steal || mpToque.tackle)) return;
-  mpToque.dribble = mpToque.jump = mpToque.steal = mpToque.tackle = false;
+  let algum = false;
+  for(let i = 0; i < MP_TOQUES.length; i++) if(mpToque[MP_TOQUES[i]]) algum = true;
+  if(!algum) return;
+  for(let i = 0; i < MP_TOQUES.length; i++) mpToque[MP_TOQUES[i]] = false;
   mpAplicarToques();
 }
 
@@ -11659,6 +12209,7 @@ function mpGatherInput(){
   mpBruto.tackle  = !!mpKeys[userKeyBindings.tackle];
   mpBruto.dribble = !!mpKeys[userKeyBindings.dribble] || !!mpKeys.g;
   mpBruto.jump    = !!mpKeys[userKeyBindings.jump];
+  mpBruto.callPass = !!mpKeys[userKeyBindings.callPass];
   mpAplicarToques();
   mpInputState.dance = !!mpKeys[userKeyBindings.dance];
   mpInputState.shoot = mpMouseShoot || !!mpKeys[userKeyBindings.shoot] || !!input.charging;
@@ -11842,6 +12393,10 @@ function mpUpdate(dt){
       c.speed = Math.hypot(s.vx, s.vz);
     }
     c.charge = s.charge;
+    // Quem pediu a bola ganha o marcador — inclusive os bots do servidor. No
+    // online o relogio do pedido corre no servidor, entao aqui e so espelhar a
+    // bandeira do snapshot em vez de mexer em c.callT.
+    mostrarPedido(c, !!s.call);
     const newSt = MP_STATE_NAME[s.state] || "idle";
 
     // Ação prevista localmente ainda rodando: o fluxo do servidor está ~100ms

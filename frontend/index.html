@@ -475,59 +475,7 @@ canvas{display:block;width:100%;height:100%}
   100%{transform:scale(1.08);filter:brightness(1.35)}
 }
 
-/* ═══════════ HUD DE SUPER CHUTE FLAMEJANTE (TOPO / CENTRO) ═══════════ */
-#superShotHud{
-  position:absolute;top:calc(max(14px,env(safe-area-inset-top)) + 52px);
-  left:50%;transform:translateX(-50%);
-  display:none;align-items:center;gap:10px;
-  background:linear-gradient(135deg,rgba(35,12,10,0.94),rgba(16,6,8,0.96));
-  border:1.5px solid rgba(255,120,0,0.45);border-radius:22px;
-  padding:5px 16px;box-shadow:0 8px 30px rgba(0,0,0,0.7),0 0 20px rgba(255,100,0,0.25);
-  backdrop-filter:blur(12px);z-index:4;pointer-events:none;
-  transition:all .25s ease;
-}
-#superShotHud.show{display:flex}
-#superShotHud.ready{
-  border-color:#ffd700;
-  box-shadow:0 8px 35px rgba(255,100,0,0.5),0 0 35px rgba(255,215,0,0.6);
-  animation:hudSuperPulse .7s infinite alternate ease-in-out;
-}
-@keyframes hudSuperPulse{
-  0%{transform:translateX(-50%) scale(1)}
-  100%{transform:translateX(-50%) scale(1.05)}
-}
-.superShotFlameIcon{font-size:16px;line-height:1;animation:flameFlicker .4s infinite alternate}
-@keyframes flameFlicker{
-  0%{transform:scale(0.9) rotate(-3deg);filter:drop-shadow(0 0 4px #ff4400)}
-  100%{transform:scale(1.25) rotate(3deg);filter:drop-shadow(0 0 10px #ffd700)}
-}
-.superShotTitle{
-  font-family:'Teko',sans-serif;font-size:20px;font-weight:700;letter-spacing:1px;
-  color:#ffaa44;line-height:1;
-}
-#superShotHud.ready .superShotTitle{color:#ffd700;text-shadow:0 0 10px rgba(255,215,0,0.8)}
-.superShotKeyBadge{
-  font-size:9px;font-weight:900;background:rgba(255,140,0,0.25);border:1px solid rgba(255,140,0,0.5);
-  color:#ffd700;padding:2px 6px;border-radius:6px;
-}
-.superShotTrack{
-  width:140px;height:9px;background:rgba(255,255,255,0.12);
-  border-radius:6px;overflow:hidden;position:relative;
-}
-.superShotFill{
-  height:100%;width:0%;
-  background:linear-gradient(90deg,#ff4400,#ff9900,#ffd700);
-  border-radius:6px;transition:width .15s ease-out;
-  box-shadow:0 0 10px rgba(255,120,0,0.8);
-}
-#superShotHud.ready .superShotFill{
-  background:linear-gradient(90deg,#ff1100,#ff7700,#ffd700,#ffffff);
-  box-shadow:0 0 16px rgba(255,215,0,1);
-}
-.superShotPct{
-  font-family:'Outfit',sans-serif;font-size:10px;font-weight:900;
-  letter-spacing:.8px;color:#fff;min-width:32px;
-}
+
 
 /* ═══════════ BULLET TIME / CÂMERA LENTA OVERLAY ═══════════ */
 #bulletTimeOverlay{
@@ -2333,16 +2281,7 @@ canvas{display:block;width:100%;height:100%}
     <span class="staminaLabel" id="staminaText">FÔLEGO</span>
   </div>
 
-  <!-- HUD Dinâmico de Super Chute Flamejante -->
-  <div id="superShotHud">
-    <span class="superShotFlameIcon">🔥</span>
-    <span class="superShotTitle">SUPER CHUTE</span>
-    <span class="superShotKeyBadge" id="superShotHudBadge">[ X ]</span>
-    <div class="superShotTrack">
-      <div class="superShotFill" id="superShotFill"></div>
-    </div>
-    <span class="superShotPct" id="superShotPct">0%</span>
-  </div>
+
 
   <div id="joy"><div id="knob"></div></div>
 
@@ -3938,6 +3877,116 @@ groundHill.receiveShadow = true;
 scene.add(groundHill);
 
 // Morros Esculpidos no Horizonte da Favela (Dois Irmãos, Corcovado, Urca)
+/* ═══════════════ SOL TROPICAL RADIANTE DO RIO DE JANEIRO ═══════════════ */
+function buildTropicalSun(){
+  const sunGroup = new THREE.Group();
+  sunGroup.position.set(-125, 92, -175);
+
+  // Núcleo solar incandescente
+  const sunCore = new THREE.Mesh(
+    new THREE.SphereGeometry(15, 24, 24),
+    new THREE.MeshBasicMaterial({ color: 0xfff6dd })
+  );
+  sunGroup.add(sunCore);
+
+  // Coroa de labaredas e brilho solar dourado / alaranjado
+  const coronaMat1 = new THREE.MeshBasicMaterial({
+    color: 0xffa020,
+    side: THREE.DoubleSide,
+    transparent: true,
+    opacity: 0.75
+  });
+  const corona1 = new THREE.Mesh(new THREE.RingGeometry(14, 52, 32), coronaMat1);
+  corona1.lookAt(new THREE.Vector3(0, 0, 0));
+  sunGroup.add(corona1);
+
+  const coronaMat2 = new THREE.MeshBasicMaterial({
+    color: 0xff4500,
+    side: THREE.DoubleSide,
+    transparent: true,
+    opacity: 0.40
+  });
+  const corona2 = new THREE.Mesh(new THREE.RingGeometry(24, 75, 32), coronaMat2);
+  corona2.lookAt(new THREE.Vector3(0, 0, 0));
+  sunGroup.add(corona2);
+
+  scene.add(sunGroup);
+  if(typeof sun !== "undefined" && sun){
+    sun.position.set(-125, 92, -175);
+    sun.target.position.set(0, 0, 0);
+  }
+  return sunGroup;
+}
+buildTropicalSun();
+
+/* ═══════════════ MONUMENTO CRISTO REDENTOR (CORCOVADO) ═══════════════ */
+function buildCristoRedentor(x, y, z, scale = 1.35){
+  const cristo = new THREE.Group();
+  cristo.position.set(x, y, z);
+  cristo.scale.set(scale, scale, scale);
+
+  const stoneMat = new THREE.MeshStandardMaterial({ color: 0xd6dbe2, roughness: 0.82, metalness: 0.04 });
+  const darkStoneMat = new THREE.MeshStandardMaterial({ color: 0x6e7279, roughness: 0.90 });
+
+  // 1. Pedestal octogonal de concreto e granito
+  const base1 = new THREE.Mesh(new THREE.CylinderGeometry(5.2, 5.8, 4.2, 8), darkStoneMat);
+  base1.position.y = 2.1; base1.castShadow = true; cristo.add(base1);
+
+  const base2 = new THREE.Mesh(new THREE.CylinderGeometry(3.8, 4.4, 5.0, 8), stoneMat);
+  base2.position.y = 6.7; base2.castShadow = true; cristo.add(base2);
+
+  // 2. Túnica / Corpo de Pedra-Sabão
+  const body = new THREE.Mesh(new THREE.CylinderGeometry(2.1, 3.6, 21.0, 10), stoneMat);
+  body.position.y = 19.7; body.castShadow = true; cristo.add(body);
+
+  // 3. Manto drapeado nas costas
+  const mantle = new THREE.Mesh(new THREE.BoxGeometry(4.4, 17.0, 1.2), stoneMat);
+  mantle.position.set(0, 18.5, -1.1); mantle.castShadow = true; cristo.add(mantle);
+
+  // 4. Braços Abertos Monumentais (28 metros de envergadura abençoando o campo e a cidade)
+  const arms = new THREE.Mesh(new THREE.BoxGeometry(26.0, 1.9, 1.8), stoneMat);
+  arms.position.set(0, 27.5, 0); arms.castShadow = true; cristo.add(arms);
+
+  // Ombros reforçados
+  const shoulders = new THREE.Mesh(new THREE.BoxGeometry(6.2, 2.6, 3.2), stoneMat);
+  shoulders.position.set(0, 27.5, 0); cristo.add(shoulders);
+
+  // Mãos esculpidas abertas
+  [-13.2, 13.2].forEach(hx => {
+    const hand = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.6, 1.8), stoneMat);
+    hand.position.set(hx, 27.3, 0.2); cristo.add(hand);
+  });
+
+  // 5. Pescoço e Cabeça serena
+  const neck = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.3, 1.8, 8), stoneMat);
+  neck.position.y = 29.4; cristo.add(neck);
+
+  const head = new THREE.Mesh(new THREE.BoxGeometry(2.4, 3.2, 2.6), stoneMat);
+  head.position.set(0, 31.5, 0.3); head.rotation.x = 0.08; cristo.add(head);
+
+  const hair = new THREE.Mesh(new THREE.BoxGeometry(2.8, 3.4, 2.8), stoneMat);
+  hair.position.set(0, 31.6, 0); cristo.add(hair);
+
+  // 6. Auréola / Coroa sutil dourada
+  const halo = new THREE.Mesh(new THREE.TorusGeometry(1.5, 0.12, 8, 20), new THREE.MeshBasicMaterial({ color: 0xffe899 }));
+  halo.position.set(0, 33.6, 0.2); halo.rotation.x = Math.PI / 2; cristo.add(halo);
+
+  // 7. Holofotes de iluminação monumental apontando para o Cristo
+  const cristoLight1 = new THREE.SpotLight(0xfffae6, 350, 45, Math.PI/4, 0.4);
+  cristoLight1.position.set(x - 6, y + 8, z + 6);
+  cristoLight1.target.position.set(x, y + 25, z);
+  scene.add(cristoLight1, cristoLight1.target);
+
+  const cristoLight2 = new THREE.SpotLight(0xffeedd, 350, 45, Math.PI/4, 0.4);
+  cristoLight2.position.set(x + 6, y + 8, z + 6);
+  cristoLight2.target.position.set(x, y + 25, z);
+  scene.add(cristoLight2, cristoLight2.target);
+
+  scene.add(cristo);
+  return cristo;
+}
+
+// Morros Esculpidos no Horizonte da Favela (Corcovado com Cristo, Dois Irmãos, Pão de Açúcar)
 function buildDistantMorros(){
   const morroMat = new THREE.MeshStandardMaterial({
     map: morroTexture,
@@ -3946,16 +3995,18 @@ function buildDistantMorros(){
   });
 
   const peaks = [
-    {x: -180, z: -140, r: 90,  h: 125, seg: 18},
-    {x: -110, z: -220, r: 120, h: 165, seg: 20}, // Dois Irmãos Pico Maior
-    {x:  130, z: -190, r: 100, h: 140, seg: 18}, // Pão de Açúcar Silhouette
-    {x:  220, z: -110, r: 85,  h: 115, seg: 16},
-    {x:  180, z:  150, r: 95,  h: 130, seg: 18},
-    {x: -170, z:  170, r: 90,  h: 120, seg: 18}
+    {x: -70,  z: -205, r: 110, h: 180, seg: 22, name: "Corcovado"},
+    {x: -180, z: -130, r: 95,  h: 145, seg: 18, name: "Dois Irmãos Maior"},
+    {x: -140, z: -155, r: 75,  h: 120, seg: 16, name: "Dois Irmãos Menor"},
+    {x:  160, z: -180, r: 105, h: 155, seg: 20, name: "Pão de Açúcar"},
+    {x:  120, z: -210, r: 80,  h: 110, seg: 16, name: "Urca"},
+    {x:  190, z:  120, r: 100, h: 135, seg: 18, name: "Cantagalo"},
+    {x: -170, z:  160, r: 110, h: 140, seg: 18, name: "Tijuca"},
+    {x:   40, z:  220, r: 115, h: 130, seg: 20, name: "Vila Isabel"}
   ];
 
   peaks.forEach(p => {
-    const geo = new THREE.ConeGeometry(p.r, p.h, p.seg, 4);
+    const geo = new THREE.ConeGeometry(p.r, p.h, p.seg, 5);
     const pos = geo.attributes.position;
     for(let i=0; i<pos.count; i++){
       const vy = pos.getY(i);
@@ -3970,6 +4021,9 @@ function buildDistantMorros(){
     morro.receiveShadow = true;
     scene.add(morro);
   });
+
+  // Constrói o Cristo Redentor no topo do Morro do Corcovado
+  buildCristoRedentor(-70, 172, -205, 1.35);
 }
 buildDistantMorros();
 
@@ -4051,7 +4105,9 @@ const houseWallMats = [
   new THREE.MeshStandardMaterial({map: makePlasterTexture("#3e9255"), roughness: 0.88}),
   new THREE.MeshStandardMaterial({map: makePlasterTexture("#b84865"), roughness: 0.88}),
   new THREE.MeshStandardMaterial({map: makePlasterTexture("#c44d28"), roughness: 0.88}),
-  new THREE.MeshStandardMaterial({map: makePlasterTexture("#7a7a84"), roughness: 0.92})
+  new THREE.MeshStandardMaterial({map: makePlasterTexture("#7a7a84"), roughness: 0.92}),
+  new THREE.MeshStandardMaterial({map: makePlasterTexture("#f0ece1"), roughness: 0.86}),
+  new THREE.MeshStandardMaterial({map: makePlasterTexture("#e27d32"), roughness: 0.88})
 ];
 
 const concreteMat = new THREE.MeshStandardMaterial({color:0x706e78, roughness:0.95});
@@ -4064,6 +4120,56 @@ const goldMat = new THREE.MeshStandardMaterial({color:0xffd700, roughness:0.25, 
 const windowMat = new THREE.MeshStandardMaterial({color:0x14121a, roughness:0.3, emissive:0xffaa33, emissiveIntensity:0.5});
 const doorMat = new THREE.MeshStandardMaterial({color:0x3a2418, roughness:0.8});
 
+// 4. Palmeiras e Coqueiros Tropicais nos Morros
+function buildCoqueiro(x, y, z, scale = 1.0, rot = 0){
+  const tree = new THREE.Group();
+  tree.position.set(x, y, z);
+  tree.rotation.y = rot;
+  tree.scale.set(scale, scale, scale);
+
+  const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5a4228, roughness: 0.9 });
+  const leafMat = new THREE.MeshStandardMaterial({ color: 0x1f5c22, roughness: 0.7, side: THREE.DoubleSide });
+
+  const segs = 6, hSeg = 1.2;
+  let currY = 0, currX = 0;
+  for(let i=0; i<segs; i++){
+    const r1 = 0.32 - i*0.035, r2 = 0.30 - i*0.035;
+    const seg = new THREE.Mesh(new THREE.CylinderGeometry(r2, r1, hSeg, 6), trunkMat);
+    const lean = Math.sin(i*0.4) * 0.15;
+    seg.position.set(currX + lean/2, currY + hSeg/2, 0);
+    seg.rotation.z = -lean * 1.2;
+    seg.castShadow = true;
+    tree.add(seg);
+    currY += hSeg * 0.95;
+    currX += lean;
+  }
+
+  const numLeaves = 7;
+  for(let i=0; i<numLeaves; i++){
+    const ang = (i / numLeaves) * Math.PI * 2;
+    const leafGroup = new THREE.Group();
+    leafGroup.position.set(currX, currY, 0);
+    leafGroup.rotation.y = ang;
+
+    const leafGeo = new THREE.PlaneGeometry(0.8, 3.4, 2, 4);
+    const leaf = new THREE.Mesh(leafGeo, leafMat);
+    leaf.position.set(0, 0.4, 1.6);
+    leaf.rotation.x = 0.75 + Math.random()*0.2;
+    leaf.castShadow = true;
+    leafGroup.add(leaf);
+
+    if(i < 3){
+      const coconut = new THREE.Mesh(new THREE.SphereGeometry(0.22, 6, 6), new THREE.MeshStandardMaterial({ color: 0x3d2b18 }));
+      coconut.position.set(Math.sin(ang)*0.3, currY - 0.2, Math.cos(ang)*0.3);
+      tree.add(coconut);
+    }
+    tree.add(leafGroup);
+  }
+
+  scene.add(tree);
+  return tree;
+}
+
 function createFavelaHouse(x, y, z, w, h, d, colorMat){
   const group = new THREE.Group();
   group.position.set(x, y, z);
@@ -4075,13 +4181,13 @@ function createFavelaHouse(x, y, z, w, h, d, colorMat){
   body.receiveShadow = true;
   group.add(body);
 
-  // 2. Colunas de Concreto Armado nos 4 Cantos
+  // 2. Colunas de Concreto Armado nos 4 Cantos (e palafitas de sustentação se estiver no morro)
   const colThick = 0.35;
-  const colGeo = new THREE.BoxGeometry(colThick, h, colThick);
+  const colGeo = new THREE.BoxGeometry(colThick, h + (y > 2 ? 1.5 : 0), colThick);
   const cx = w/2 - colThick/2, cz = d/2 - colThick/2;
   [[-cx, -cz], [cx, -cz], [-cx, cz], [cx, cz]].forEach(([px, pz])=>{
     const col = new THREE.Mesh(colGeo, concreteMat);
-    col.position.set(px, h/2, pz);
+    col.position.set(px, (h - (y > 2 ? 1.5 : 0))/2, pz);
     col.castShadow = true;
     group.add(col);
 
@@ -4133,7 +4239,14 @@ function createFavelaHouse(x, y, z, w, h, d, colorMat){
   win.position.set(0, h*0.56, d/2 + 0.04);
   group.add(win);
 
-  // 8. Porta no Térreo (em algumas casas)
+  // 8. Varal de roupas na laje (em algumas casas)
+  if(Math.random() > 0.65){
+    const clothesline = new THREE.Mesh(new THREE.BoxGeometry(w * 0.7, 0.4, 0.08), new THREE.MeshBasicMaterial({ color: Math.random() > 0.5 ? 0xff4444 : 0xffee33 }));
+    clothesline.position.set(0, h + 0.7, (Math.random() - 0.5) * (d * 0.4));
+    group.add(clothesline);
+  }
+
+  // 9. Porta no Térreo (em algumas casas)
   if(h > 3.2 && Math.random() > 0.4){
     const door = new THREE.Mesh(new THREE.BoxGeometry(1.0, 2.1, 0.1), doorMat);
     door.position.set((Math.random() > 0.5 ? 1 : -1) * (w*0.25), 1.05, d/2 + 0.03);
@@ -4145,23 +4258,26 @@ function createFavelaHouse(x, y, z, w, h, d, colorMat){
 }
 
 function buildFavelaNeighborhood(){
+  // 1. Casas ao redor da quadra e subindo os morros em múltiplos patamares (até 52m de altitude!)
   const sides = [
-    {axis:'x', sign: 1, pos: TW/2 + 8, count: 20},
-    {axis:'x', sign:-1, pos:-(TW/2 + 8), count: 20},
-    {axis:'z', sign: 1, pos: TH/2 + 9, count: 16},
-    {axis:'z', sign:-1, pos:-(TH/2 + 9), count: 16}
+    {axis:'x', sign: 1, pos: TW/2 + 8, count: 22},
+    {axis:'x', sign:-1, pos:-(TW/2 + 8), count: 22},
+    {axis:'z', sign: 1, pos: TH/2 + 9, count: 18},
+    {axis:'z', sign:-1, pos:-(TH/2 + 9), count: 18}
   ];
 
   sides.forEach(s => {
     for(let i=0; i<s.count; i++){
       const span = (i - s.count/2) * 6.2 + (Math.random()-0.5)*2;
       const mat = houseWallMats[Math.floor(Math.random()*houseWallMats.length)];
-      for(let tier=0; tier<4; tier++){
-        const w = 5.0 + Math.random()*2.5;
-        const h = 3.8 + Math.random()*2.2;
-        const d = 5.0 + Math.random()*2.5;
-        const yOffset = tier * 4.2;
-        const distOffset = tier * 7.5;
+      
+      // 7 patamares de altitude escalando os morros
+      for(let tier=0; tier<7; tier++){
+        const w = 4.8 + Math.random()*2.8;
+        const h = 3.6 + Math.random()*2.4;
+        const d = 4.8 + Math.random()*2.8;
+        const yOffset = tier * 6.8;
+        const distOffset = tier * 9.5;
 
         if(s.axis === 'x'){
           createFavelaHouse(s.pos + s.sign*distOffset, yOffset, span, w, h, d, mat);
@@ -4172,6 +4288,16 @@ function buildFavelaNeighborhood(){
     }
   });
 
+  // 2. Coqueiros espalhados pelas encostas dos morros e arredores da comunidade
+  for(let i=0; i<28; i++){
+    const ang = Math.random() * Math.PI * 2;
+    const rad = 38 + Math.random() * 65;
+    const px = Math.cos(ang) * rad, pz = Math.sin(ang) * rad;
+    const py = Math.max(0, (rad - 35) * 0.45);
+    buildCoqueiro(px, py, pz, 0.85 + Math.random()*0.4, Math.random()*Math.PI*2);
+  }
+
+  // 3. Postes de Iluminação da Quadra
   const corners = [
     {x:-(HW+2.0), z:-(HH+2.0), tx: -HW/2, tz: -HH/2},
     {x: (HW+2.0), z:-(HH+2.0), tx:  HW/2, tz: -HH/2},
@@ -4197,8 +4323,9 @@ function buildFavelaNeighborhood(){
     addFloodlight(c.x, 14.5, c.z, c.tx, c.tz, 0xffeedd);
   });
 
+  // 4. Fiação Aérea Típica da Favela
   const wireMat = new THREE.LineBasicMaterial({color:0x221a28, linewidth:1});
-  for(let i=0; i<6; i++){
+  for(let i=0; i<8; i++){
     const p1 = new THREE.Vector3(-(HW+2), 12 + Math.random()*2, (Math.random()-0.5)*TH);
     const p2 = new THREE.Vector3( (HW+2), 12 + Math.random()*2, (Math.random()-0.5)*TH);
     const mid = new THREE.Vector3().addVectors(p1, p2).multiplyScalar(0.5);
@@ -4209,6 +4336,7 @@ function buildFavelaNeighborhood(){
     scene.add(new THREE.Line(geo, wireMat));
   }
 
+  // 5. Alambrado de Proteção da Quadra
   for(let x=-HW; x<=HW; x+=4.2){
     for(const zSign of [-1, 1]){
       const f = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 4.8, 6), metalMat);
@@ -6602,6 +6730,85 @@ function animateHumanoid(char, dt, isMoving){
     return;
   }
 
+  if(char.state === "dive_high"){
+    // ════════════ DEFESA NO ALTO: SALTO RETO, BRAÇOS ESTICADOS ════════════
+    // Sem inclinação lateral — é o salto de quem sobe em cima da bola cruzada.
+    const prog = Math.min(1, Math.max(0, 1 - (char.act / (char.gkDur || 0.62))));
+    const subida = Math.sin(Math.min(1, prog / 0.62) * Math.PI * 0.85);
+
+    char.root.rotation.z = THREE.MathUtils.damp(char.root.rotation.z, 0, 16, dt);
+    char.root.rotation.x = THREE.MathUtils.damp(char.root.rotation.x, -0.12 * subida, 14, dt);
+    char.hips.position.y = THREE.MathUtils.damp(char.hips.position.y, 1.02 + subida * 0.16, 15, dt);
+    char.torsoGroup.rotation.x = -0.22 * subida;
+
+    // Braços em cima da cabeça, palmas abertas para espalmar
+    armL.shoulder.rotation.x = -2.55 * subida - 0.25;
+    armL.shoulder.rotation.z = -0.30 - subida * 0.12;
+    armL.elbow.rotation.x = -0.10;
+    armR.shoulder.rotation.x = -2.55 * subida - 0.25;
+    armR.shoulder.rotation.z = 0.30 + subida * 0.12;
+    armR.elbow.rotation.x = -0.10;
+
+    // Pernas recolhidas na subida, esticando na descida
+    legL.hipJoint.rotation.x = -0.55 * subida; legL.kneeJoint.rotation.x = 1.15 * subida;
+    legR.hipJoint.rotation.x = -0.35 * subida; legR.kneeJoint.rotation.x = 0.85 * subida;
+    char.headGroup.rotation.x = -0.25 * subida;
+    return;
+  }
+
+  if(char.state === "punch"){
+    // ════════════ SOCO / ESPALMADA DE PUNHO ════════════
+    const prog = Math.min(1, Math.max(0, 1 - (char.act / (char.gkDur || 0.40))));
+    // Recolhe e estoura: o punho sai rápido e volta
+    const golpe = prog < 0.35 ? -(prog / 0.35) * 0.6 : (1 - (prog - 0.35) / 0.65);
+
+    char.hips.position.y = THREE.MathUtils.damp(char.hips.position.y, 1.06, 14, dt);
+    char.torsoGroup.rotation.x = -0.18 * golpe;
+    char.root.rotation.z = THREE.MathUtils.damp(char.root.rotation.z, 0, 14, dt);
+
+    // Os dois punhos juntos indo pra frente e pra cima
+    const braco = -1.95 * Math.max(0, golpe) - 0.30;
+    armL.shoulder.rotation.x = braco; armL.shoulder.rotation.z = -0.22;
+    armL.elbow.rotation.x = -0.55 + Math.max(0, golpe) * 0.5;
+    armR.shoulder.rotation.x = braco; armR.shoulder.rotation.z = 0.22;
+    armR.elbow.rotation.x = -0.55 + Math.max(0, golpe) * 0.5;
+
+    legL.hipJoint.rotation.x = -0.30 * Math.max(0, golpe); legL.kneeJoint.rotation.x = 0.55;
+    legR.hipJoint.rotation.x = -0.20 * Math.max(0, golpe); legR.kneeJoint.rotation.x = 0.45;
+    return;
+  }
+
+  if(char.state === "throw"){
+    // ════════════ REPOSIÇÃO COM A MÃO ════════════
+    // Braço dominante desenha o arco por cima do ombro e solta na frente.
+    const prog = Math.min(1, Math.max(0, 1 - (char.act / (char.gkDur || 0.38))));
+
+    char.hips.position.y = THREE.MathUtils.damp(char.hips.position.y, 1.04, 14, dt);
+    char.root.rotation.z = THREE.MathUtils.damp(char.root.rotation.z, 0, 14, dt);
+    char.torsoGroup.rotation.y = footSign * (prog < 0.4 ? -0.42 * (prog / 0.4) : -0.42 + 0.62 * ((prog - 0.4) / 0.6));
+    char.torsoGroup.rotation.x = 0.10 + prog * 0.14;
+
+    if(prog < 0.4){
+      // Armando: braço vai pra trás e pra cima
+      const f = prog / 0.4;
+      armKick.shoulder.rotation.x = -0.6 - f * 2.2;
+      armKick.shoulder.rotation.z = footSign * (0.25 + f * 0.35);
+      armKick.elbow.rotation.x = -1.15 * f;
+    } else {
+      // Soltando: chicote pra frente
+      const f = (prog - 0.4) / 0.6;
+      armKick.shoulder.rotation.x = -2.8 + f * 3.3;
+      armKick.shoulder.rotation.z = footSign * (0.60 - f * 0.55);
+      armKick.elbow.rotation.x = -1.15 + f * 1.05;
+    }
+    armPlant.shoulder.rotation.x = -0.45 + prog * 0.30;
+    armPlant.shoulder.rotation.z = footSign * -0.30;
+
+    legPlant.hipJoint.rotation.x = 0.30 * prog; legPlant.kneeJoint.rotation.x = 0.25;
+    legKick.hipJoint.rotation.x = -0.25 * prog; legKick.kneeJoint.rotation.x = 0.35;
+    return;
+  }
+
   if(char.state === "catch_left" || char.state === "catch_right" || char.state === "catch_center" || char.state === "catch"){
     const dirSign = char.state === "catch_left" ? -1 : (char.state === "catch_right" ? 1 : 0);
     const prog = Math.min(1, Math.max(0, 1 - (char.act / 0.90)));
@@ -7282,7 +7489,7 @@ function getAimWorldPoint(){
       const gx = camera.position.x + tGoal * camAimDir.x;
       const gy = camera.position.y + tGoal * camAimDir.y;
       if(Math.abs(gx) <= GHW + 8 && gy >= -0.5 && gy <= CFG.GOAL_H + 4){
-        aimWorldPoint.set(clamp(gx, -GHW + 0.4, GHW - 0.4), clamp(gy, 0.4, CFG.GOAL_H - 0.2), -HH);
+        aimWorldPoint.set(clamp(gx, -GHW + 0.4, GHW - 0.4), clamp(gy, 0.4, CHUTE.tetoMira), -HH);
         return aimWorldPoint;
       }
     }
@@ -7332,7 +7539,15 @@ const CHUTE = {
   aberturaMax:   0.52, // rad: teto do quanto o chute sai aberto pra curvar
   espalhaTec:   0.10, // erro lateral (m) na linha do gol
   espalhaBomba: 0.55, // encher o pé custa pontaria
-  alturaMin:     0.35 // nunca sai tão rasteiro a ponto de raspar no gramado
+  alturaMin:     0.35, // nunca sai tão rasteiro a ponto de raspar no gramado
+  // O gol só é contado 0,8m DEPOIS da linha. Uma bola que cruza subindo já subiu
+  // mais um pedaço até lá — e um chute mirado no ângulo batia no travessão e
+  // voltava. Resolver a balística para este ponto (e não para a linha) faz o
+  // chute chegar na altura mirada exatamente onde o gol vale.
+  folgaGol:      0.90,
+  // Teto da mira: acima disto a bola cruza acima da trave justamente no instante
+  // em que o gol é conferido.
+  tetoMira:      3.40
 };
 
 // Arrasto do ar e decaimento do giro, iguais aos de updateBall(). Ter os dois
@@ -7559,7 +7774,7 @@ function kick(power, type, over = 0){
     // A saída abre pro lado CONTRÁRIO ao desvio: a bola sai aberta e o efeito a
     // traz de volta no canto mirado — é isso que torna a curva útil em vez de só
     // um erro bonito.
-    const tVoo = tempoDeVoo(dAlvo, horizSpeed);
+    const tVoo = tempoDeVoo(dAlvo + CHUTE.folgaGol, horizSpeed);
     const abertura = clamp(Math.atan2(desvioCurva(spin, horizSpeed, tVoo), dAlvo),
                            -CHUTE.aberturaMax, CHUTE.aberturaMax);
     // Erro do pé: a bomba é menos precisa que o colocado.
@@ -7571,7 +7786,7 @@ function kick(power, type, over = 0){
     ballVel.copy(tA).multiplyScalar(horizSpeed);
     // Altura de saída resolvida para a bola PASSAR na altura mirada: é isto que
     // faz "escolher o canto" existir de verdade.
-    const targetHeight = clamp(target.y, 0.3, CFG.GOAL_H);
+    const targetHeight = clamp(target.y, 0.3, CHUTE.tetoMira);
     ballVel.y = Math.max(CHUTE.alturaMin,
                          (targetHeight - ball.position.y) / tVoo + 0.5 * 18 * tVoo) * loft;
     ballSpin.set(0, spin, 0);
@@ -12305,7 +12520,7 @@ function mpAimPoint(){
       const gx = camera.position.x + t*mpAimDir.x;
       const gy = camera.position.y + t*mpAimDir.y;
       if(Math.abs(gx) <= GHW+8 && gy >= -0.5 && gy <= 4+4){
-        mpAimOut.set(clamp(gx,-GHW+0.4,GHW-0.4), clamp(gy,0.4,4-0.2), goalZ);
+        mpAimOut.set(clamp(gx,-GHW+0.4,GHW-0.4), clamp(gy,0.4,CHUTE.tetoMira), goalZ);
         return mpAimOut;
       }
     }

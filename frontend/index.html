@@ -1291,6 +1291,148 @@ canvas{display:block;width:100%;height:100%}
   .donateCard{padding:20px 16px}
   .donateSide{width:100%}
 }
+
+/* ═══════════ MODAL DE SELEÇÃO DE COMEMORAÇÕES ═══════════ */
+#celebrationModal {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+  background: rgba(4, 2, 8, 0.78);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+#celebrationModal.show {
+  display: flex;
+  animation: modalFadeIn .20s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.celebrationCard {
+  width: min(94vw, 520px);
+  background: linear-gradient(180deg, rgba(28, 16, 42, 0.96), rgba(12, 8, 20, 0.98));
+  border: 1.5px solid rgba(255, 215, 0, 0.45);
+  border-radius: 26px;
+  box-shadow: 0 30px 90px rgba(0,0,0,0.92), 0 0 50px rgba(255, 215, 0, 0.22);
+  padding: 22px 20px;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+.celebrationCard::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0; height: 4px;
+  background: linear-gradient(90deg, #ffd700, #ff4455, #00f0b8);
+}
+.celebrationHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.celebrationHeader h3 {
+  margin: 0;
+  font-family: 'Teko', sans-serif;
+  font-size: 34px;
+  letter-spacing: 1.5px;
+  line-height: 1;
+  background: linear-gradient(135deg, #ffd700, #ff9900);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.celebrationSubtitle {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.65);
+  margin-top: -6px;
+  margin-bottom: 14px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.celebrationGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.celebrationOptionBtn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #fff;
+  cursor: pointer;
+  transition: all .14s ease;
+  text-align: left;
+  user-select: none;
+}
+.celebrationOptionBtn:hover, .celebrationOptionBtn:focus {
+  background: rgba(255, 215, 0, 0.15);
+  border-color: rgba(255, 215, 0, 0.6);
+  transform: translateX(4px);
+}
+.celebrationOptionBtn.selected {
+  background: linear-gradient(90deg, rgba(255, 215, 0, 0.22), rgba(255, 140, 0, 0.12));
+  border-color: #ffd700;
+  box-shadow: 0 0 16px rgba(255, 215, 0, 0.25);
+}
+.celebrationLeft {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.celebrationIcon {
+  font-size: 26px;
+  flex: none;
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5));
+}
+.celebrationTitle {
+  font-size: 13.5px;
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  color: #fff;
+  text-transform: uppercase;
+}
+.celebrationSub {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.65);
+  margin-top: 2px;
+}
+.celebrationKeyBadge {
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  font-size: 11px;
+  font-weight: 900;
+  color: #ffd700;
+  letter-spacing: 1px;
+  flex: none;
+}
+.celebrationCloseBtn {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 50%;
+  color: #fff;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 900;
+  transition: all .15s;
+}
+.celebrationCloseBtn:hover {
+  background: rgba(255,255,255,0.2);
+  transform: scale(1.08);
+}
 </style>
 </head>
 <body>
@@ -1501,6 +1643,7 @@ canvas{display:block;width:100%;height:100%}
       <button class="customTabBtn" data-tab="tabCleats">👟 Chuteiras</button>
       <button class="customTabBtn" data-tab="tabBody">🏃 Físico</button>
       <button class="customTabBtn" data-tab="tabPixel">🎨 Tatuagem</button>
+      <button class="customTabBtn" data-tab="tabCelebrations">🎉 Comemoração</button>
     </div>
 
     <!-- Aba 1: Rosto & Cabelo -->
@@ -1683,6 +1826,26 @@ canvas{display:block;width:100%;height:100%}
           <canvas id="pixelCanvas" width="160" height="160"></canvas>
           <div class="pixelPalette" id="pixelPalette"></div>
           <button class="choiceBtn" id="btnClearPixels" style="width:100%">Limpar Desenho</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Aba 7: Comemorações -->
+    <div class="tabPanel" id="tabCelebrations">
+      <div class="customSection">
+        <label>Comemoração Padrão ao Fazer Gol</label>
+        <div class="choiceGrid" id="customCelebrationChoices" style="grid-template-columns:1fr;gap:9px">
+          <button class="choiceBtn selected" data-celebration="0">🦅 1. Braços Abertos (Estátua / Bellingham)</button>
+          <button class="choiceBtn" data-celebration="1">🕺 2. Passinho do Cria (Funk / Samba)</button>
+          <button class="choiceBtn" data-celebration="2">💥 3. SIUUU! (Pulo, Giro 180° & Land)</button>
+          <button class="choiceBtn" data-celebration="3">❤️ 4. Coração na Torcida & Fé no Céu</button>
+          <button class="choiceBtn" data-celebration="4">🏄‍♂️ 5. Deslize de Joelhos (Knee Slide)</button>
+        </div>
+      </div>
+      <div class="customSection">
+        <label>Dica em Campo</label>
+        <div style="font-size:12px;line-height:1.5;color:rgba(255,255,255,0.7);background:rgba(255,255,255,0.05);padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,0.1)">
+          💡 Em campo, aperte <b>[ V ]</b> ou toque no botão de comemoração para abrir a roda rápida ou trocar sua comemoração a qualquer momento!
         </div>
       </div>
     </div>
@@ -1872,6 +2035,21 @@ canvas{display:block;width:100%;height:100%}
   </div>
 
   <div class="introSkipHint" id="introSkipBtn">Pressione ESPAÇO ou clique para Iniciar Agora ⏩</div>
+</div>
+
+<!-- ═══════════ MODAL DE SELEÇÃO DE COMEMORAÇÕES (5 COMEMORAÇÕES) ═══════════ -->
+<div id="celebrationModal">
+  <div class="celebrationCard">
+    <div class="celebrationHeader">
+      <h3>🎉 ESCOLHA SUA COMEMORAÇÃO</h3>
+      <button class="celebrationCloseBtn" id="btnCloseCelebration">✕</button>
+    </div>
+    <div class="celebrationSubtitle">Selecione uma comemoração para festejar em campo (ou use as teclas [1] a [5])</div>
+
+    <div class="celebrationGrid" id="celebrationOptionsList">
+      <!-- Opções geradas dinamicamente via JS com seleção interativa -->
+    </div>
+  </div>
 </div>
 
 <!-- ═══════════ POPUP DE SUBIDA DE NÍVEL / LEVEL UP DE CARTA ═══════════ -->
@@ -5318,33 +5496,141 @@ function animateHumanoid(char, dt, isMoving){
   const armKick  = footSign === 1 ? armR : armL;
   const armPlant = footSign === 1 ? armL : armR;
 
-  if(char.state === "dance"){
-    char.danceTime += dt * 9.5;
+  if(char.state.startsWith("dance") || char.state === "dance"){
+    char.danceTime = (char.danceTime || 0) + dt;
     const d = char.danceTime;
+    const danceType = char.danceType || (char.state === "dance_arms_open" ? "arms_open" :
+                                        char.state === "dance_siuuu" ? "siuuu" :
+                                        char.state === "dance_heart_sky" ? "heart_sky" :
+                                        char.state === "dance_knee_slide" ? "knee_slide" : "passinho");
 
-    char.hips.position.y = 1.02 + Math.abs(Math.sin(d*2))*0.14;
-    char.hips.rotation.z = Math.sin(d)*0.12;
-    char.torsoGroup.rotation.y = Math.sin(d)*0.45;
-    char.torsoGroup.rotation.x = Math.sin(d*2)*0.18;
-    char.headGroup.rotation.y = -Math.sin(d)*0.5;
-    char.headGroup.rotation.x = -0.15;
+    if(danceType === "arms_open"){
+      // ════════════ 1. BRAÇOS ABERTOS (ESTÁTUA / BELLINGHAM / CRISTO) ════════════
+      char.hips.position.y = 1.04 + Math.sin(d * 2.0) * 0.015;
+      char.hips.rotation.z = 0; char.hips.rotation.y = 0;
+      char.torsoGroup.rotation.x = -0.16 + Math.sin(d * 2.0) * 0.02; // Peito estufado triunfante
+      char.torsoGroup.rotation.y = 0; char.torsoGroup.rotation.z = 0;
+      char.headGroup.rotation.x = -0.22; // Queixo e cabeça erguidos
+      char.headGroup.rotation.y = Math.sin(d * 0.8) * 0.12; // Olhar imponente pra torcida
 
-    legL.hipJoint.rotation.x = Math.sin(d)*0.85;
-    legL.hipJoint.rotation.z = Math.cos(d)*0.35;
-    legL.kneeJoint.rotation.x = Math.max(0, -Math.sin(d)*1.1);
+      // Braços abertos em cruz/V imponente com as palmas abertas
+      armL.shoulder.rotation.x = -0.08 + Math.sin(d * 1.5) * 0.03;
+      armL.shoulder.rotation.z = -1.48;
+      armL.shoulder.rotation.y = 0;
+      armL.elbow.rotation.x = -0.05;
 
-    legR.hipJoint.rotation.x = -Math.sin(d)*0.85;
-    legR.hipJoint.rotation.z = -Math.cos(d)*0.35;
-    legR.kneeJoint.rotation.x = Math.max(0, Math.sin(d)*1.1);
+      armR.shoulder.rotation.x = -0.08 + Math.sin(d * 1.5) * 0.03;
+      armR.shoulder.rotation.z = 1.48;
+      armR.shoulder.rotation.y = 0;
+      armR.elbow.rotation.x = -0.05;
 
-    armL.shoulder.rotation.x = Math.cos(d)*0.9 - 0.4;
-    armL.shoulder.rotation.z = -0.4 - Math.sin(d*2)*0.3;
-    armL.elbow.rotation.x = -1.2 + Math.sin(d)*0.6;
+      // Base firme e aberta no chão
+      legL.hipJoint.rotation.x = 0;
+      legL.hipJoint.rotation.z = -0.20;
+      legL.kneeJoint.rotation.x = 0.08;
 
-    armR.shoulder.rotation.x = -Math.cos(d)*0.9 - 0.4;
-    armR.shoulder.rotation.z = 0.4 + Math.sin(d*2)*0.3;
-    armR.elbow.rotation.x = -1.2 - Math.sin(d)*0.6;
-    return;
+      legR.hipJoint.rotation.x = 0;
+      legR.hipJoint.rotation.z = 0.20;
+      legR.kneeJoint.rotation.x = 0.08;
+      return;
+
+    } else if(danceType === "siuuu"){
+      // ════════════ 3. SIUUU! (PULO, GIRO 180° E ATERRISSAGEM PODEROSA) ════════════
+      const cycle = (d * 0.65) % 1.0;
+      if(cycle < 0.42){
+        // Fase 1: Salto giratório no ar
+        const jProg = cycle / 0.42;
+        char.hips.position.y = 1.05 + Math.sin(jProg * Math.PI) * 0.60;
+        char.root.rotation.y = char.yaw + (jProg * Math.PI);
+        char.torsoGroup.rotation.x = -0.15;
+        char.headGroup.rotation.x = 0;
+        armL.shoulder.rotation.x = -1.75; armL.shoulder.rotation.z = -0.3;
+        armR.shoulder.rotation.x = -1.75; armR.shoulder.rotation.z = 0.3;
+        legL.hipJoint.rotation.x = -0.35; legL.kneeJoint.rotation.x = 0.75;
+        legR.hipJoint.rotation.x = -0.35; legR.kneeJoint.rotation.x = 0.75;
+      } else {
+        // Fase 2: Aterrissagem com braços esticados pra trás e peito inflado
+        char.hips.position.y = 0.94;
+        char.root.rotation.y = char.yaw + Math.PI;
+        char.torsoGroup.rotation.x = -0.28;
+        char.headGroup.rotation.x = -0.30;
+
+        armL.shoulder.rotation.x = 0.72; armL.shoulder.rotation.z = -0.55; armL.elbow.rotation.x = -0.10;
+        armR.shoulder.rotation.x = 0.72; armR.shoulder.rotation.z = 0.55; armR.elbow.rotation.x = -0.10;
+
+        legL.hipJoint.rotation.z = -0.32; legL.kneeJoint.rotation.x = 0.42;
+        legR.hipJoint.rotation.z = 0.32; legR.kneeJoint.rotation.x = 0.42;
+      }
+      return;
+
+    } else if(danceType === "heart_sky"){
+      // ════════════ 4. CORAÇÃO & FÉ NO CÉU (BEIJO & DEDOS PRO ALTO) ════════════
+      const cycle = (d * 0.45) % 1.0;
+      if(cycle < 0.50){
+        // Mãos formando coração no peito
+        char.hips.position.y = 1.03 + Math.sin(d * 3.0) * 0.015;
+        char.torsoGroup.rotation.x = 0.08;
+        char.headGroup.rotation.x = 0.12;
+        char.headGroup.rotation.y = Math.sin(d * 1.5) * 0.10;
+
+        armL.shoulder.rotation.x = -1.35; armL.shoulder.rotation.z = 0.40; armL.elbow.rotation.x = -1.85;
+        armR.shoulder.rotation.x = -1.35; armR.shoulder.rotation.z = -0.40; armR.elbow.rotation.x = -1.85;
+        legL.hipJoint.rotation.z = -0.06; legR.hipJoint.rotation.z = 0.06;
+      } else {
+        // Apontando dedos indicadores pro céu em louvor
+        char.hips.position.y = 1.06;
+        char.torsoGroup.rotation.x = -0.18;
+        char.headGroup.rotation.x = -0.45;
+        char.headGroup.rotation.y = 0;
+
+        armL.shoulder.rotation.x = -2.85; armL.shoulder.rotation.z = -0.22; armL.elbow.rotation.x = -0.08;
+        armR.shoulder.rotation.x = -2.85; armR.shoulder.rotation.z = 0.22; armR.elbow.rotation.x = -0.08;
+        legL.hipJoint.rotation.z = -0.12; legR.hipJoint.rotation.z = 0.12;
+      }
+      return;
+
+    } else if(danceType === "knee_slide"){
+      // ════════════ 5. DESLIZE DE JOELHOS (KNEE SLIDE NO ASFALTO/GRAMA) ════════════
+      char.hips.position.y = 0.42;
+      char.torsoGroup.rotation.x = -0.38 + Math.sin(d * 2.0) * 0.03; // Tronco reclinado de êxtase
+      char.headGroup.rotation.x = -0.35;
+
+      // Joelhos dobrados no chão deslizando
+      legL.hipJoint.rotation.x = 0.15; legL.hipJoint.rotation.z = -0.08; legL.kneeJoint.rotation.x = 1.55;
+      legR.hipJoint.rotation.x = 0.15; legR.hipJoint.rotation.z = 0.08; legR.kneeJoint.rotation.x = 1.55;
+
+      // Punhos erguidos e vibrando no ar
+      armL.shoulder.rotation.x = -2.35 + Math.sin(d * 6.0) * 0.12; armL.shoulder.rotation.z = -0.35; armL.elbow.rotation.x = -0.45;
+      armR.shoulder.rotation.x = -2.35 + Math.sin(d * 6.0) * 0.12; armR.shoulder.rotation.z = 0.35; armR.elbow.rotation.x = -0.45;
+      return;
+
+    } else {
+      // ════════════ 2. PASSINHO DO CRIA (FUNK / SAMBA / GINGA DE FAVELA) ════════════
+      const pTime = d * 9.5;
+      char.hips.position.y = 1.02 + Math.abs(Math.sin(pTime * 2)) * 0.14;
+      char.hips.rotation.z = Math.sin(pTime) * 0.12;
+      char.torsoGroup.rotation.y = Math.sin(pTime) * 0.45;
+      char.torsoGroup.rotation.x = Math.sin(pTime * 2) * 0.18;
+      char.headGroup.rotation.y = -Math.sin(pTime) * 0.5;
+      char.headGroup.rotation.x = -0.15;
+
+      legL.hipJoint.rotation.x = Math.sin(pTime) * 0.85;
+      legL.hipJoint.rotation.z = Math.cos(pTime) * 0.35;
+      legL.kneeJoint.rotation.x = Math.max(0, -Math.sin(pTime) * 1.1);
+
+      legR.hipJoint.rotation.x = -Math.sin(pTime) * 0.85;
+      legR.hipJoint.rotation.z = -Math.cos(pTime) * 0.35;
+      legR.kneeJoint.rotation.x = Math.max(0, Math.sin(pTime) * 1.1);
+
+      armL.shoulder.rotation.x = Math.cos(pTime) * 0.9 - 0.4;
+      armL.shoulder.rotation.z = -0.4 - Math.sin(pTime * 2) * 0.3;
+      armL.elbow.rotation.x = -1.2 + Math.sin(pTime) * 0.6;
+
+      armR.shoulder.rotation.x = -Math.cos(pTime) * 0.9 - 0.4;
+      armR.shoulder.rotation.z = 0.4 + Math.sin(pTime * 2) * 0.3;
+      armR.elbow.rotation.x = -1.2 - Math.sin(pTime) * 0.6;
+      return;
+    }
   }
 
   if(char.state.startsWith("dribble_")){
@@ -6782,13 +7068,122 @@ function performHeaderContact(){
   sfx.playHeader();
 }
 
-function dancePassinho(){
-  if(player.state === "dance"){
+/* ═══════════════ SISTEMA DE COMEMORAÇÕES & SELEÇÃO INTERATIVA (5 COMEMORAÇÕES) ═══════════════ */
+const CELEBRATIONS = [
+  {
+    id: "arms_open",
+    state: "dance_arms_open",
+    name: "BRAÇOS ABERTOS",
+    sub: "ESTÁTUA / BELLINGHAM / CRISTO 🦅",
+    icon: "🦅",
+    key: "1",
+    desc: "Postura imponente de peito estufado e braços abertos para a torcida"
+  },
+  {
+    id: "passinho",
+    state: "dance_passinho",
+    name: "PASSINHO DO CRIA",
+    sub: "DANCINHA DE FAVELA / FUNK 🕺",
+    icon: "🕺",
+    key: "2",
+    desc: "Ginga ritmada com balanço de quadril, pés ágeis e swingueira"
+  },
+  {
+    id: "siuuu",
+    state: "dance_siuuu",
+    name: "SIUUU!",
+    sub: "PULO, GIRO 180° E ATERRISSAGEM 💥",
+    icon: "💥",
+    key: "3",
+    desc: "Salto giratório no ar com aterrissagem estrondosa e braços pra trás"
+  },
+  {
+    id: "heart_sky",
+    state: "dance_heart_sky",
+    name: "CORAÇÃO & FÉ NO CÉU",
+    sub: "BEIJO NA TORCIDA & DEDOS PRO ALTO ❤️",
+    icon: "❤️",
+    key: "4",
+    desc: "Coração com as mãos no peito e dedos apontados ao céu em gratidão"
+  },
+  {
+    id: "knee_slide",
+    state: "dance_knee_slide",
+    name: "DESLIZE DE JOELHOS",
+    sub: "KNEE SLIDE NO ASFALTO / GRAMA 🏄‍♂️",
+    icon: "🏄‍♂️",
+    key: "5",
+    desc: "Deslize no chão de joelhos com punhos erguidos aos céus"
+  }
+];
+
+let selectedCelebrationIdx = 0;
+try {
+  const savedCel = localStorage.getItem("fut_cria_celebration_idx");
+  if(savedCel !== null) selectedCelebrationIdx = Math.max(0, Math.min(CELEBRATIONS.length - 1, parseInt(savedCel, 10) || 0));
+} catch(e){}
+
+function openCelebrationMenu(){
+  const modal = $("#celebrationModal");
+  const list = $("#celebrationOptionsList");
+  if(!modal || !list) return;
+
+  list.innerHTML = "";
+  CELEBRATIONS.forEach((cel, idx) => {
+    const btn = document.createElement("button");
+    btn.className = "celebrationOptionBtn" + (idx === selectedCelebrationIdx ? " selected" : "");
+    btn.innerHTML = `
+      <div class="celebrationLeft">
+        <span class="celebrationIcon">${cel.icon}</span>
+        <div>
+          <div class="celebrationTitle">${cel.name}</div>
+          <div class="celebrationSub">${cel.sub}</div>
+        </div>
+      </div>
+      <span class="celebrationKeyBadge">[ ${idx + 1} ]</span>
+    `;
+    btn.addEventListener("click", () => {
+      playCelebration(idx);
+    });
+    list.appendChild(btn);
+  });
+
+  modal.classList.add("show");
+  modal.style.display = "flex";
+}
+
+function closeCelebrationMenu(){
+  const modal = $("#celebrationModal");
+  if(modal){
+    modal.classList.remove("show");
+    modal.style.display = "none";
+  }
+}
+
+function playCelebration(idx){
+  if(idx < 0 || idx >= CELEBRATIONS.length) idx = 0;
+  selectedCelebrationIdx = idx;
+  try {
+    localStorage.setItem("fut_cria_celebration_idx", idx);
+  } catch(e){}
+
+  const cel = CELEBRATIONS[idx];
+  player.state = cel.state;
+  player.danceType = cel.id;
+  player.danceTime = 0;
+  player.act = 0;
+  player.vel.set(0, 0, 0);
+
+  flash(`${cel.icon} ${cel.name}! 🔥`, "#ffd700", cel.sub);
+  sfx.init();
+  closeCelebrationMenu();
+}
+
+function toggleCelebration(){
+  if(player.state.startsWith("dance") || player.state === "dance"){
     player.state = "idle";
   } else {
-    player.state = "dance";
-    player.danceTime = 0;
-    flash("MANDOU O PASSINHO! 🔥", "#ffd700");
+    openCelebrationMenu();
   }
 }
 
@@ -8147,6 +8542,15 @@ function setupCustomizerUI(){
   setupChoices("cleatStyleChoices", "data-cleat", playerCustomConfig.cleatStyle || "mercurial", val => playerCustomConfig.cleatStyle = val);
   setupChoices("bodyTypeChoices", "data-body", playerCustomConfig.bodyType, val => playerCustomConfig.bodyType = val);
   setupChoices("footChoices", "data-foot", playerCustomConfig.foot, val => playerCustomConfig.foot = parseInt(val));
+  setupChoices("customCelebrationChoices", "data-celebration", selectedCelebrationIdx, val => {
+    const idx = parseInt(val, 10) || 0;
+    selectedCelebrationIdx = idx;
+    try { localStorage.setItem("fut_cria_celebration_idx", idx); } catch(e){}
+    player.state = CELEBRATIONS[idx].state;
+    player.danceType = CELEBRATIONS[idx].id;
+    player.danceTime = 0;
+    flash(`${CELEBRATIONS[idx].icon} ${CELEBRATIONS[idx].name}! 🔥`, "#ffd700", CELEBRATIONS[idx].sub);
+  });
 
   // Slider de Altura
   const hSlider = $("#heightSlider"), hVal = $("#heightVal");
@@ -8353,18 +8757,25 @@ function startCelebration(team){
     scorer = team === 0 ? player : foeA;
   }
 
-  celebration = { scorer, t: 0, total: 4.0, team, orbit: 0 };
+  celebration = { scorer, t: 0, total: 4.5, team, orbit: 0 };
   camTarget = scorer;
 
-  // O autor manda o passinho; os companheiros comemoram junto
+  // O autor manda a comemoração escolhida; os companheiros comemoram com opções variadas
   scorer.state = "dance";
+  scorer.danceType = (scorer === player) ? CELEBRATIONS[selectedCelebrationIdx].id : CELEBRATIONS[Math.floor(Math.random() * CELEBRATIONS.length)].id;
   scorer.danceTime = 0;
   scorer.act = 0;
   scorer.vel.set(0, 0, 0);
+
+  if(scorer === player){
+    openCelebrationMenu();
+  }
+
   for(const c of chars){
     if(c === scorer || c.team !== team || c.role === "keeper") continue;
     c.state = "dance";
-    c.danceTime = Math.random() * 3;
+    c.danceType = CELEBRATIONS[Math.floor(Math.random() * CELEBRATIONS.length)].id;
+    c.danceTime = Math.random() * 2.5;
     c.vel.set(0, 0, 0);
   }
 }
@@ -8388,7 +8799,8 @@ function updateCelebration(dt){
     const team = celebration.team;
     celebration = null;
     camTarget = null;
-    for(const c of chars) if(c.state === "dance") c.state = "idle";
+    closeCelebrationMenu();
+    for(const c of chars) if(c.state.startsWith("dance") || c.state === "dance") c.state = "idle";
     if(gameMode === "training") resetTrainingBall();
     else kickoff(team === 0 ? -1 : 1);
   }
@@ -8940,16 +9352,12 @@ function updateMobileControlsUI(){
       if(passTackleBdg) passTackleBdg.textContent = "Q";
 
       if(skillBtn) skillBtn.classList.add("defenseMode");
-      if(skillLbl) skillLbl.textContent = (player.vel.lengthSq() > 0.6 ? "PULO" : "PASSINHO");
-      if(skillBdg) skillBdg.textContent = "C / F";
+      if(skillLbl) skillLbl.textContent = (player.vel.lengthSq() > 0.6 ? "PULO" : "COMEMORAR");
+      if(skillBdg) skillBdg.textContent = "V / C";
     }
   }
 }
 
-// Desenha a barra de forca. A altura mostra a carga inteira (inclusive a parte
-// perigosa), e a marca branca fica onde a forca cheia acaba: passou dali, o
-// chute comeca a subir. Sem isso a punicao por segurar demais seria injusta —
-// o jogador precisa VER que passou do ponto.
 let powerSafeMarcada = false;
 function renderPowerBar(carga){
   const el = $("#power");
@@ -8967,7 +9375,7 @@ function startCharge(){
   sfx.init();
   if(!running) return;
   input.charging = true; input.charge = 0; pw.style.display = "block";
-  player.state = "kick_charge"; // perna vai pra trás e fica armada enquanto segura o botão
+  player.state = "kick_charge";
   if(mainBtn) mainBtn.classList.add("activeKey");
   if(crosshairWrap) crosshairWrap.classList.add("charging");
 }
@@ -8975,7 +9383,6 @@ function startCharge(){
 function releaseCharge(){
   if(!input.charging) return;
   kick(0.3 + Math.min(1, input.charge)*0.7, "shot", kickOver(input.charge));
-  // Se o kick() não saiu (fora de alcance da bola), sai do estado de carregamento
   if(player.state === "kick_charge") player.state = "idle";
   input.charging = false; pw.style.display = "none"; $("#power").style.height = "0"; pw.classList.remove("over");
   if(mainBtn) mainBtn.classList.remove("activeKey");
@@ -8991,7 +9398,6 @@ function cancelCharge(){
   if(crosshairWrap) crosshairWrap.classList.remove("charging");
 }
 
-/* ═══════════════ PASSE COM FORÇA CONTROLADA (SEGURAR PRA CARREGAR) ═══════════════ */
 function startPassCharge(){
   sfx.init();
   if(!running) return;
@@ -9072,7 +9478,7 @@ if(skillBtn){
       if(player.vel.lengthSq() > 0.4 || player.state === "run" || player.state === "sprint" || input.sprint){
         jump();
       } else {
-        dancePassinho();
+        toggleCelebration();
       }
     }
   });
@@ -9103,6 +9509,17 @@ addEventListener("keydown", e=>{
   const k = e.key.toLowerCase();
   if(keys[k]) return; keys[k] = true;
 
+  // Se o modal de comemorações estiver aberto:
+  const celModal = $("#celebrationModal");
+  if(celModal && (celModal.classList.contains("show") || celModal.style.display === "flex")){
+    if(k === "escape"){ closeCelebrationMenu(); return; }
+    if(k === "1" || k === "numpad1"){ playCelebration(0); return; }
+    if(k === "2" || k === "numpad2"){ playCelebration(1); return; }
+    if(k === "3" || k === "numpad3"){ playCelebration(2); return; }
+    if(k === "4" || k === "numpad4"){ playCelebration(3); return; }
+    if(k === "5" || k === "numpad5"){ playCelebration(4); return; }
+  }
+
   if(!running){
     // Navegação pelas abas superiores do Lobby com A e E
     if(gameMode === "menu"){
@@ -9117,8 +9534,8 @@ addEventListener("keydown", e=>{
     return;
   }
 
-  if(k === "1" || k === "numpad1"){ passToMate(mateA); }
-  if(k === "2" || k === "numpad2"){ passToMate(mateB); }
+  if(k === "1" || k === "numpad1"){ if(owner === player) passToMate(mateA); }
+  if(k === "2" || k === "numpad2"){ if(owner === player) passToMate(mateB); }
 
   if(k === userKeyBindings.shoot){ if(!registerKickPress()){ startCharge(); } }
   if(k === userKeyBindings.pass){ startPassCharge(); }
@@ -9126,10 +9543,11 @@ addEventListener("keydown", e=>{
   if(k === userKeyBindings.tackle){ doTackle(); if(passTackleBtn) passTackleBtn.classList.add("activeKey"); }
   if(k === userKeyBindings.dribble){ if(!registerDribblePress()){ doDribble(); } if(skillBtn) skillBtn.classList.add("activeKey"); }
   if(k === userKeyBindings.jump){ jumpOrHeader(); if(skillBtn) skillBtn.classList.add("activeKey"); }
-  if(k === userKeyBindings.dance){ dancePassinho(); if(skillBtn) skillBtn.classList.add("activeKey"); }
+  if(k === userKeyBindings.dance){ toggleCelebration(); if(skillBtn) skillBtn.classList.add("activeKey"); }
   if(k === userKeyBindings.sprint){ input.sprint = true; if(sprintBtn) sprintBtn.classList.add("activeKey"); }
-  if(["w","a","s","d","arrowup","arrowdown","arrowleft","arrowright"].includes(k) && player.state === "dance"){
+  if(["w","a","s","d","arrowup","arrowdown","arrowleft","arrowright"].includes(k) && (player.state.startsWith("dance") || player.state === "dance")){
     player.state = "run";
+    closeCelebrationMenu();
   }
 });
 
@@ -9142,6 +9560,10 @@ addEventListener("keyup", e=>{
   if(k === userKeyBindings.dribble || k === userKeyBindings.jump || k === userKeyBindings.dance){ if(skillBtn) skillBtn.classList.remove("activeKey"); }
   if(k === userKeyBindings.sprint){ input.sprint = false; if(sprintBtn) sprintBtn.classList.remove("activeKey"); }
 });
+
+// Botão de fechar modal de comemorações
+const btnCloseCelebration = $("#btnCloseCelebration");
+if(btnCloseCelebration) btnCloseCelebration.addEventListener("click", closeCelebrationMenu);
 
 // Botões do Menu Principal e Vestiário
 const btnPlayMatch = $("#btnPlayMatch");

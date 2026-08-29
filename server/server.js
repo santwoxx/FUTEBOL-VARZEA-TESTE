@@ -89,6 +89,7 @@ const server = http.createServer((req, res) => {
       players: clients.size,
       voice: voiceConfig().enabled,
       betaClosed: accessConfig().enforced,   // multiplayer so para e-mails liberados
+      betaList: accessConfig().source,        // de onde a lista foi lida (sem expor os e-mails)
       snapshotsDropped,
       uptime: Math.round(process.uptime())
     }));
@@ -385,6 +386,6 @@ server.listen(PORT, () => {
     : `CORS liberado (defina ALLOWED_ORIGINS em producao)`);
   const acc = accessConfig();
   console.log(acc.enforced
-    ? `Multiplayer em BETA FECHADA: ${acc.allowed} e-mail(s) liberado(s) — projeto ${acc.projectId}`
-    : `Multiplayer ABERTO (defina MP_ALLOWED_EMAILS para travar na beta fechada)`);
+    ? `Multiplayer em BETA FECHADA: ${acc.allowed} e-mail(s) liberado(s), lista de ${acc.source}`
+    : `Multiplayer ABERTO (lista: ${acc.source}) — ponha e-mails em betaEmails() no firestore.rules`);
 });

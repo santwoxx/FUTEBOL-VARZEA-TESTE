@@ -20,9 +20,9 @@ services:
       # Vercel. Sem isso, qualquer site consegue abrir salas no seu servidor.
       - key: ALLOWED_ORIGINS
         sync: false
-      # Beta fechada do multiplayer: e-mails liberados, separados por virgula.
-      # Vazio = multiplayer aberto para qualquer um logado. Mantenha igual a
-      # lista do firestore.rules.
+      # A lista da beta sai do firestore.rules (o servidor le o arquivo no
+      # boot). Esta variavel e so o atalho para liberar alguem sem esperar
+      # deploy: se preenchida, manda no lugar do arquivo.
       - key: MP_ALLOWED_EMAILS
         sync: false
       # Projeto do Firebase que assina os ID tokens do login Google.

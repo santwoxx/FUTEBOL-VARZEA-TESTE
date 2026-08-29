@@ -59,8 +59,11 @@ npm install     # instala as dependências do server/
 npm run dev     # sobe backend (8080) + frontend (5173) juntos
 ```
 
-Abra <http://localhost:5173>. Para testar o multiplayer sozinho, abra em duas
-abas e escolha o mesmo modo nas duas.
+Abra <http://localhost:5173>. Jogar exige login com o Google — inclusive local.
+
+Para testar o multiplayer sozinho em duas abas, crie `server/.env` com
+`MP_OPEN=1`: as duas abas usam a mesma conta Google, e sem isso a segunda
+derruba a primeira (mesmo `uid` na sala).
 
 Em `localhost` o `config.js` aponta sozinho para `http://localhost:8080` — você
 não precisa configurar nada. Para jogar com amigos no mesmo Wi-Fi, passe o seu
@@ -118,7 +121,7 @@ vírgula — inclua os previews da Vercel se for testar por lá.
 
 Não há build: é HTML estático.
 
-### Depois do primeiro deploy — 5 passos obrigatórios
+### Depois do primeiro deploy — 4 passos obrigatórios
 
 1. **Firebase.** Console do Firebase → *Authentication* → *Settings* →
    *Authorized domains* → adicione o domínio da Vercel. Sem isso o login com
@@ -126,10 +129,9 @@ Não há build: é HTML estático.
    explicando).
 2. **`ALLOWED_ORIGINS` no Render** com o domínio final da Vercel.
 3. **Publique o `firestore.rules`** com a lista de quem pode jogar online —
-   Console do Firebase → *Firestore Database* → *Regras*.
-4. **`MP_ALLOWED_EMAILS` no Render** com a mesma lista do passo 3. Esta é a
-   trava de verdade; confira em `/health` que `betaClosed` virou `true`.
-5. **Credenciais do LiveKit no Render**, se quiser a voz in-game — veja
+   Console do Firebase → *Firestore Database* → *Regras*. O backend lê a mesma
+   lista do arquivo no boot; confira em `/health` que `betaClosed` é `true`.
+4. **Credenciais do LiveKit no Render**, se quiser a voz in-game — veja
    [VoIP](#voip--voz-do-time) abaixo. Sem elas o jogo funciona igual, só sem voz.
 
 Se o backend mudar de endereço, o único lugar a editar é a constante `PROD` em
@@ -304,20 +306,27 @@ Enquanto o online está em teste, o jogo funciona assim:
 
 ### Onde mora a lista
 
-Em dois lugares, e os dois precisam ficar iguais:
+Num lugar só: a função `betaEmails()` do [`firestore.rules`](firestore.rules).
+Ela serve aos dois lados:
 
-| Onde | Para quê |
+| Lado | O que faz com a lista |
 |---|---|
-| `firestore.rules` (função `betaEmails()`) | Só quem está na lista consegue ler `betaAccess/{uid}`. É o que faz o jogo mostrar o lobby ou a tela de "beta fechada". |
-| `MP_ALLOWED_EMAILS` (env do Render) | A trava real: o servidor recusa criar/entrar em sala de quem não está na lista. |
+| Navegador | Só quem está nela consegue ler `betaAccess/{uid}` (regra do Firestore). É o que faz o jogo abrir o lobby ou a tela de "beta fechada". |
+| Servidor | `server/auth.js` lê o **mesmo arquivo** no boot e recusa criar/entrar em sala de quem não está nela. Esta é a trava real. |
 
-Tudo em minúsculas, separado por vírgula. Convidar alguém = adicionar o e-mail
-nos dois lugares (publicar as regras no console + editar a variável no Render).
+**Convidar alguém:** põe o e-mail (minúsculo) no `firestore.rules`, dá push — o
+Render reconstrói e o backend recarrega a lista — e publica as regras no console
+do Firebase. Uma edição, os dois lados atualizados.
 
-Quando `MP_ALLOWED_EMAILS` está **vazia**, o multiplayer fica aberto para
-qualquer um logado — é a comodidade em dev, a mesma convenção do
-`ALLOWED_ORIGINS`. O boot do servidor diz em qual modo subiu, e `/health`
-devolve `betaClosed: true|false`.
+Duas variáveis de ambiente ajustam isso quando precisa:
+
+| Variável | Para quê |
+|---|---|
+| `MP_ALLOWED_EMAILS` | Atalho: liberar alguém no painel do Render sem esperar deploy. Se preenchida, manda no lugar do arquivo. |
+| `MP_OPEN=1` | Abre o online para qualquer um logado. É o que destrava **testar sozinho em duas abas** — duas abas são a mesma conta Google, e a sala derruba o uid duplicado. |
+
+O boot do servidor diz de onde leu a lista, e `/health` devolve
+`betaClosed` + `betaList` (a origem, nunca os e-mails).
 
 ### Por que o servidor confere o login sozinho
 

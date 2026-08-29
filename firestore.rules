@@ -9,12 +9,14 @@ rules_version = '2';
 //   firebase deploy --only firestore:rules
 //
 // AQUI mora a lista da BETA FECHADA do multiplayer (funcao betaEmails abaixo).
-// Ela aparece em dois lugares e os dois precisam ficar iguais:
-//   1. esta lista  -> o jogo le betaAccess/{uid} so para saber se abre o lobby
-//                     ou a tela de "beta fechada" (vitrine);
-//   2. MP_ALLOWED_EMAILS no painel do Render -> a trava de verdade, conferida
-//      pelo servidor antes de criar/entrar em qualquer sala.
-// Mexeu numa, mexa na outra.
+// Ela vale para os dois lados do jogo:
+//   1. no navegador, so quem esta na lista consegue ler betaAccess/{uid} — e
+//      isso que abre o lobby online em vez da tela de "beta fechada";
+//   2. no servidor, o server/auth.js le esta MESMA funcao no boot e recusa
+//      criar/entrar em sala de quem nao esta nela. Essa e a trava de verdade.
+//
+// Convidar alguem = por o e-mail aqui, dar push (o backend recarrega no deploy)
+// e publicar estas regras no console. Uma lista so, dois lugares atualizados.
 // ═══════════════════════════════════════════════════════════════════════════
 
 service cloud.firestore {
@@ -24,7 +26,7 @@ service cloud.firestore {
     // Tudo em MINUSCULO, um por linha, separados por virgula.
     function betaEmails() {
       return [
-        "coloque-seu-email@gmail.com"
+        "brisasofc@gmail.com"       // adm do jogo
         // , "amigo1@gmail.com"
         // , "amigo2@gmail.com"
       ];
@@ -39,6 +41,7 @@ service cloud.firestore {
     function isBetaTester() {
       return isSignedIn()
         && 'email' in request.auth.token
+        && 'email_verified' in request.auth.token
         && request.auth.token.email is string
         && request.auth.token.email_verified == true
         && request.auth.token.email.lower() in betaEmails();

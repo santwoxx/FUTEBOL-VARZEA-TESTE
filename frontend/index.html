@@ -1584,11 +1584,8 @@ canvas{display:block;width:100%;height:100%}
       <input class="mpInput" id="mpName" maxlength="14" placeholder="ATÉ 14 CARACTERES" value="CRIA">
     </div>
 
-    <div class="mpField">
-      <label>ENDEREÇO DO SERVIDOR (WEBSOCKET)</label>
-      <input class="mpInput" id="mpServer" spellcheck="false" autocomplete="off"
-             placeholder="wss://futebol-varzea-teste.onrender.com">
-    </div>
+    <!-- Endereço do servidor configurado automaticamente via config.js -->
+    <input type="hidden" id="mpServer" value="">
 
     <div class="mpField">
       <label>Voz do time</label>
@@ -6902,6 +6899,67 @@ function resolveTackleContact(){
 }
 
 /* ═══════════════ SISTEMA DE DRIBLES & HABILIDADES DE RUA ═══════════════ */
+
+// Chapéu / lambreta. Estes números são espelhados em server/shared/sim.js —
+// os dois lados precisam escolher o MESMO movimento para o cliente conseguir
+// desenhar o drible no quadro do clique, sem esperar o snapshot confirmar.
+//
+// O arco é alto de propósito: um jogador em pé tem ~1,8m, então a bola só passa
+// "por cima do marcador" se o ápice ficar bem acima disso.
+const CHAPEU = {
+  altura:     3.60, // ápice do arco acima do gramado
+  avanco:     2.60, // quanto a bola avança além do pé durante o arco
+  subida:     7.20, // velocidade vertical enquanto sobe/desce
+  raioFoe:    3.60, // adversário até aqui, em QUALQUER direção, pede chapéu
+  ballMax:    2.60, // bola dentro do alcance de controle
+  ballPe:     1.20, // bola colada no pé: a direção não importa
+  ballFrente: 0.15, // senão ela precisa estar à frente do corpo
+  stun:       0.50  // atordoamento de quem levou o chapéu
+};
+
+// Marcador colado que justifica o chapéu: adversário dentro do raio em QUALQUER
+// direção — frente, costas ou lado — com a bola caindo no alcance do pé.
+// Recebe posições soltas em vez de objetos para servir tanto o jogo local
+// quanto o multiplayer, onde os adversários vêm do snapshot.
+function foeParaChapeu(px, pz, yaw, bx, bz, adversarios){
+  const d = Math.hypot(px - bx, pz - bz);
+  if(d > CHAPEU.ballMax) return null;
+  if(d > CHAPEU.ballPe){
+    // Longe do pé, a bola precisa estar caindo À FRENTE do jogador.
+    const dot = ((bx - px) * Math.sin(yaw) + (bz - pz) * Math.cos(yaw)) / d;
+    if(dot < CHAPEU.ballFrente) return null;
+  }
+  let perto = null, melhor = CHAPEU.raioFoe;
+  for(const o of adversarios){
+    if(!o || o.role === "keeper") continue;
+    if(o.stunned > 0 || o.state === "fall" || o.state === "foul") continue;
+    const dd = Math.hypot(px - o.root.position.x, pz - o.root.position.z);
+    if(dd < melhor){ melhor = dd; perto = o; }
+  }
+  return perto;
+}
+
+// Empurrão nos marcadores colados. No chapéu a bola passa POR CIMA do
+// adversário, então ele fica um instante sem reação em vez de só ser afastado:
+// como findOwner() ignora quem está atordoado, ele não recupera a bola na queda
+// do arco — é essa janela que faz o movimento valer o risco. O goleiro leva só
+// o empurrão: atordoar ele dentro da área viraria gol de graça.
+function empurraoDrible(c, adversarios, chapelou){
+  const raio = chapelou ? CHAPEU.raioFoe : 2.6;
+  for(const foe of adversarios){
+    if(!foe) continue;
+    if(flat(c.root.position, foe.root.position) >= raio) continue;
+    foe.cool = 0.8;
+    tB.copy(foe.root.position).sub(c.root.position); tB.y = 0;
+    if(tB.length() < 0.1) tB.set(-Math.cos(c.yaw), 0, Math.sin(c.yaw));
+    foe.vel.addScaledVector(tB.normalize(), 4.2);
+    if(chapelou && foe.role !== "keeper"){
+      foe.stunned = Math.max(foe.stunned || 0, CHAPEU.stun);
+      foe.state = "idle"; foe.act = 0;
+    }
+  }
+}
+
 const DRIBBLES = [
   { id: "dribble_stepover", name: "PEDALADA DO NEYMAR! ⚡", sub: "PEDALOU PRA CIMA DA MARCAÇÃO", duration: 0.70, boost: 4.8 },
   { id: "dribble_elastico", name: "ELÁSTICO DO BRUXO! 🔥", sub: "TOQUE RÁPIDO FORA-DENTRO", duration: 0.55, boost: 5.8 },
@@ -6909,6 +6967,10 @@ const DRIBBLES = [
   { id: "dribble_dragback", name: "PUXADINHA DE CRIA! 💫", sub: "PUXOU E ARRANCOU NA FRENTE", duration: 0.60, boost: 5.2 },
   { id: "dribble_rainbow",  name: "CHAPÉU / LAMBRETA! 🌈", sub: "ELEVAÇÃO POR CIMA DO ZAGUEIRO", duration: 0.80, boost: 6.2 }
 ];
+
+// O chapéu tem entrada própria porque ele também sai fora da ordem, sempre que
+// há marcador colado. Mesmo índice de DRIBBLE_MOVES em server/shared/sim.js.
+const DRIBBLE_CHAPEU = { ...DRIBBLES[4], name: "CHAPÉU NA CARA! 🌈👑", sub: "POR CIMA DO MARCADOR E SEGUIU" };
 
 let currentDribbleIdx = 0;
 
@@ -6919,8 +6981,14 @@ function doDribble(){
   if(dToBall > 3.2) return;
 
   owner = player;
-  const dribbleInfo = DRIBBLES[currentDribbleIdx];
-  currentDribbleIdx = (currentDribbleIdx + 1) % DRIBBLES.length;
+
+  // Bola no pé com marcador colado (frente, costas ou lado): sai chapéu, por
+  // cima dele. Fura a ordem do repertório de propósito — é a jogada que a
+  // situação pede.
+  const marcado = foeParaChapeu(player.root.position.x, player.root.position.z,
+                                player.yaw, ball.position.x, ball.position.z, foes);
+  const dribbleInfo = marcado ? DRIBBLE_CHAPEU : DRIBBLES[currentDribbleIdx];
+  if(!marcado) currentDribbleIdx = (currentDribbleIdx + 1) % DRIBBLES.length;
 
   player.state = dribbleInfo.id;
   player.act = dribbleInfo.duration;
@@ -6936,17 +7004,9 @@ function doDribble(){
 
   flash(dribbleInfo.name, "#ffd700", dribbleInfo.sub);
   sfx.playSteal();
-  shake = 0.15;
+  shake = marcado ? 0.20 : 0.15;
 
-  // Afasta defensores que tentarem encostar sem dar carrinho
-  for(const foe of foes){
-    if(flat(player.root.position, foe.root.position) < 2.6){
-      foe.cool = 0.8;
-      tB.copy(foe.root.position).sub(player.root.position); tB.y = 0;
-      if(tB.length() < 0.1) tB.set(-tA.z, 0, tA.x);
-      foe.vel.addScaledVector(tB.normalize(), 4.2);
-    }
-  }
+  empurraoDrible(player, foes, dribbleInfo.id === "dribble_rainbow");
 }
 
 /* ═══════════════ COMBO: DRIBLE + CHUTE JUNTOS = CHAPÉU OU CARRETILHA ═══════════════ */
@@ -7009,15 +7069,7 @@ function doComboSkill(){
   sfx.playSteal();
   shake = 0.20;
 
-  // Afasta defensores que tentarem encostar sem dar carrinho
-  for(const foe of foes){
-    if(flat(player.root.position, foe.root.position) < 2.6){
-      foe.cool = 0.8;
-      tB.copy(foe.root.position).sub(player.root.position); tB.y = 0;
-      if(tB.length() < 0.1) tB.set(-tA.z, 0, tA.x);
-      foe.vel.addScaledVector(tB.normalize(), 4.2);
-    }
-  }
+  empurraoDrible(player, foes, move.id === "dribble_rainbow");
 }
 
 function jump(){
@@ -7369,10 +7421,10 @@ function dribble(c, dt){
   if(c.state === "dribble_rainbow"){
     const prog = Math.min(1, Math.max(0, 1 - (c.act / (c.dribbleDuration || 0.80))));
     tA.set(Math.sin(c.yaw), 0, Math.cos(c.yaw));
-    tB.copy(c.root.position).addScaledVector(tA, 0.3 + prog * 2.2);
-    tB.y = 0.28 + Math.sin(prog * Math.PI) * 2.6;
+    tB.copy(c.root.position).addScaledVector(tA, 0.3 + prog * CHAPEU.avanco);
+    tB.y = 0.28 + Math.sin(prog * Math.PI) * CHAPEU.altura;
     ball.position.copy(tB);
-    ballVel.set(tA.x * 6.5, Math.cos(prog * Math.PI) * 5.5, tA.z * 6.5);
+    ballVel.set(tA.x * 6.5, Math.cos(prog * Math.PI) * CHAPEU.subida, tA.z * 6.5);
     return;
   }
   if(c.state === "dribble_carretilha"){
@@ -9819,6 +9871,10 @@ async function openMultiplayerLobby(){
   $("#multiplayerLobby").classList.add("show");
   const srv = document.querySelector("#mpServer");
   if(srv && !srv.value){ srv.value = mpDefaultServerUrl(); }
+  const nameInput = document.querySelector("#mpName");
+  if(nameInput && window.firebaseUser && window.firebaseUser.displayName){
+    nameInput.value = window.firebaseUser.displayName.slice(0, 14);
+  }
   voiceRefreshMicButton();
   mpSetStatus("Conferindo seu acesso...");
   await refreshIdToken();         // o servidor recusa token vencido

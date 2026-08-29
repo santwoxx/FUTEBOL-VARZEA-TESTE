@@ -7328,7 +7328,7 @@ const MP_STATE_NAME = [
 // Duração (s) de cada ação para o cliente reproduzir a animação completa
 // (o servidor só envia o estado; o cliente controla o tempo da animação).
 const MP_STATE_DUR = {
-  shot_power: 0.30, shot_technique: 0.24, pass: 0.22, tackle: TACKLE.duration, steal: 0.40,
+  shot_power: 0.30, shot_technique: 0.24, pass: 0.28, tackle: TACKLE.duration, steal: 0.40,
   dribble_stepover: 0.70, dribble_elastico: 0.55, dribble_roulette: 0.75,
   dribble_dragback: 0.60, dribble_rainbow: 0.80, dribble_carretilha: 0.62,
   jump: 0.55, header: 0.62, fall: 1.25, dive_left: 0.75, dive_right: 0.75,
@@ -7893,12 +7893,16 @@ function mpGatherInput(){
       mp.localKickCooldown = 0.35;
       sfx.playKick(mp.charge >= 1.0 ? 1.0 : 0.75);
       if(mp.charge >= 0.65) shake = 0.22;
+      // Mesmo corte do servidor (p >= 0.65 vira bomba), com p = 0.3 + carga*0.7
+      const p = 0.3 + Math.min(1, mp.charge) * 0.7;
+      mpPreverAcao(p >= 0.65 ? "shot_power" : "shot_technique");
     }
   }
   if(mpPrevPass && !mpInputState.pass){
     if(mp.ownerId === mp.entId){
       mp.localKickCooldown = 0.25;
       sfx.playKick(0.65);
+      mpPreverAcao("pass");
     }
   }
   if(mpInputState.steal && mp.ownerId !== mp.entId && !mpKeys._stealPressed){
@@ -7906,7 +7910,10 @@ function mpGatherInput(){
   }
   if(mpInputState.tackle && mp.ownerId !== mp.entId && !mpKeys._tacklePressed){
     sfx.playTackle();
+    mpPreverAcao("tackle");        // o servidor recusa se estiver com a bola — igual aqui
   }
+  if(mpInputState.jump && !mpKeys._jumpPressed) mpPularOuCabecear();
+  mpKeys._jumpPressed = mpInputState.jump;
   mpKeys._stealPressed = mpInputState.steal;
   mpKeys._tacklePressed = mpInputState.tackle;
 
@@ -7933,6 +7940,27 @@ function mpUpdateCharge(dt){
     const el = $("#power"); if(el) el.style.height = "0";
     if(crosshairWrap) crosshairWrap.classList.remove("charging");
   }
+}
+
+function mpPreverAcao(nome){
+  const c = mp.chars.get(mp.entId);
+  if(!c || c.act > 0) return;              // já tem ação rodando: não atropela
+  const d = MP_STATE_DUR[nome] || 0.3;
+  c.state = nome;
+  c.act = d;
+  c.lastState = nome;                      // impede o rearme quando o servidor confirmar
+  c.dribbleDuration = d;
+  if(nome === "tackle") c.tackleAct = d;
+  if(nome === "dance") c.danceTime = 0;
+}
+
+// Espelha a decisão do servidor em doJumpOrHeader: perto de uma bola na altura
+// da cabeça é cabeceio, senão é pulo. A conta é a mesma dos dois lados.
+function mpPularOuCabecear(){
+  const c = mp.chars.get(mp.entId);
+  if(!c) return;
+  const d = Math.hypot(ball.position.x - mp.localX, ball.position.z - mp.localZ);
+  mpPreverAcao(ball.position.y > 1.15 && ball.position.y < 3.4 && d < 2.6 ? "header" : "jump");
 }
 
 const mpAimDir = new THREE.Vector3();
@@ -8034,8 +8062,15 @@ function mpUpdate(dt){
     c.charge = s.charge;
     const newSt = MP_STATE_NAME[s.state] || "idle";
 
+    // Ação prevista localmente ainda rodando: o fluxo do servidor está ~100ms
+    // atrasado e ainda diz "parado". Tem que ser ignorado POR COMPLETO — deixar
+    // o bloco abaixo rodar zeraria o `act` da animação que acabou de começar no
+    // clique, e ela morreria no quadro seguinte.
+    const locoAtrasada = c.isMe && c.act > 0 &&
+      (newSt === "idle" || newSt === "run" || newSt === "sprint" || newSt === "kick_charge");
+
     // Ao trocar para uma nova ação autoritativa pelo servidor
-    if(newSt !== c.lastState){
+    if(newSt !== c.lastState && !locoAtrasada){
       c.lastState = newSt;
       const d = MP_STATE_DUR[newSt];
       c.act = d || 0;

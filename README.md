@@ -171,6 +171,26 @@ silêncio (o servidor gira o corpo em ações que o cliente não prediz, como o
 chute virando para a mira). Agora que a bola é posicionada a partir desse
 ângulo, divergir mandaria a bola para o lado errado.
 
+**Animações das próprias ações.** O estado do jogador vem do fluxo interpolado,
+~100ms atrás. Para os outros isso é o certo; para você significava a perna
+armando depois do clique. Chute, passe, carrinho e salto passaram a ser
+previstos localmente — o servidor segue sendo a autoridade sobre o que
+aconteceu com a bola, mas a animação sai junto com o botão. Pulo x cabeceio usa
+o mesmo critério dos dois lados (bola entre 1,15m e 3,4m a menos de 2,6m).
+
+Duas armadilhas resolvidas aí: a previsão marca `lastState`, senão a confirmação
+do servidor 100ms depois rearmaria o `act` e a animação tocaria duas vezes; e o
+estado "parado" atrasado do servidor é ignorado por completo enquanto a ação
+prevista roda, senão ele zerava o `act` e matava a animação no quadro seguinte.
+
+**Duração das animações.** Cada animação calcula o progresso como
+`1 - act/DURAÇÃO`, com a duração escrita à mão dentro do `animateHumanoid`. No
+online quem arma o `act` é a tabela `MP_STATE_DUR` — e os dois números **têm que ser
+iguais**, senão a animação começa no meio ou congela antes do fim. O passe
+estava assim: tabela 0,22 contra divisor 0,28, então ele começava com 21% já
+andados e a perna nunca armava. Há teste que percorre todas as animações e
+falha se alguém mexer num número sem mexer no outro.
+
 **Congelamento de saque.** O servidor segura todo mundo por 1,2s no saque e
 depois de cada gol, e mandava isso no snapshot (campo `f`) — que o cliente
 guardava em `mp.frozen` e nunca lia. Resultado: durante o congelamento o

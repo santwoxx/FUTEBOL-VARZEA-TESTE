@@ -4617,7 +4617,7 @@ const VFX = {
   })()
 };
 
-// ════════════ 1. EFEITO DE VENTO NA CORRIDA / SPRINT ════════════
+// ════════════ 1. EFEITO DE VENTO NA CORRIDA / SPRINT (SOMENTE NOS PÉS) ════════════
 function vfxSpawnWindLine(pos, vel){
   if(!scene) return;
   const speed = vel.length();
@@ -4627,22 +4627,23 @@ function vfxSpawnWindLine(pos, vel){
     map: VFX.windTex,
     color: 0xffffff,
     transparent: true,
-    opacity: 0.65,
+    opacity: 0.55,
     blending: THREE.AdditiveBlending,
     depthWrite: false
   });
   const sprite = new THREE.Sprite(mat);
-  const sideOffset = (Math.random() - 0.5) * 0.8;
-  const heightOffset = 0.8 + Math.random() * 0.8;
-  sprite.position.set(pos.x + sideOffset, pos.y + heightOffset, pos.z);
-  sprite.scale.set(1.4 + Math.random() * 0.6, 0.25, 1);
+  // Rastros aerodinâmicos rentes ao chão, saindo exclusivamente dos pés/chuteiras
+  const sideOffset = (Math.random() - 0.5) * 0.35;
+  const footHeight = 0.08 + Math.random() * 0.10; // Altura exclusiva dos pés
+  sprite.position.set(pos.x + sideOffset, footHeight, pos.z);
+  sprite.scale.set(0.95 + Math.random() * 0.45, 0.14, 1);
   scene.add(sprite);
 
   VFX.particles.push({
     mesh: sprite,
-    vel: new THREE.Vector3(-vel.x * 0.25, 0.15, -vel.z * 0.25),
-    life: 0.28 + Math.random() * 0.12,
-    maxLife: 0.40,
+    vel: new THREE.Vector3(-vel.x * 0.20, 0.04, -vel.z * 0.20),
+    life: 0.22 + Math.random() * 0.10,
+    maxLife: 0.32,
     type: "wind"
   });
 }
@@ -5140,40 +5141,42 @@ function animateHumanoid(char, dt, isMoving){
     const roll = -footSign;
     char.hips.rotation.y = 0; char.hips.rotation.z = 0;
 
-    if(prog < 0.18){
-      // ---- FASE 1: ENTRADA EXPLOSIVA - projeta o corpo rente ao chão e estica a perna ----
-      const e = prog / 0.18;
-      char.hips.position.y = THREE.MathUtils.damp(char.hips.position.y, 0.26, 24, dt);
-      char.root.rotation.z = THREE.MathUtils.damp(char.root.rotation.z, roll * 0.82, 24, dt);
-      char.root.rotation.x = THREE.MathUtils.damp(char.root.rotation.x, -0.42, 24, dt);
-      char.torsoGroup.rotation.x = 0.35 - e * 0.15;
+    if(prog < 0.16){
+      // ---- FASE 1: ENTRADA DINÂMICA - drop suave e atlético sem afundar no chão ----
+      const e = prog / 0.16;
+      const easeIn = e * (2 - e);
+      char.hips.position.y = THREE.MathUtils.damp(char.hips.position.y, 0.36, 20, dt);
+      char.root.rotation.z = THREE.MathUtils.damp(char.root.rotation.z, roll * 0.55 * easeIn, 20, dt);
+      char.root.rotation.x = THREE.MathUtils.damp(char.root.rotation.x, -0.14 * easeIn, 20, dt);
+      char.torsoGroup.rotation.x = 0.18 + easeIn * 0.06;
       char.torsoGroup.rotation.y = 0;
-      char.headGroup.rotation.x = -0.22;
+      char.headGroup.rotation.x = -0.10;
 
-      legKick.hipJoint.rotation.x  = 1.20 + e * 0.65; legKick.kneeJoint.rotation.x  = 0.30 - e * 0.25;
-      legPlant.hipJoint.rotation.x = -0.50 - e * 0.50; legPlant.kneeJoint.rotation.x = 0.70 + e * 0.80;
-      legKick.footGroup.rotation.x = -0.30;
-      armKick.shoulder.rotation.x = -0.65; armKick.shoulder.rotation.z = footSign * 0.55;
-      armPlant.shoulder.rotation.x = -1.55; armPlant.shoulder.rotation.z = -footSign * 0.70;
-      armPlant.elbow.rotation.x = -0.65;
+      legKick.hipJoint.rotation.x  = 1.10 + easeIn * 0.35; legKick.kneeJoint.rotation.x  = 0.20 - easeIn * 0.15;
+      legPlant.hipJoint.rotation.x = -0.25 - easeIn * 0.10; legPlant.kneeJoint.rotation.x = 0.60 + easeIn * 0.55;
+      legKick.footGroup.rotation.x = -0.20;
+      armKick.shoulder.rotation.x = -0.35; armKick.shoulder.rotation.z = footSign * 0.45;
+      armPlant.shoulder.rotation.x = -0.85; armPlant.shoulder.rotation.z = -footSign * 0.55;
+      armPlant.elbow.rotation.x = -0.40;
 
     } else if(prog < TACKLE.glideEnd){
-      // ---- FASE 2: DESLIZE RADICAL - corpo rasgando a quadra, perna alongada na bola ----
-      const g = (prog - 0.18) / (TACKLE.glideEnd - 0.18);
+      // ---- FASE 2: DESLIZE FLUIDO & POTENTE - 100% sobre o gramado/quadra ----
+      const g = (prog - 0.16) / (TACKLE.glideEnd - 0.16);
       const sway = Math.sin(g * Math.PI);
-      char.hips.position.y = THREE.MathUtils.damp(char.hips.position.y, 0.14, 20, dt);
-      char.root.rotation.z = THREE.MathUtils.damp(char.root.rotation.z, roll * (1.18 + sway * 0.08), 16, dt);
-      char.root.rotation.x = THREE.MathUtils.damp(char.root.rotation.x, -0.48 - sway * 0.06, 16, dt);
-      char.torsoGroup.rotation.x = 0.22 - g * 0.14;
-      char.torsoGroup.rotation.y = footSign * sway * 0.15;
-      char.headGroup.rotation.x = -0.12 + g * 0.16;
+      char.hips.position.y = THREE.MathUtils.damp(char.hips.position.y, 0.35, 18, dt);
+      char.root.rotation.z = THREE.MathUtils.damp(char.root.rotation.z, roll * (0.58 + sway * 0.04), 16, dt);
+      char.root.rotation.x = THREE.MathUtils.damp(char.root.rotation.x, -0.16 - sway * 0.03, 16, dt);
+      char.torsoGroup.rotation.x = 0.24 - g * 0.06;
+      char.torsoGroup.rotation.y = footSign * sway * 0.10;
+      char.headGroup.rotation.x = -0.10 + g * 0.08;
 
-      legKick.hipJoint.rotation.x  = 1.82 + g * 0.28; legKick.kneeJoint.rotation.x  = Math.max(0, 0.02);
-      legPlant.hipJoint.rotation.x = -0.95 + g * 0.30; legPlant.kneeJoint.rotation.x = 1.45 - g * 0.35;
-      legKick.footGroup.rotation.x = -0.35 + g * 0.12;
-      armKick.shoulder.rotation.x = -0.90 + sway * 0.38; armKick.shoulder.rotation.z = footSign * (0.38 + sway * 0.16);
-      armPlant.shoulder.rotation.x = -1.35 - sway * 0.30; armPlant.shoulder.rotation.z = -footSign * 0.55;
-      armPlant.elbow.rotation.x = -0.80 - sway * 0.32;
+      // Perna de ataque esticada como lâmina na bola
+      legKick.hipJoint.rotation.x  = 1.55 + g * 0.15; legKick.kneeJoint.rotation.x  = Math.max(0.02, 0.05 - g * 0.03);
+      legPlant.hipJoint.rotation.x = -0.38 + g * 0.10; legPlant.kneeJoint.rotation.x = 1.25 - g * 0.15;
+      legKick.footGroup.rotation.x = -0.25;
+      armKick.shoulder.rotation.x = -0.45 + sway * 0.20; armKick.shoulder.rotation.z = footSign * (0.42 + sway * 0.10);
+      armPlant.shoulder.rotation.x = -0.95 - sway * 0.15; armPlant.shoulder.rotation.z = -footSign * 0.58;
+      armPlant.elbow.rotation.x = -0.35 - sway * 0.15;
 
       // Spawna efeitos de rachaduras no chão, faíscas e cascalho
       if(typeof vfxSpawnTackleTrail === "function"){
@@ -5181,22 +5184,22 @@ function animateHumanoid(char, dt, isMoving){
       }
 
     } else {
-      // ---- FASE 3: RECUPERAÇÃO ÁGIL DE PÉ ----
+      // ---- FASE 3: LEVANTADA SUAVE & ÁGIL ----
       const u = (prog - TACKLE.glideEnd) / (1 - TACKLE.glideEnd);
       const ease = u * u * (3 - 2 * u);
       char.hips.position.y = THREE.MathUtils.damp(char.hips.position.y, 1.05, 16, dt);
-      char.root.rotation.z = THREE.MathUtils.damp(char.root.rotation.z, 0, 15, dt);
-      char.root.rotation.x = THREE.MathUtils.damp(char.root.rotation.x, 0, 15, dt);
-      char.torsoGroup.rotation.x = (1 - ease) * 0.38;
+      char.root.rotation.z = THREE.MathUtils.damp(char.root.rotation.z, 0, 16, dt);
+      char.root.rotation.x = THREE.MathUtils.damp(char.root.rotation.x, 0, 16, dt);
+      char.torsoGroup.rotation.x = (1 - ease) * 0.24;
       char.torsoGroup.rotation.y = 0;
-      char.headGroup.rotation.x = THREE.MathUtils.damp(char.headGroup.rotation.x, 0, 15, dt);
+      char.headGroup.rotation.x = THREE.MathUtils.damp(char.headGroup.rotation.x, 0, 16, dt);
 
-      legKick.hipJoint.rotation.x  = (1 - ease) * 1.25; legKick.kneeJoint.rotation.x  = (1 - ease) * 0.65;
-      legPlant.hipJoint.rotation.x = (1 - ease) * -0.70; legPlant.kneeJoint.rotation.x = (1 - ease) * 0.95;
-      legKick.footGroup.rotation.x = (1 - ease) * -0.22;
-      armKick.shoulder.rotation.x = (1 - ease) * -0.65; armKick.shoulder.rotation.z = (1 - ease) * footSign * 0.35;
-      armPlant.shoulder.rotation.x = (1 - ease) * -1.15; armPlant.shoulder.rotation.z = (1 - ease) * -footSign * 0.45;
-      armPlant.elbow.rotation.x = (1 - ease) * -0.65;
+      legKick.hipJoint.rotation.x  = (1 - ease) * 1.10; legKick.kneeJoint.rotation.x  = (1 - ease) * 0.45;
+      legPlant.hipJoint.rotation.x = (1 - ease) * -0.35; legPlant.kneeJoint.rotation.x = (1 - ease) * 0.70;
+      legKick.footGroup.rotation.x = (1 - ease) * -0.15;
+      armKick.shoulder.rotation.x = (1 - ease) * -0.45; armKick.shoulder.rotation.z = (1 - ease) * footSign * 0.25;
+      armPlant.shoulder.rotation.x = (1 - ease) * -0.85; armPlant.shoulder.rotation.z = (1 - ease) * -footSign * 0.35;
+      armPlant.elbow.rotation.x = (1 - ease) * -0.40;
     }
     return;
   }

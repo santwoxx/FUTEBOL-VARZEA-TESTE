@@ -7564,6 +7564,7 @@ function mpClearRoster(){
   mp.roster = [];
   mp.snaps.length = 0; mp.history.length = 0; mp.ready = false;
   mp.hudScore = null; mp.hudClock = null;
+  mp.localState = "idle"; mp.localAct = 0;
   mpWorld.ents.clear(); mpWorld.ball = null;
 }
 
@@ -7684,6 +7685,15 @@ function mpOnSnapshot(d){
 
   // Reconciliacao: estado autoritativo do proprio jogador
   const mineEl = mpSnapEnt(d, mp.entId);
+  // Guarda a ação em que o servidor colocou você: é o que mpApplyLocalInput usa
+  // para parar de dirigir o boneco enquanto ela dura.
+  if(mineEl){
+    const st = MP_STATE_NAME[mineEl[5]] || "idle";
+    if(st !== mp.localState){
+      mp.localState = st;
+      mp.localAct = MP_STATE_DUR[st] || 0;
+    }
+  }
   if(mineEl && mp.chars.has(mp.entId)){
     mpReconcile(mineEl);
   }
@@ -7696,10 +7706,43 @@ function mpSnapEnt(snap, id){
 }
 
 const mpDamp = (a,b,l,dt)=> b + (a-b)*Math.exp(-l*dt);
+// Integração + limites do campo, iguais aos do servidor. Extraído porque agora
+// há três caminhos de movimento (drible, ação travada e locomoção normal).
+function mpIntegrarLocal(dt){
+  mp.localX += mp.localVx*dt;
+  mp.localZ += mp.localVz*dt;
+  mp.localX = clamp(mp.localX, -HW+0.8, HW-0.8);
+  mp.localZ = clamp(mp.localZ, -HH+0.8, HH-0.8);
+}
+
 function mpApplyLocalInput(input, dt, hasBall){
   // Saque e comemoração de gol: o servidor segura todo mundo parado. Prever
   // movimento aqui só geraria correção depois.
   if(mp.frozen){ mp.localVx = 0; mp.localVz = 0; return; }
+
+  mp.localAct = Math.max(0, (mp.localAct || 0) - dt);
+  const st = mp.localState || "idle";
+
+  // Carrinho, desarme e tombo: sem direção, só o atrito levando o corpo. O
+  // servidor apenas PARA de dirigir e aplica atrito, e isso o cliente espelha
+  // exatamente — medido, a fuga da posição cai de 0,48m para 0,17m no deslize.
+  //
+  // O drible NÃO entra aqui de propósito: lá o servidor dá um impulso que o
+  // cliente não tem como prever (a força varia com o movimento sorteado), e
+  // adivinhar 13,5 m/s ficou PIOR que continuar seguindo o teclado — medido,
+  // 0,20m viravam 0,35m. Nesse caso a reconciliação sozinha se sai melhor.
+  if(st === "tackle" || st === "steal" || st === "fall"){
+    let lambda = 5;
+    if(st === "tackle"){
+      const deslizando = mp.localAct > TACKLE.duration * (1 - TACKLE.glideEnd);
+      lambda = deslizando ? TACKLE.drag : TACKLE.drag * TACKLE.brake;
+    }
+    mp.localVx = mpDamp(mp.localVx, 0, lambda, dt);
+    mp.localVz = mpDamp(mp.localVz, 0, lambda, dt);
+    mpIntegrarLocal(dt);
+    return;
+  }
+
   let speed = input.sprint ? 12.0 : 8.5;
   if(hasBall) speed *= 0.90;
   if(input.shoot) speed *= 0.55;
@@ -7712,11 +7755,12 @@ function mpApplyLocalInput(input, dt, hasBall){
   } else {
     mp.localVx = mpDamp(mp.localVx, 0, 13, dt);
     mp.localVz = mpDamp(mp.localVz, 0, 13, dt);
+    // Parado, o angulo volta devagar para o oficial. O servidor gira o corpo em
+    // acoes que o cliente nao prediz (o chute vira para a mira), e sem isso os
+    // dois divergiam para sempre. Enquanto o jogador dirige, o teclado manda.
+    if(mp.serverYaw != null) mp.localYaw = angleLerp(mp.localYaw, mp.serverYaw, 1 - Math.exp(-6*dt));
   }
-  mp.localX += mp.localVx*dt;
-  mp.localZ += mp.localVz*dt;
-  mp.localX = clamp(mp.localX, -HW+0.8, HW-0.8);
-  mp.localZ = clamp(mp.localZ, -HH+0.8, HH-0.8);
+  mpIntegrarLocal(dt);
 }
 function mpReconcile(serverEnt){
   const sx = serverEnt[1], sy = serverEnt[2], sz = serverEnt[3];
@@ -7729,7 +7773,7 @@ function mpReconcile(serverEnt){
   const startX = mp.localX, startZ = mp.localZ;
   mp.localX = sx; mp.localZ = sz; mp.localY = sy;
   mp.localVx = svx; mp.localVz = svz;
-  mp.localYaw = angleLerp(mp.localYaw, serverEnt[4], 0.25);
+  mp.serverYaw = serverEnt[4];   // convergido so quando o jogador esta parado
   const hasBall = mp.ownerId === mp.entId;
   for(const h of mp.history) mpApplyLocalInput(h.input, h.dt, hasBall);
   const err = Math.hypot(mp.localX - startX, mp.localZ - startZ);
@@ -8003,7 +8047,9 @@ function mpUpdate(dt){
       if(newSt === "pass"){ if(!c.isMe) sfx.playKick(0.60); }
       if(newSt.startsWith("dive_") || newSt.startsWith("catch_")){ sfx.playPostClank(); }
       if(newSt === "dance") c.danceTime = 0;
-      if(!c.isMe) c.state = newSt;
+      const locomocao = newSt === "idle" || newSt === "run" ||
+                        newSt === "sprint" || newSt === "kick_charge";
+      if(!c.isMe || !locomocao) c.state = newSt;
     }
     animateHumanoid(c, dt, c.speed > 0.5);
   }

@@ -86,6 +86,7 @@ export function createWorld(teamSize, opts = {}) {
     ents,
     ball: { x: 0, y: CFG.BALL_R, z: 0, vx: 0, vy: 0, vz: 0, spinY: 0 },
     ownerId: 0,
+    lastTouchEntId: 0,
     score: [0, 0],
     timeLeft: CFG.MATCH,
     running: false,
@@ -157,6 +158,7 @@ function findOwner(w) {
 
 // Cola a bola no pe de quem conduz (mesma cadencia do single-player)
 function dribbleBall(w, e, dt) {
+  w.lastTouchEntId = e.id;
   const b = w.ball;
   const fx = Math.sin(e.yaw), fz = Math.cos(e.yaw);
   const lead = 0.88;
@@ -174,6 +176,7 @@ function dribbleBall(w, e, dt) {
 function doShoot(w, e, power, over = 0) {
   const b = w.ball;
   if (dist2(e.x, e.z, b.x, b.z) > 3.8 || b.y > 2.8) return false;
+  w.lastTouchEntId = e.id;
   const p = clamp(power, 0, 1);
 
   // Segurar alem da carga cheia nao adiciona forca: o pe passa por baixo da
@@ -217,6 +220,7 @@ function doShoot(w, e, power, over = 0) {
 function doPass(w, e, power) {
   const b = w.ball;
   if (dist2(e.x, e.z, b.x, b.z) > 4.2 || b.y > 2.8) return false;
+  w.lastTouchEntId = e.id;
   const p = clamp(power, 0, 1);
 
   // Escolhe o companheiro mais alinhado com a mira/frente do jogador
@@ -912,7 +916,7 @@ export function step(w, dt, inputs) {
       const scored = stepBall(w, dt);
       if (scored >= 0) {
         w.score[scored]++;
-        event = { type: "goal", team: scored };
+        event = { type: "goal", team: scored, scorerEntId: w.lastTouchEntId || 0 };
         resetPositions(w, scored === 0 ? -1 : 1);
       }
     }

@@ -178,6 +178,8 @@ wss.on("connection", (ws) => {
         if (n) client.name = n;
         if (msg.d?.customConfig) client.customConfig = msg.d.customConfig;
         client.uid = msg.d?.uid || null;
+        client.mpGoals = typeof msg.d?.mpGoals === "number" ? msg.d.mpGoals : 0;
+        client.cardTier = typeof msg.d?.cardTier === "string" ? msg.d.cardTier : "silver";
         break;
       }
       case C2S.CREATE_ROOM: {

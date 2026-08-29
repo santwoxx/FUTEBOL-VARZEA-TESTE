@@ -604,6 +604,588 @@ canvas{display:block;width:100%;height:100%}
 .keybindBtn { background: rgba(255,215,0,0.2); border: 1px solid #ffd700; color: #ffd700; font-family: 'Outfit'; font-weight: 800; padding: 6px 16px; border-radius: 6px; cursor: pointer; min-width: 60px; text-align: center; text-transform: uppercase; }
 .keybindBtn.listening { background: #ffd700; color: #000; animation: pulseKey 1s infinite; }
 @keyframes pulseKey { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+/* ═══════════════ DESIGN LIMPO & PREMIUM DAS CARTAS FUT DE NÍVEL ═══════════════ */
+.futCardWrapper {
+  perspective: 1000px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  user-select: none;
+}
+
+.futCard {
+  position: relative;
+  width: 250px;
+  height: 380px;
+  border-radius: 22px;
+  transform-style: preserve-3d;
+  transition: transform 0.12s ease-out, box-shadow 0.25s ease;
+  overflow: hidden;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+}
+
+/* 🥈 CARTA PRATA — INICIANTE (0 a 400 gols) */
+.futCard.cardTier-silver {
+  background: 
+    radial-gradient(circle at 50% 15%, rgba(255, 255, 255, 0.18) 0%, transparent 60%),
+    linear-gradient(155deg, #2b323c 0%, #1a1e26 40%, #28303d 70%, #0f1217 100%);
+  border: 2px solid rgba(220, 230, 245, 0.75);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.85), 0 0 25px rgba(200, 220, 245, 0.25), inset 0 0 20px rgba(255,255,255,0.08);
+}
+
+/* 🥇 CARTA DOURADA — PRO (400 a 1000 gols) */
+.futCard.cardTier-gold {
+  background: 
+    radial-gradient(circle at 50% 15%, rgba(255, 220, 100, 0.25) 0%, transparent 60%),
+    linear-gradient(155deg, #3d2c0b 0%, #1f1503 40%, #44320c 70%, #120b01 100%);
+  border: 2px solid rgba(255, 215, 0, 0.85);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.85), 0 0 35px rgba(255, 195, 0, 0.35), inset 0 0 22px rgba(255, 215, 0, 0.15);
+}
+
+/* 👑 CARTA LEGEND — LENDÁRIO (1000+ gols) */
+.futCard.cardTier-legend {
+  background: 
+    radial-gradient(circle at 50% 15%, rgba(255, 235, 150, 0.3) 0%, transparent 60%),
+    radial-gradient(circle at 85% 85%, rgba(168, 85, 247, 0.25) 0%, transparent 50%),
+    linear-gradient(155deg, #1c0e29 0%, #0d0615 40%, #2b113e 70%, #08030c 100%);
+  border: 2.2px solid rgba(255, 225, 120, 0.95);
+  box-shadow: 0 18px 45px rgba(0,0,0,0.9), 0 0 45px rgba(255, 215, 0, 0.45), 0 0 25px rgba(168, 85, 247, 0.35), inset 0 0 25px rgba(255, 215, 0, 0.2);
+}
+
+/* Efeito Holográfico & Brilho Metálico Dinâmico */
+.cardHoloSheen {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  mix-blend-mode: color-dodge;
+  opacity: 0.35;
+  background: linear-gradient(
+    var(--holo-deg, 125deg),
+    transparent 0%,
+    rgba(255, 255, 255, 0.08) 20%,
+    rgba(255, 215, 0, 0.45) 40%,
+    rgba(0, 240, 184, 0.4) 55%,
+    rgba(0, 210, 255, 0.45) 70%,
+    transparent 100%
+  );
+  transition: opacity 0.3s;
+}
+.futCard:hover .cardHoloSheen {
+  opacity: 0.85;
+}
+
+.cardGlowOverlay {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4;
+  background: radial-gradient(circle at var(--glow-x, 50%) var(--glow-y, 50%), rgba(255,255,255,0.22) 0%, transparent 65%);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.futCard:hover .cardGlowOverlay {
+  opacity: 1;
+}
+
+/* Cabeçalho da Carta (Nível & Faixa de Gols) */
+.cardHeader {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  right: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 3;
+}
+
+.cardTierPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
+.cardTier-silver .cardTierPill {
+  background: rgba(226, 232, 240, 0.2);
+  border: 1px solid rgba(226, 232, 240, 0.6);
+  color: #f1f5f9;
+}
+.cardTier-gold .cardTierPill {
+  background: rgba(255, 215, 0, 0.2);
+  border: 1px solid rgba(255, 215, 0, 0.7);
+  color: #ffd700;
+}
+.cardTier-legend .cardTierPill {
+  background: rgba(255, 215, 0, 0.25);
+  border: 1px solid rgba(255, 225, 120, 0.85);
+  color: #fff2a8;
+  box-shadow: 0 0 10px rgba(255,215,0,0.3);
+}
+
+.cardTierRange {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  padding: 3px 8px;
+  border-radius: 8px;
+  background: rgba(0,0,0,0.45);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.75);
+}
+
+/* Área Central com a Skin 3D do Personagem */
+.cardSkinContainer {
+  position: absolute;
+  top: 32px;
+  bottom: 80px;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.cardSkinImg {
+  height: 100%;
+  width: auto;
+  max-width: 98%;
+  object-fit: contain;
+  filter: drop-shadow(0 8px 16px rgba(0,0,0,0.75));
+}
+
+/* Faixa do Nome do Atleta */
+.cardNameBanner {
+  position: absolute;
+  bottom: 84px;
+  left: 14px;
+  right: 14px;
+  text-align: center;
+  z-index: 3;
+  background: rgba(10, 8, 14, 0.75);
+  backdrop-filter: blur(8px);
+  padding: 4px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.6);
+}
+.cardTier-silver .cardNameBanner {
+  border-color: rgba(220, 230, 245, 0.35);
+}
+.cardTier-gold .cardNameBanner {
+  border-color: rgba(255, 215, 0, 0.45);
+}
+.cardTier-legend .cardNameBanner {
+  border-color: rgba(255, 215, 0, 0.65);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.6), 0 0 12px rgba(255,215,0,0.2);
+}
+
+.cardPlayerName {
+  font-family: 'Teko', sans-serif;
+  font-size: 25px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin: 0;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cardTier-silver .cardPlayerName { color: #f8fafc; }
+.cardTier-gold .cardPlayerName { color: #ffd700; }
+.cardTier-legend .cardPlayerName { color: #fff3ad; text-shadow: 0 0 10px rgba(255,215,0,0.5); }
+
+/* Bloco Inferior — Destaque Exclusivo dos Gols Multiplayer */
+.cardGoalsSection {
+  position: absolute;
+  bottom: 14px;
+  left: 14px;
+  right: 14px;
+  z-index: 3;
+}
+
+.cardGoalsBox {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: rgba(8, 6, 12, 0.88);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.7);
+}
+.cardTier-silver .cardGoalsBox {
+  border: 1.5px solid rgba(220, 230, 245, 0.55);
+}
+.cardTier-gold .cardGoalsBox {
+  border: 1.5px solid rgba(255, 215, 0, 0.65);
+}
+.cardTier-legend .cardGoalsBox {
+  border: 1.5px solid rgba(255, 215, 0, 0.85);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.7), 0 0 14px rgba(255,215,0,0.25);
+}
+
+.cardGoalsIcon {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.cardGoalsContent {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  line-height: 1;
+}
+
+.cardGoalsValue {
+  font-family: 'Teko', sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 0.9;
+  letter-spacing: 0.5px;
+}
+.cardTier-silver .cardGoalsValue { color: #f1f5f9; text-shadow: 0 0 8px rgba(255,255,255,0.4); }
+.cardTier-gold .cardGoalsValue { color: #ffd700; text-shadow: 0 0 8px rgba(255,215,0,0.5); }
+.cardTier-legend .cardGoalsValue { color: #ffd700; text-shadow: 0 0 10px rgba(255,215,0,0.6); }
+
+.cardGoalsLabel {
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.75);
+  margin-top: 2px;
+}
+
+/* ═══════════ MODAL DE PERFIL DO ATLETA & CARTAS ═══════════ */
+#profileModal {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(8,5,12,0.92), rgba(4,2,8,0.97));
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 28;
+  overflow-y: auto;
+}
+#profileModal.show { display: flex; animation: fadeInModal .2s ease-out; }
+@keyframes fadeInModal { from { opacity: 0; transform: scale(0.97); } to { opacity: 1; transform: scale(1); } }
+
+.profileContainer {
+  width: min(94vw, 840px);
+  background: linear-gradient(180deg, rgba(24,14,34,0.88), rgba(10,6,16,0.96));
+  border: 1.5px solid rgba(255,215,0,0.35);
+  border-radius: 28px;
+  box-shadow: 0 30px 90px rgba(0,0,0,0.9), 0 0 50px rgba(255,140,0,0.18);
+  padding: 26px 28px;
+  color: #fff;
+  position: relative;
+}
+.profileHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255,255,255,0.12);
+  padding-bottom: 12px;
+  margin-bottom: 20px;
+}
+.profileHeader h2 {
+  margin: 0;
+  font-family: 'Teko', sans-serif;
+  font-size: 34px;
+  letter-spacing: 1.5px;
+  color: #ffd700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.profileBody {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 28px;
+  align-items: center;
+}
+@media(max-width: 768px) {
+  .profileBody { grid-template-columns: 1fr; justify-items: center; }
+}
+
+.profileCardPreviewWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+.profileTiltHint {
+  font-size: 11px;
+  color: rgba(255,255,255,0.5);
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.profileInfoCol {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.profileTierBanner {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 16px;
+  padding: 16px 18px;
+}
+.profileTierBadgeRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.profileTierTitle {
+  font-family: 'Teko', sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  color: #ffd700;
+}
+.profileProgressBarWrap {
+  width: 100%;
+  height: 12px;
+  background: rgba(0,0,0,0.5);
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.15);
+  margin-top: 8px;
+}
+.profileProgressBarFill {
+  height: 100%;
+  background: linear-gradient(90deg, #00f0b8, #ffd700, #ff8800);
+  border-radius: 6px;
+  transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 0 12px rgba(255,215,0,0.6);
+}
+.profileProgressLabel {
+  font-size: 12px;
+  font-weight: 800;
+  color: rgba(255,255,255,0.85);
+  margin-top: 6px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.profileGalleryRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+.profileMiniTierBtn {
+  padding: 10px 8px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.05);
+  border: 1.5px solid rgba(255,255,255,0.12);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  font-family: 'Outfit', sans-serif;
+  font-size: 11.5px;
+  font-weight: 900;
+  text-transform: uppercase;
+  transition: all .15s;
+}
+.profileMiniTierBtn:hover {
+  background: rgba(255,255,255,0.12);
+  border-color: #ffd700;
+  transform: translateY(-2px);
+}
+.profileMiniTierBtn.active {
+  background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,140,0,0.1));
+  border-color: #ffd700;
+  color: #ffd700;
+  box-shadow: 0 0 15px rgba(255,215,0,0.3);
+}
+
+.profileStatsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+.profileStatBox {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 10px 14px;
+}
+.profileStatVal {
+  font-family: 'Teko', sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: #ffd700;
+  line-height: 1;
+}
+.profileStatLabel {
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  color: rgba(255,255,255,0.6);
+  text-transform: uppercase;
+}
+
+.profileMpNote {
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: #8ef0c8;
+  background: rgba(0,240,184,0.08);
+  border: 1px solid rgba(0,240,184,0.22);
+  padding: 10px 14px;
+  border-radius: 12px;
+}
+
+/* ═══════════ APRESENTAÇÃO DE PARTIDA COM CARTAS (VS MATCH INTRO) ═══════════ */
+#matchIntroOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: radial-gradient(circle at 50% 50%, rgba(20,12,30,0.94) 0%, rgba(6,3,10,0.98) 100%);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  user-select: none;
+}
+#matchIntroOverlay.show { display: flex; animation: introFadeIn 0.3s ease-out; }
+@keyframes introFadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.introTopHeader {
+  text-align: center;
+  margin-bottom: 22px;
+}
+.introTopHeader h1 {
+  margin: 0;
+  font-family: 'Teko', sans-serif;
+  font-size: 46px;
+  letter-spacing: 3px;
+  background: linear-gradient(135deg, #ffd700, #ff8800);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 30px rgba(255,215,0,0.4);
+}
+.introSubTitle {
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: #8ef0c8;
+  text-transform: uppercase;
+}
+
+.introVsArena {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 36px;
+  width: 100%;
+  max-width: 900px;
+}
+@media(max-width: 680px) {
+  .introVsArena { gap: 14px; transform: scale(0.85); }
+}
+
+.introCardCol {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.introCardCol.homeTeam { animation: slideInLeft 0.55s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.introCardCol.awayTeam { animation: slideInRight 0.55s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+@keyframes slideInLeft { from { opacity: 0; transform: translateX(-60px) scale(0.9); } to { opacity: 1; transform: translateX(0) scale(1); } }
+@keyframes slideInRight { from { opacity: 0; transform: translateX(60px) scale(0.9); } to { opacity: 1; transform: translateX(0) scale(1); } }
+
+.introTeamTag {
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 4px 14px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+}
+.introTeamTag.home { color: #ff4455; border-color: rgba(255,68,85,0.4); }
+.introTeamTag.away { color: #f5f5f7; border-color: rgba(255,255,255,0.4); }
+
+.introVsCenter {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  z-index: 5;
+}
+.introVsEmblem {
+  font-family: 'Teko', sans-serif;
+  font-size: 58px;
+  font-weight: 900;
+  line-height: 1;
+  color: #ffd700;
+  text-shadow: 0 0 20px rgba(255,215,0,0.8), 0 0 40px rgba(255,140,0,0.6);
+  animation: vsPulse 1.2s ease-in-out infinite;
+}
+@keyframes vsPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.15); } }
+
+.introSkipHint {
+  margin-top: 24px;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: rgba(255,255,255,0.6);
+  background: rgba(255,255,255,0.06);
+  padding: 8px 18px;
+  border-radius: 20px;
+  border: 1px solid rgba(255,255,255,0.15);
+  cursor: pointer;
+  transition: all .15s;
+}
+.introSkipHint:hover { background: rgba(255,255,255,0.15); color: #fff; }
+
+/* Modal de Level Up / Subida de Carta */
+#cardLevelUpModal {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(6,3,10,0.88);
+  backdrop-filter: blur(16px);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  padding: 20px;
+}
+#cardLevelUpModal.show { display: flex; animation: levelUpPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) both; }
+@keyframes levelUpPop { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: scale(1); } }
 </style>
 </head>
 <body>
@@ -1061,6 +1643,137 @@ canvas{display:block;width:100%;height:100%}
   </div>
 </div>
 
+<!-- ═══════════ MODAL DE PERFIL DO ATLETA & CARTAS ═══════════ -->
+<div id="profileModal">
+  <div class="profileContainer">
+    <div class="profileHeader">
+      <h2>👤 PERFIL DO ATLETA & CARTA</h2>
+      <button class="closeCustomBtn" id="btnCloseProfile">✕</button>
+    </div>
+
+    <div class="profileBody">
+      <!-- Coluna da Esquerda: Carta FUT 3D Grande e Interativa -->
+      <div class="profileCardPreviewWrap">
+        <div class="futCardWrapper" id="profileCardMount">
+          <!-- Renderizado via JS -->
+        </div>
+        <div class="profileTiltHint">✨ Mova o mouse sobre a carta para ver o reflexo holográfico 3D</div>
+      </div>
+
+      <!-- Coluna da Direita: Progresso de Nível, Coleção de Cartas e Estatísticas -->
+      <div class="profileInfoCol">
+        <!-- Banner de Nível Atual e Próxima Carta -->
+        <div class="profileTierBanner">
+          <div class="profileTierBadgeRow">
+            <span class="profileTierTitle" id="profileTierTitleText">🥈 CARTA PRATA — INICIANTE</span>
+            <span style="font-size:12px;font-weight:900;color:#8ef0c8;letter-spacing:1px" id="profileGoalsCounter">⚽ 0 GOLS</span>
+          </div>
+
+          <div class="profileProgressBarWrap">
+            <div class="profileProgressBarFill" id="profileProgressFill" style="width: 0%"></div>
+          </div>
+
+          <div class="profileProgressLabel">
+            <span id="profileProgressText">0 / 400 Gols</span>
+            <span id="profileNextTierText" style="color:#ffd700">Faltam 400 gols para CARTA DOURADA PRO</span>
+          </div>
+        </div>
+
+        <!-- Coleção de 3 Cartas -->
+        <div>
+          <label style="display:block;font-size:11px;font-weight:900;letter-spacing:1px;color:#ffd700;margin-bottom:8px;text-transform:uppercase">Coleção de Cartas de Nível</label>
+          <div class="profileGalleryRow">
+            <button class="profileMiniTierBtn active" id="btnPreviewSilver" data-tier="silver">
+              <span style="font-size:18px">🥈</span>
+              <span>PRATA</span>
+              <small style="font-size:9px;color:rgba(255,255,255,0.6)">0 - 400 GOLS</small>
+            </button>
+            <button class="profileMiniTierBtn" id="btnPreviewGold" data-tier="gold">
+              <span style="font-size:18px">🥇</span>
+              <span>DOURADA</span>
+              <small style="font-size:9px;color:rgba(255,255,255,0.6)">400 - 1000 GOLS</small>
+            </button>
+            <button class="profileMiniTierBtn" id="btnPreviewLegend" data-tier="legend">
+              <span style="font-size:18px">👑</span>
+              <span>LEGEND</span>
+              <small style="font-size:9px;color:rgba(255,255,255,0.6)">1000+ GOLS</small>
+            </button>
+          </div>
+        </div>
+
+        <!-- Estatísticas Gerais -->
+        <div>
+          <label style="display:block;font-size:11px;font-weight:900;letter-spacing:1px;color:rgba(255,255,255,0.6);margin-bottom:8px;text-transform:uppercase">Estatísticas Oficiais Multiplayer</label>
+          <div class="profileStatsGrid">
+            <div class="profileStatBox">
+              <div class="profileStatVal" id="statValGoals">0</div>
+              <div class="profileStatLabel">⚽ Gols no Modo Online</div>
+            </div>
+            <div class="profileStatBox">
+              <div class="profileStatVal" id="statValMatches">0</div>
+              <div class="profileStatLabel">🎮 Partidas Jogadas</div>
+            </div>
+            <div class="profileStatBox">
+              <div class="profileStatVal" id="statValWins">0</div>
+              <div class="profileStatLabel">🏆 Vitórias Conquistadas</div>
+            </div>
+            <div class="profileStatBox">
+              <div class="profileStatVal" id="statValWinRate">0%</div>
+              <div class="profileStatLabel">📈 Aproveitamento</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Aviso de Contabilidade Exclusiva -->
+        <div class="profileMpNote">
+          ⚽ <b>Apenas gols feitos no modo Multiplayer Online</b> contam para o progresso da sua carta e evolução de nível!
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════ APRESENTAÇÃO DE PARTIDA COM CARTAS (VS MATCH INTRO) ═══════════ -->
+<div id="matchIntroOverlay">
+  <div class="introTopHeader">
+    <div class="introSubTitle">⚽ APRESENTAÇÃO DE PARTIDA • FUTEBOL DE VÁRZEA</div>
+    <h1 id="introMatchTitle">CONFRONTO DE CRIAS</h1>
+  </div>
+
+  <div class="introVsArena">
+    <!-- Carta Time Casa / Jogador -->
+    <div class="introCardCol homeTeam">
+      <span class="introTeamTag home" id="introHomeTag">TIME DA CASA</span>
+      <div class="futCardWrapper" id="introHomeCardMount"></div>
+    </div>
+
+    <!-- Centro: VS Animado -->
+    <div class="introVsCenter">
+      <span class="introVsEmblem">VS</span>
+      <span style="font-size:11px;font-weight:900;letter-spacing:2px;color:rgba(255,255,255,0.5)">FAVELA ARENA</span>
+    </div>
+
+    <!-- Carta Time Visitante / Adversário -->
+    <div class="introCardCol awayTeam">
+      <span class="introTeamTag away" id="introAwayTag">VISITANTE</span>
+      <div class="futCardWrapper" id="introAwayCardMount"></div>
+    </div>
+  </div>
+
+  <div class="introSkipHint" id="introSkipBtn">Pressione ESPAÇO ou clique para Iniciar Agora ⏩</div>
+</div>
+
+<!-- ═══════════ POPUP DE SUBIDA DE NÍVEL / LEVEL UP DE CARTA ═══════════ -->
+<div id="cardLevelUpModal">
+  <div style="text-align:center;max-width:440px;display:flex;flex-direction:column;align-items:center;gap:14px">
+    <div style="font-size:42px" id="levelUpEmoji">🎉</div>
+    <h1 style="margin:0;font-family:'Teko',sans-serif;font-size:42px;color:#ffd700;letter-spacing:2px;line-height:1" id="levelUpTitle">NOVA CARTA DESBLOQUEADA!</h1>
+    <div style="font-size:14px;color:rgba(255,255,255,0.9);font-weight:700;line-height:1.4" id="levelUpDesc">Você atingiu a marca de gols necessária e subiu de nível!</div>
+    <div class="futCardWrapper" id="levelUpCardMount" style="margin:10px 0"></div>
+    <button class="mpBtn mpBtnCreate" id="btnClaimLevelUp" style="padding:12px 32px;font-size:15px">CONTINUAR JOGANDO ⚽</button>
+  </div>
+</div>
+
 <script type="module">
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.179.1/build/three.module.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
@@ -1088,13 +1801,11 @@ const authAvatar = document.getElementById("authAvatar");
 
 btnAuth.addEventListener("click", () => {
   if (window.firebaseUser) {
-    signOut(fbAuth);
+    if (typeof openProfileModal === "function") openProfileModal();
   } else {
     const provider = new GoogleAuthProvider();
     signInWithPopup(fbAuth, provider).catch(e => {
       console.error(e);
-      // Erro nº1 depois de trocar de domínio (Render → Vercel): o Firebase só
-      // aceita popup de domínios que estão na allowlist do projeto.
       if (e?.code === "auth/unauthorized-domain") {
         alert(`Login bloqueado: o domínio "${location.hostname}" não está autorizado no Firebase.\n\n` +
               `Console do Firebase > Authentication > Settings > Authorized domains > Add domain`);
@@ -1107,19 +1818,16 @@ onAuthStateChanged(fbAuth, async (user) => {
   window.firebaseUser = user;
   if (user) {
     window.firebaseUid = user.uid;
-    authName.textContent = user.displayName ? user.displayName.toUpperCase() : "JOGADOR";
-    authName.style.color = "#8ef0c8"; // Neon green when logged in
     authAvatar.innerHTML = user.photoURL ? `<img src="${user.photoURL}" style="width:20px;height:20px;border-radius:50%">` : "✅";
-    btnAuth.title = "Clique para Sair";
+    btnAuth.title = "Clique para abrir seu Perfil";
     await loadFirebaseConfig();
   } else {
     window.firebaseUid = null;
-    authName.textContent = "ENTRAR (GOOGLE)";
-    authName.style.color = "#ffd700";
     authAvatar.innerHTML = "👤";
-    btnAuth.title = "";
+    btnAuth.title = "Entrar com Google";
     loadLocalConfig();
   }
+  if (typeof updateTopBarProfileChip === "function") updateTopBarProfileChip();
 });
 
 async function loadFirebaseConfig() {
@@ -1138,6 +1846,14 @@ async function loadFirebaseConfig() {
         if(typeof applyPlayerCustomization === "function") applyPlayerCustomization();
         console.log("Firebase: customização carregada e sincronizada da nuvem com sucesso!", playerCustomConfig);
       }
+      if (data && typeof data.mpGoals === "number") {
+        playerStats.mpGoals = data.mpGoals;
+        playerStats.mpMatches = data.mpMatches || 0;
+        playerStats.mpWins = data.mpWins || 0;
+        saveLocalStats();
+        if(typeof updateProfileUI === "function") updateProfileUI();
+        if(typeof updateTopBarProfileChip === "function") updateTopBarProfileChip();
+      }
     }
   } catch(e) { console.error("Error loading profile from Firebase:", e); }
 }
@@ -1146,11 +1862,20 @@ async function saveFirebaseConfig(cfg) {
   if (!window.firebaseUid) return;
   try {
     const docRef = doc(fbDb, "users", window.firebaseUid);
-    await setDoc(docRef, { customConfig: cfg, updatedAt: Date.now() }, { merge: true });
+    await setDoc(docRef, { customConfig: cfg, mpGoals: playerStats.mpGoals, mpMatches: playerStats.mpMatches, mpWins: playerStats.mpWins, updatedAt: Date.now() }, { merge: true });
     console.log("Firebase: perfil salvo na nuvem com sucesso!");
   } catch(e) { console.error("Error saving profile to Firebase:", e); }
 }
 window.saveFirebaseConfig = saveFirebaseConfig;
+
+async function saveFirebaseStats(stats) {
+  if (!window.firebaseUid) return;
+  try {
+    const docRef = doc(fbDb, "users", window.firebaseUid);
+    await setDoc(docRef, { mpGoals: stats.mpGoals || 0, mpMatches: stats.mpMatches || 0, mpWins: stats.mpWins || 0, updatedAt: Date.now() }, { merge: true });
+  } catch(e) { console.error("Error saving stats to Firebase:", e); }
+}
+window.saveFirebaseStats = saveFirebaseStats;
 
 function loadLocalConfig() {
   try {
@@ -1158,9 +1883,11 @@ function loadLocalConfig() {
     if(saved){
       Object.assign(playerCustomConfig, JSON.parse(saved));
     }
+    loadLocalStats();
   } catch(e){}
   if(typeof setupCustomizerUI === "function") setupCustomizerUI();
   if(typeof applyPlayerCustomization === "function") applyPlayerCustomization();
+  if(typeof updateTopBarProfileChip === "function") updateTopBarProfileChip();
 }
 
 /* ═══════════════ ÁUDIO PROCEDURAL (WEB AUDIO API) ═══════════════ */
@@ -3807,6 +4534,392 @@ function startTackleState(c, drainPerFrame){
   c.tackleResolved = false;
 }
 
+/* ═══════════════ SISTEMA DE EFEITOS VISUAIS (VFX ENGINE) ═══════════════ */
+// Efeitos minimalistas, fluidos e otimizados para 60 FPS:
+// 1. Vento & Poeira ao correr/sprintar
+// 2. Chamas, brasas & onda de choque ao chutar
+// 3. Rachaduras no asfalto, faíscas de atrito e cascalho no carrinho
+
+const VFX = {
+  particles: [],
+  decals: [],
+  
+  // Textura procedural de faísca / chama circular suave
+  sparkTex: (() => {
+    const c = document.createElement("canvas"); c.width = 64; c.height = 64;
+    const g = c.getContext("2d");
+    const grad = g.createRadialGradient(32, 32, 0, 32, 32, 30);
+    grad.addColorStop(0, "rgba(255, 255, 255, 1)");
+    grad.addColorStop(0.3, "rgba(255, 180, 50, 0.9)");
+    grad.addColorStop(0.7, "rgba(255, 60, 10, 0.4)");
+    grad.addColorStop(1, "rgba(255, 20, 0, 0)");
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 64, 64);
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  })(),
+
+  // Textura procedural de vento / rastro aerodinâmico
+  windTex: (() => {
+    const c = document.createElement("canvas"); c.width = 128; c.height = 32;
+    const g = c.getContext("2d");
+    const grad = g.createLinearGradient(0, 16, 128, 16);
+    grad.addColorStop(0, "rgba(255, 255, 255, 0)");
+    grad.addColorStop(0.3, "rgba(220, 245, 255, 0.85)");
+    grad.addColorStop(0.8, "rgba(180, 230, 255, 0.6)");
+    grad.addColorStop(1, "rgba(255, 255, 255, 0)");
+    g.fillStyle = grad;
+    g.fillRect(0, 0, 128, 32);
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  })(),
+
+  // Textura procedural de rachadura de asfalto / concreto
+  crackTex: (() => {
+    const c = document.createElement("canvas"); c.width = 256; c.height = 256;
+    const g = c.getContext("2d");
+    g.clearRect(0, 0, 256, 256);
+    
+    // Fissura principal profunda
+    g.strokeStyle = "rgba(10, 8, 12, 0.92)";
+    g.lineWidth = 6;
+    g.lineCap = "round";
+    g.lineJoin = "round";
+    g.beginPath();
+    g.moveTo(40, 128);
+    g.lineTo(80, 115);
+    g.lineTo(120, 138);
+    g.lineTo(170, 120);
+    g.lineTo(220, 130);
+    g.stroke();
+
+    // Ramificações laterais de impacto
+    g.lineWidth = 3;
+    g.beginPath();
+    g.moveTo(80, 115); g.lineTo(95, 75);
+    g.moveTo(120, 138); g.lineTo(135, 185);
+    g.moveTo(170, 120); g.lineTo(190, 80);
+    g.moveTo(140, 130); g.lineTo(160, 160);
+    g.stroke();
+
+    // Borda iluminada de atrito térmico
+    g.strokeStyle = "rgba(255, 140, 30, 0.65)";
+    g.lineWidth = 2;
+    g.beginPath();
+    g.moveTo(50, 128); g.lineTo(120, 136); g.lineTo(210, 128);
+    g.stroke();
+
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  })()
+};
+
+// ════════════ 1. EFEITO DE VENTO NA CORRIDA / SPRINT ════════════
+function vfxSpawnWindLine(pos, vel){
+  if(!scene) return;
+  const speed = vel.length();
+  if(speed < 5.0) return;
+  
+  const mat = new THREE.SpriteMaterial({
+    map: VFX.windTex,
+    color: 0xffffff,
+    transparent: true,
+    opacity: 0.65,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+  const sprite = new THREE.Sprite(mat);
+  const sideOffset = (Math.random() - 0.5) * 0.8;
+  const heightOffset = 0.8 + Math.random() * 0.8;
+  sprite.position.set(pos.x + sideOffset, pos.y + heightOffset, pos.z);
+  sprite.scale.set(1.4 + Math.random() * 0.6, 0.25, 1);
+  scene.add(sprite);
+
+  VFX.particles.push({
+    mesh: sprite,
+    vel: new THREE.Vector3(-vel.x * 0.25, 0.15, -vel.z * 0.25),
+    life: 0.28 + Math.random() * 0.12,
+    maxLife: 0.40,
+    type: "wind"
+  });
+}
+
+function vfxSpawnFootDust(pos, isSprint = false){
+  if(!scene) return;
+  const count = isSprint ? 2 : 1;
+  for(let i = 0; i < count; i++){
+    const geo = new THREE.SphereGeometry(0.08 + Math.random() * 0.06, 5, 4);
+    const mat = new THREE.MeshBasicMaterial({
+      color: 0xded8cb,
+      transparent: true,
+      opacity: 0.55,
+      depthWrite: false
+    });
+    const m = new THREE.Mesh(geo, mat);
+    m.position.set(pos.x + (Math.random()-0.5)*0.2, 0.06, pos.z + (Math.random()-0.5)*0.2);
+    scene.add(m);
+
+    VFX.particles.push({
+      mesh: m,
+      vel: new THREE.Vector3((Math.random()-0.5)*1.2, 0.6 + Math.random()*0.8, (Math.random()-0.5)*1.2),
+      life: 0.35 + Math.random() * 0.15,
+      maxLife: 0.50,
+      scaleSpeed: 2.2,
+      type: "dust"
+    });
+  }
+}
+
+// ════════════ 2. EFEITO DE FOGO NO CHUTE / FINALIZAÇÃO ════════════
+function vfxSpawnKickFire(pos, dir, intensity = 1.0){
+  if(!scene) return;
+  // 1. Explosão central de chamas e brasas
+  const sparkCount = Math.floor(10 + intensity * 14);
+  for(let i = 0; i < sparkCount; i++){
+    const mat = new THREE.SpriteMaterial({
+      map: VFX.sparkTex,
+      color: Math.random() > 0.3 ? 0xff6600 : 0xffdd33,
+      transparent: true,
+      opacity: 0.95,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    const s = new THREE.Sprite(mat);
+    s.position.copy(pos);
+    const sz = (0.28 + Math.random() * 0.35) * intensity;
+    s.scale.set(sz, sz, sz);
+    scene.add(s);
+
+    const spread = 2.4 * intensity;
+    const v = new THREE.Vector3(
+      dir.x * (6.0 + Math.random()*10.0) + (Math.random()-0.5)*spread,
+      1.5 + Math.random() * 4.5,
+      dir.z * (6.0 + Math.random()*10.0) + (Math.random()-0.5)*spread
+    );
+
+    VFX.particles.push({
+      mesh: s,
+      vel: v,
+      life: 0.32 + Math.random() * 0.22,
+      maxLife: 0.54,
+      type: "fire"
+    });
+  }
+
+  // 2. Anel de onda de choque térmico no solo
+  const ringGeo = new THREE.RingGeometry(0.1, 0.35, 16);
+  const ringMat = new THREE.MeshBasicMaterial({
+    color: 0xff7700,
+    transparent: true,
+    opacity: 0.85,
+    side: THREE.DoubleSide,
+    depthWrite: false
+  });
+  const ring = new THREE.Mesh(ringGeo, ringMat);
+  ring.rotation.x = -Math.PI / 2;
+  ring.position.set(pos.x, 0.05, pos.z);
+  scene.add(ring);
+
+  VFX.particles.push({
+    mesh: ring,
+    vel: new THREE.Vector3(0, 0, 0),
+    life: 0.25,
+    maxLife: 0.25,
+    expandSpeed: 7.5 * intensity,
+    type: "shockwave"
+  });
+}
+
+function vfxSpawnBallFireTrail(ballPos, ballVel){
+  if(!scene) return;
+  const speed = ballVel.length();
+  if(speed < 18.0) return;
+
+  const mat = new THREE.SpriteMaterial({
+    map: VFX.sparkTex,
+    color: speed > 30 ? 0xff3b30 : 0xffa500,
+    transparent: true,
+    opacity: 0.85,
+    blending: THREE.AdditiveBlending,
+    depthWrite: false
+  });
+  const s = new THREE.Sprite(mat);
+  s.position.set(
+    ballPos.x + (Math.random()-0.5)*0.15,
+    ballPos.y + (Math.random()-0.5)*0.15,
+    ballPos.z + (Math.random()-0.5)*0.15
+  );
+  const sz = 0.25 + (speed / 45) * 0.22;
+  s.scale.set(sz, sz, sz);
+  scene.add(s);
+
+  VFX.particles.push({
+    mesh: s,
+    vel: new THREE.Vector3(-ballVel.x * 0.08 + (Math.random()-0.5), -ballVel.y * 0.08 + 0.3, -ballVel.z * 0.08 + (Math.random()-0.5)),
+    life: 0.20 + Math.random() * 0.12,
+    maxLife: 0.32,
+    type: "fire_trail"
+  });
+}
+
+// ════════════ 3. EFEITO DE CARRINHO: RACHADURA NO CHÃO, FAÍSCAS E CASCALHO ════════════
+function vfxSpawnTackleTrail(char, footSign){
+  if(!scene) return;
+  const p = char.root.position;
+  const vel = char.vel;
+  const speed = vel.length();
+  if(speed < 2.0) return;
+
+  // 1. Spawna Decal de Rachadura no Asfalto da Quadra
+  if(!char._lastCrackPos || flat(char._lastCrackPos, p) > 0.85){
+    char._lastCrackPos = p.clone();
+    
+    const crackGeo = new THREE.PlaneGeometry(1.3, 0.7);
+    const crackMat = new THREE.MeshBasicMaterial({
+      map: VFX.crackTex,
+      transparent: true,
+      opacity: 0.85,
+      depthWrite: false,
+      polygonOffset: true,
+      polygonOffsetFactor: -1
+    });
+    const crack = new THREE.Mesh(crackGeo, crackMat);
+    crack.rotation.x = -Math.PI / 2;
+    crack.rotation.z = Math.atan2(vel.x, vel.z) + (Math.random() - 0.5) * 0.4;
+    crack.position.set(p.x, 0.025, p.z);
+    scene.add(crack);
+
+    VFX.decals.push({
+      mesh: crack,
+      life: 1.8,
+      maxLife: 1.8
+    });
+  }
+
+  // 2. Faíscas de atrito metálico/concreto
+  for(let i = 0; i < 3; i++){
+    const mat = new THREE.SpriteMaterial({
+      map: VFX.sparkTex,
+      color: 0xffaa00,
+      transparent: true,
+      opacity: 0.95,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    const sp = new THREE.Sprite(mat);
+    sp.position.set(p.x + (Math.random()-0.5)*0.3, 0.08, p.z + (Math.random()-0.5)*0.3);
+    sp.scale.set(0.18, 0.18, 0.18);
+    scene.add(sp);
+
+    VFX.particles.push({
+      mesh: sp,
+      vel: new THREE.Vector3(
+        -vel.x * 0.4 + (Math.random()-0.5)*3.0,
+        1.2 + Math.random()*2.2,
+        -vel.z * 0.4 + (Math.random()-0.5)*3.0
+      ),
+      life: 0.22 + Math.random() * 0.14,
+      maxLife: 0.36,
+      type: "friction_spark"
+    });
+  }
+
+  // 3. Pedregulhos / cascalho de concreto voando do chão
+  for(let i = 0; i < 2; i++){
+    const pebbleGeo = new THREE.BoxGeometry(0.045, 0.045, 0.045);
+    const pebbleMat = new THREE.MeshStandardMaterial({
+      color: 0x4a4453,
+      roughness: 0.9,
+      flatShading: true
+    });
+    const pebble = new THREE.Mesh(pebbleGeo, pebbleMat);
+    pebble.position.set(p.x + (Math.random()-0.5)*0.2, 0.08, p.z + (Math.random()-0.5)*0.2);
+    scene.add(pebble);
+
+    VFX.particles.push({
+      mesh: pebble,
+      vel: new THREE.Vector3(
+        -vel.x * 0.3 + (Math.random()-0.5)*2.4,
+        1.6 + Math.random()*1.8,
+        -vel.z * 0.3 + (Math.random()-0.5)*2.4
+      ),
+      rotVel: new THREE.Vector3(Math.random()*10, Math.random()*10, Math.random()*10),
+      life: 0.40 + Math.random() * 0.20,
+      maxLife: 0.60,
+      type: "pebble"
+    });
+  }
+}
+
+// ════════════ UPDATE E FADE SUAVE DOS EFEITOS ════════════
+function updateVFX(dt){
+  if(!scene) return;
+  
+  // Atualiza partículas ativas
+  for(let i = VFX.particles.length - 1; i >= 0; i--){
+    const p = VFX.particles[i];
+    p.life -= dt;
+    if(p.life <= 0){
+      scene.remove(p.mesh);
+      if(p.mesh.geometry) p.mesh.geometry.dispose();
+      if(p.mesh.material) p.mesh.material.dispose();
+      VFX.particles.splice(i, 1);
+      continue;
+    }
+
+    const t = Math.max(0, p.life / p.maxLife);
+    if(p.mesh.material){
+      p.mesh.material.opacity = t * (p.type === "fire" ? 0.95 : 0.80);
+    }
+
+    if(p.vel){
+      p.mesh.position.addScaledVector(p.vel, dt);
+      if(p.type === "pebble" || p.type === "dust" || p.type === "friction_spark"){
+        p.vel.y -= 9.8 * dt; // gravidade
+        if(p.mesh.position.y < 0.03){
+          p.mesh.position.y = 0.03;
+          p.vel.y = -p.vel.y * 0.35;
+          p.vel.x *= 0.85;
+          p.vel.z *= 0.85;
+        }
+      }
+    }
+
+    if(p.rotVel && p.mesh.rotation){
+      p.mesh.rotation.x += p.rotVel.x * dt;
+      p.mesh.rotation.y += p.rotVel.y * dt;
+    }
+
+    if(p.expandSpeed){
+      const sz = (1 - t) * p.expandSpeed;
+      p.mesh.scale.set(1 + sz, 1 + sz, 1);
+    }
+
+    if(p.scaleSpeed){
+      const s = p.mesh.scale.x + p.scaleSpeed * dt;
+      p.mesh.scale.set(s, s, s);
+    }
+  }
+
+  // Atualiza decals de rachadura de chão
+  for(let i = VFX.decals.length - 1; i >= 0; i--){
+    const d = VFX.decals[i];
+    d.life -= dt;
+    if(d.life <= 0){
+      scene.remove(d.mesh);
+      if(d.mesh.geometry) d.mesh.geometry.dispose();
+      if(d.mesh.material) d.mesh.material.dispose();
+      VFX.decals.splice(i, 1);
+      continue;
+    }
+    const t = Math.max(0, d.life / d.maxLife);
+    d.mesh.material.opacity = t * 0.85;
+  }
+}
+
 /* ═══════════════ ANIMAÇÕES HUMANAS FLUIDAS & BIOMECÂNICA REALISTA ═══════════════ */
 function animateHumanoid(char, dt, isMoving){
   char.cool = Math.max(0, char.cool - dt);
@@ -4028,58 +5141,62 @@ function animateHumanoid(char, dt, isMoving){
     char.hips.rotation.y = 0; char.hips.rotation.z = 0;
 
     if(prog < 0.18){
-      // ---- FASE 1: ENTRADA - joga o corpo pro lado e lanca a perna a frente ----
+      // ---- FASE 1: ENTRADA EXPLOSIVA - projeta o corpo rente ao chão e estica a perna ----
       const e = prog / 0.18;
-      char.hips.position.y = THREE.MathUtils.damp(char.hips.position.y, 0.34, 22, dt);
-      char.root.rotation.z = THREE.MathUtils.damp(char.root.rotation.z, roll * 0.72, 20, dt);
-      char.root.rotation.x = THREE.MathUtils.damp(char.root.rotation.x, -0.30, 20, dt);
-      char.torsoGroup.rotation.x = 0.30 - e * 0.10;
+      char.hips.position.y = THREE.MathUtils.damp(char.hips.position.y, 0.26, 24, dt);
+      char.root.rotation.z = THREE.MathUtils.damp(char.root.rotation.z, roll * 0.82, 24, dt);
+      char.root.rotation.x = THREE.MathUtils.damp(char.root.rotation.x, -0.42, 24, dt);
+      char.torsoGroup.rotation.x = 0.35 - e * 0.15;
       char.torsoGroup.rotation.y = 0;
-      char.headGroup.rotation.x = -0.18;
+      char.headGroup.rotation.x = -0.22;
 
-      legKick.hipJoint.rotation.x  = 1.05 + e * 0.60; legKick.kneeJoint.rotation.x  = 0.50 - e * 0.45;
-      legPlant.hipJoint.rotation.x = -0.40 - e * 0.45; legPlant.kneeJoint.rotation.x = 0.65 + e * 0.70;
-      legKick.footGroup.rotation.x = -0.25;
-      armKick.shoulder.rotation.x = -0.55; armKick.shoulder.rotation.z = footSign * 0.45;
-      armPlant.shoulder.rotation.x = -1.40; armPlant.shoulder.rotation.z = -footSign * 0.60;
-      armPlant.elbow.rotation.x = -0.55;
+      legKick.hipJoint.rotation.x  = 1.20 + e * 0.65; legKick.kneeJoint.rotation.x  = 0.30 - e * 0.25;
+      legPlant.hipJoint.rotation.x = -0.50 - e * 0.50; legPlant.kneeJoint.rotation.x = 0.70 + e * 0.80;
+      legKick.footGroup.rotation.x = -0.30;
+      armKick.shoulder.rotation.x = -0.65; armKick.shoulder.rotation.z = footSign * 0.55;
+      armPlant.shoulder.rotation.x = -1.55; armPlant.shoulder.rotation.z = -footSign * 0.70;
+      armPlant.elbow.rotation.x = -0.65;
 
     } else if(prog < TACKLE.glideEnd){
-      // ---- FASE 2: DESLIZE - corpo rasteiro varrendo o gramado, perna alongando ----
+      // ---- FASE 2: DESLIZE RADICAL - corpo rasgando a quadra, perna alongada na bola ----
       const g = (prog - 0.18) / (TACKLE.glideEnd - 0.18);
-      const sway = Math.sin(g * Math.PI);        // balanco sutil pra pose nao travar
-      char.hips.position.y = THREE.MathUtils.damp(char.hips.position.y, 0.19, 16, dt);
-      char.root.rotation.z = THREE.MathUtils.damp(char.root.rotation.z, roll * (1.06 + sway * 0.07), 13, dt);
-      char.root.rotation.x = THREE.MathUtils.damp(char.root.rotation.x, -0.38 - sway * 0.05, 13, dt);
-      char.torsoGroup.rotation.x = 0.20 - g * 0.12;
-      char.torsoGroup.rotation.y = footSign * sway * 0.13;
-      char.headGroup.rotation.x = -0.10 + g * 0.14;
+      const sway = Math.sin(g * Math.PI);
+      char.hips.position.y = THREE.MathUtils.damp(char.hips.position.y, 0.14, 20, dt);
+      char.root.rotation.z = THREE.MathUtils.damp(char.root.rotation.z, roll * (1.18 + sway * 0.08), 16, dt);
+      char.root.rotation.x = THREE.MathUtils.damp(char.root.rotation.x, -0.48 - sway * 0.06, 16, dt);
+      char.torsoGroup.rotation.x = 0.22 - g * 0.14;
+      char.torsoGroup.rotation.y = footSign * sway * 0.15;
+      char.headGroup.rotation.x = -0.12 + g * 0.16;
 
-      // A perna de ataque continua estendendo ao longo do deslize (varredura na bola)
-      legKick.hipJoint.rotation.x  = 1.65 + g * 0.26; legKick.kneeJoint.rotation.x  = Math.max(0, 0.05 - g * 0.05);
-      legPlant.hipJoint.rotation.x = -0.85 + g * 0.28; legPlant.kneeJoint.rotation.x = 1.35 - g * 0.32;
-      legKick.footGroup.rotation.x = -0.30 + g * 0.10;
-      armKick.shoulder.rotation.x = -0.80 + sway * 0.35; armKick.shoulder.rotation.z = footSign * (0.32 + sway * 0.14);
-      armPlant.shoulder.rotation.x = -1.20 - sway * 0.28; armPlant.shoulder.rotation.z = -footSign * 0.48;
-      armPlant.elbow.rotation.x = -0.70 - sway * 0.30;
+      legKick.hipJoint.rotation.x  = 1.82 + g * 0.28; legKick.kneeJoint.rotation.x  = Math.max(0, 0.02);
+      legPlant.hipJoint.rotation.x = -0.95 + g * 0.30; legPlant.kneeJoint.rotation.x = 1.45 - g * 0.35;
+      legKick.footGroup.rotation.x = -0.35 + g * 0.12;
+      armKick.shoulder.rotation.x = -0.90 + sway * 0.38; armKick.shoulder.rotation.z = footSign * (0.38 + sway * 0.16);
+      armPlant.shoulder.rotation.x = -1.35 - sway * 0.30; armPlant.shoulder.rotation.z = -footSign * 0.55;
+      armPlant.elbow.rotation.x = -0.80 - sway * 0.32;
+
+      // Spawna efeitos de rachaduras no chão, faíscas e cascalho
+      if(typeof vfxSpawnTackleTrail === "function"){
+        vfxSpawnTackleTrail(char, footSign);
+      }
 
     } else {
-      // ---- FASE 3: LEVANTADA - apoia o braco, recolhe as pernas e fica de pe ----
+      // ---- FASE 3: RECUPERAÇÃO ÁGIL DE PÉ ----
       const u = (prog - TACKLE.glideEnd) / (1 - TACKLE.glideEnd);
       const ease = u * u * (3 - 2 * u);
-      char.hips.position.y = THREE.MathUtils.damp(char.hips.position.y, 1.05, 13, dt);
-      char.root.rotation.z = THREE.MathUtils.damp(char.root.rotation.z, 0, 12, dt);
-      char.root.rotation.x = THREE.MathUtils.damp(char.root.rotation.x, 0, 12, dt);
-      char.torsoGroup.rotation.x = (1 - ease) * 0.34;
+      char.hips.position.y = THREE.MathUtils.damp(char.hips.position.y, 1.05, 16, dt);
+      char.root.rotation.z = THREE.MathUtils.damp(char.root.rotation.z, 0, 15, dt);
+      char.root.rotation.x = THREE.MathUtils.damp(char.root.rotation.x, 0, 15, dt);
+      char.torsoGroup.rotation.x = (1 - ease) * 0.38;
       char.torsoGroup.rotation.y = 0;
-      char.headGroup.rotation.x = THREE.MathUtils.damp(char.headGroup.rotation.x, 0, 12, dt);
+      char.headGroup.rotation.x = THREE.MathUtils.damp(char.headGroup.rotation.x, 0, 15, dt);
 
-      legKick.hipJoint.rotation.x  = (1 - ease) * 1.15; legKick.kneeJoint.rotation.x  = (1 - ease) * 0.60;
-      legPlant.hipJoint.rotation.x = (1 - ease) * -0.62; legPlant.kneeJoint.rotation.x = (1 - ease) * 0.90;
-      legKick.footGroup.rotation.x = (1 - ease) * -0.20;
-      armKick.shoulder.rotation.x = (1 - ease) * -0.60; armKick.shoulder.rotation.z = (1 - ease) * footSign * 0.30;
-      armPlant.shoulder.rotation.x = (1 - ease) * -1.05; armPlant.shoulder.rotation.z = (1 - ease) * -footSign * 0.40;
-      armPlant.elbow.rotation.x = (1 - ease) * -0.60;
+      legKick.hipJoint.rotation.x  = (1 - ease) * 1.25; legKick.kneeJoint.rotation.x  = (1 - ease) * 0.65;
+      legPlant.hipJoint.rotation.x = (1 - ease) * -0.70; legPlant.kneeJoint.rotation.x = (1 - ease) * 0.95;
+      legKick.footGroup.rotation.x = (1 - ease) * -0.22;
+      armKick.shoulder.rotation.x = (1 - ease) * -0.65; armKick.shoulder.rotation.z = (1 - ease) * footSign * 0.35;
+      armPlant.shoulder.rotation.x = (1 - ease) * -1.15; armPlant.shoulder.rotation.z = (1 - ease) * -footSign * 0.45;
+      armPlant.elbow.rotation.x = (1 - ease) * -0.65;
     }
     return;
   }
@@ -4474,6 +5591,17 @@ function animateHumanoid(char, dt, isMoving){
     // Estabilização de foco da cabeça
     char.headGroup.rotation.y = -Math.sin(p) * 0.07 * b;
     char.headGroup.rotation.x = (-0.05 - sprintFactor * 0.07) * b;
+
+    // Spawna linhas de vento e poeira dinâmica nos pés (EXCLUSIVAMENTE no personagem do jogador local)
+    const isLocalPlayer = (char === player) || (char.role === "player") || (gameMode === "multiplayer" && typeof mp !== "undefined" && mp.myEntId && char === mp.chars?.[mp.myEntId]);
+    if(isLocalPlayer){
+      if(typeof vfxSpawnWindLine === "function" && speed > 5.8 && Math.random() < (0.28 + sprintFactor * 0.35)){
+        vfxSpawnWindLine(char.root.position, char.vel);
+      }
+      if(typeof vfxSpawnFootDust === "function" && Math.abs(legPhaseL) > 0.90 && Math.random() < 0.32){
+        vfxSpawnFootDust(char.root.position, sprintFactor > 0.3);
+      }
+    }
   }
 
   if(b < 0.99){
@@ -4922,6 +6050,9 @@ function kick(power, type, over = 0){
       player.cool = 0.34; player.act = 0.30; shake = 0.22 + p*0.16;
       flash("BOMBA! 💣⚡", "#ff3b4e", "FOGUETE NO ÂNGULO!");
       sfx.playKick(1.0);
+      if(typeof vfxSpawnKickFire === "function"){
+        vfxSpawnKickFire(ball.position, tA, 1.35 + p * 0.45);
+      }
     } else {
       // ════════════ CHUTE COM TÉCNICA / COLOCADO DE CHAPA COM CURVA ════════════
       const horizSpeed = 18 + 14*p; // 23.6 a 27.1 m/s
@@ -4939,6 +6070,9 @@ function kick(power, type, over = 0){
       player.cool = 0.28; player.act = 0.24; shake = 0.10 + p*0.10;
       flash("CHUTE COLOCADO! 🎯", "#00ffcc", "CHAPA COM CATEGORIA NO ÂNGULO");
       sfx.playKick(0.70);
+      if(typeof vfxSpawnKickFire === "function"){
+        vfxSpawnKickFire(ball.position, tA, 0.85 + p * 0.35);
+      }
     }
   }
   owner = null;
@@ -5260,6 +6394,11 @@ function updateBall(dt){
   ballVel.y -= 18*dt;
   ballSpin.multiplyScalar(Math.pow(0.2, dt));
   ball.position.addScaledVector(ballVel, dt);
+
+  // Spawna rastro incandescente quando o chute for veloz
+  if(typeof vfxSpawnBallFireTrail === "function" && ballVel.length() > 16.0){
+    vfxSpawnBallFireTrail(ball.position, ballVel);
+  }
 
   // Defesa do goleiro antes de qualquer teste de gol
   if(keeperSweptSave(dt)) return;
@@ -6012,6 +7151,430 @@ function applyPlayerCustomization(){
     localStorage.setItem("fut_cria_custom_v1", JSON.stringify(playerCustomConfig));
     if (window.saveFirebaseConfig) window.saveFirebaseConfig(playerCustomConfig);
   } catch(e){}
+  
+  if (typeof cardAvatarCache !== "undefined") cardAvatarCache.clear();
+  if (typeof updateProfileUI === "function") updateProfileUI();
+  if (typeof updateTopBarProfileChip === "function") updateTopBarProfileChip();
+}
+
+/* ═══════════════ SISTEMA DE CARTAS DE NÍVEL & ESTATÍSTICAS MULTIPLAYER ═══════════════ */
+
+const playerStats = {
+  mpGoals: 0,
+  mpMatches: 0,
+  mpWins: 0,
+  updatedAt: Date.now()
+};
+
+function loadLocalStats() {
+  try {
+    const saved = localStorage.getItem("fut_cria_stats_v1");
+    if (saved) {
+      Object.assign(playerStats, JSON.parse(saved));
+    }
+  } catch(e){}
+}
+
+function saveLocalStats() {
+  try {
+    playerStats.updatedAt = Date.now();
+    localStorage.setItem("fut_cria_stats_v1", JSON.stringify(playerStats));
+  } catch(e){}
+}
+loadLocalStats();
+
+// 3 Níveis de Cartas:
+// 1. Carta Prata / Iniciante: 0 até 400 gols
+// 2. Carta Dourada / Pro: 400 até 1000 gols
+// 3. Carta Legend / Lendário: 1000 gols em diante
+function getCardTier(goals = 0) {
+  const g = Math.max(0, Number(goals) || 0);
+  if (g >= 1000) {
+    return {
+      id: "legend",
+      name: "LENDÁRIO",
+      cardTitle: "CARTA LEGEND",
+      code: "LEG",
+      badge: "👑",
+      rating: 99,
+      minGoals: 1000,
+      nextGoals: null,
+      color: "#ffd700",
+      themeClass: "cardTier-legend"
+    };
+  } else if (g >= 400) {
+    return {
+      id: "gold",
+      name: "PRO",
+      cardTitle: "CARTA DOURADA",
+      code: "PRO",
+      badge: "🥇",
+      rating: 88,
+      minGoals: 400,
+      nextGoals: 1000,
+      color: "#f5c518",
+      themeClass: "cardTier-gold"
+    };
+  } else {
+    return {
+      id: "silver",
+      name: "INICIANTE",
+      cardTitle: "CARTA PRATA",
+      code: "INI",
+      badge: "🥈",
+      rating: 75,
+      minGoals: 0,
+      nextGoals: 400,
+      color: "#cbd5e1",
+      themeClass: "cardTier-silver"
+    };
+  }
+}
+
+// Cache de snapshots de avatar 3D das skins para performance impecável (60 FPS)
+const cardAvatarCache = new Map();
+
+function getAvatarSnapshot(customConfig = playerCustomConfig, forceRefresh = false) {
+  const key = JSON.stringify(customConfig || playerCustomConfig || {}) + "_v6";
+  if (!forceRefresh && cardAvatarCache.has(key)) {
+    return cardAvatarCache.get(key);
+  }
+
+  try {
+    const width = 320, height = 400;
+    const offCanvas = document.createElement("canvas");
+    offCanvas.width = width;
+    offCanvas.height = height;
+
+    const offRenderer = new THREE.WebGLRenderer({
+      canvas: offCanvas,
+      alpha: true,
+      antialias: true,
+      preserveDrawingBuffer: true,
+      powerPreference: "high-performance"
+    });
+    offRenderer.setSize(width, height);
+    offRenderer.setPixelRatio(1);
+    offRenderer.toneMapping = THREE.ACESFilmicToneMapping;
+    offRenderer.toneMappingExposure = 1.35;
+
+    const offScene = new THREE.Scene();
+    // Câmera perfeitamente afastada e calibrada: enquadra do meio do tronco (Y=1.20) até acima da cabeça com folga (Y=2.35)
+    const offCam = new THREE.PerspectiveCamera(36, width / height, 0.1, 20);
+    offCam.position.set(0, 1.70, 2.30);
+    offCam.lookAt(0, 1.70, 0);
+
+    // Iluminação especial de estúdio EA FC (Luzes Frontais, Fill e Rim)
+    const keyLight = new THREE.DirectionalLight(0xffffff, 2.8);
+    keyLight.position.set(1.4, 2.6, 2.4);
+    offScene.add(keyLight);
+
+    const fillLight = new THREE.DirectionalLight(0xffe8d6, 1.5);
+    fillLight.position.set(-1.6, 1.6, 2.0);
+    offScene.add(fillLight);
+
+    const rimLight = new THREE.DirectionalLight(0xffd700, 3.4);
+    rimLight.position.set(0, 2.8, -1.8);
+    offScene.add(rimLight);
+
+    const ambLight = new THREE.AmbientLight(0xffffff, 1.4);
+    offScene.add(ambLight);
+
+    const char = createHumanoidCria(0, "player", 0, 1, customConfig || playerCustomConfig);
+    char.root.position.set(0, 0, 0);
+    // Face apontando 100% para frente (+Z) com leve pose
+    char.root.rotation.y = 0.04;
+    offScene.add(char.root);
+
+    offRenderer.render(offScene, offCam);
+    const dataUrl = offCanvas.toDataURL("image/png");
+
+    offRenderer.dispose();
+    cardAvatarCache.set(key, dataUrl);
+    return dataUrl;
+  } catch(e) {
+    console.warn("Avatar snapshot error:", e);
+    return "";
+  }
+}
+
+// Construtor do Elemento HTML da Carta FUT com Efeitos Visuais
+function createFutCardElement(playerData = {}, options = {}) {
+  const name = (playerData.name || (window.firebaseUser ? window.firebaseUser.displayName : "CRIA") || "CRIA").slice(0, 14).toUpperCase();
+  const goals = typeof playerData.mpGoals === "number" ? playerData.mpGoals : (playerStats.mpGoals || 0);
+  const forcedTier = options.forcedTier || null;
+  const tier = forcedTier ? getCardTier(forcedTier === 'legend' ? 1000 : forcedTier === 'gold' ? 400 : 0) : getCardTier(goals);
+  const cfg = playerData.customConfig || playerCustomConfig;
+  const avatarUrl = getAvatarSnapshot(cfg);
+
+  const card = document.createElement("div");
+  card.className = `futCard ${tier.themeClass}`;
+  if (options.extraClass) card.classList.add(options.extraClass);
+
+  const rangeLabel = tier.id === "legend" ? "1000+ GOLS" : (tier.id === "gold" ? "400 - 1000 GOLS" : "0 - 400 GOLS");
+
+  card.innerHTML = `
+    <div class="cardHoloSheen"></div>
+    <div class="cardGlowOverlay"></div>
+
+    <!-- Cabeçalho Limpo: Tier e Faixa de Gols -->
+    <div class="cardHeader">
+      <div class="cardTierPill ${tier.id}">
+        <span>${tier.badge}</span>
+        <span>${tier.name}</span>
+      </div>
+      <div class="cardTierRange">${rangeLabel}</div>
+    </div>
+
+    <!-- Skin 3D do Personagem (Enquadramento Perfeito de Rosto e Peito) -->
+    <div class="cardSkinContainer">
+      ${avatarUrl ? `<img class="cardSkinImg" src="${avatarUrl}" alt="${name}">` : ''}
+    </div>
+
+    <!-- Nome do Jogador -->
+    <div class="cardNameBanner">
+      <div class="cardPlayerName">${name}</div>
+    </div>
+
+    <!-- Destaque Exclusivo: Gols Multiplayer -->
+    <div class="cardGoalsSection">
+      <div class="cardGoalsBox">
+        <div class="cardGoalsIcon">⚽</div>
+        <div class="cardGoalsContent">
+          <div class="cardGoalsValue">${goals}</div>
+          <div class="cardGoalsLabel">GOLS MULTIPLAYER</div>
+        </div>
+      </div>
+    </div>
+  `;
+
+  attachFutCardTilt(card);
+  return card;
+}
+
+// Efeito Holográfico e Tilt 3D com Reflexo de Luz
+function attachFutCardTilt(cardEl) {
+  if (!cardEl) return;
+
+  function onMove(e) {
+    const rect = cardEl.getBoundingClientRect();
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+    const px = (x / rect.width) * 100;
+    const py = (y / rect.height) * 100;
+
+    const rotX = ((y / rect.height) - 0.5) * -22;
+    const rotY = ((x / rect.width) - 0.5) * 22;
+    const deg = Math.round(Math.atan2(y - rect.height/2, x - rect.width/2) * (180 / Math.PI) + 90);
+
+    cardEl.style.transform = `perspective(1000px) rotateX(${rotX.toFixed(2)}deg) rotateY(${rotY.toFixed(2)}deg) scale3d(1.03, 1.03, 1.03)`;
+    cardEl.style.setProperty("--glow-x", `${px.toFixed(1)}%`);
+    cardEl.style.setProperty("--glow-y", `${py.toFixed(1)}%`);
+    cardEl.style.setProperty("--holo-deg", `${deg}deg`);
+  }
+
+  function onLeave() {
+    cardEl.style.transform = `perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)`;
+    cardEl.style.setProperty("--glow-x", `50%`);
+    cardEl.style.setProperty("--glow-y", `50%`);
+    cardEl.style.setProperty("--holo-deg", `125deg`);
+  }
+
+  cardEl.addEventListener("mousemove", onMove);
+  cardEl.addEventListener("mouseleave", onLeave);
+  cardEl.addEventListener("touchmove", onMove, { passive: true });
+  cardEl.addEventListener("touchend", onLeave, { passive: true });
+}
+
+// Atualização do Chip no Topo do Menu
+function updateTopBarProfileChip() {
+  const tier = getCardTier(playerStats.mpGoals);
+  const name = (window.firebaseUser ? window.firebaseUser.displayName : "JOGADOR") || "CRIA";
+  const authNameEl = document.getElementById("authName");
+  if (authNameEl) {
+    if (window.firebaseUser) {
+      authNameEl.innerHTML = `<span style="color:${tier.color}">${tier.badge} ${name.toUpperCase()}</span> <span style="color:#ffd700;font-size:11px;margin-left:4px;opacity:0.9">⚽ ${playerStats.mpGoals} GOLS</span>`;
+    } else {
+      authNameEl.innerHTML = `<span>${tier.badge} ENTRAR (GOOGLE)</span> <span style="color:#ffd700;font-size:11px;margin-left:4px;opacity:0.9">⚽ ${playerStats.mpGoals} GOLS</span>`;
+    }
+  }
+}
+
+// Painel e Modal de Perfil
+let profileActivePreviewTier = null;
+
+function updateProfileUI() {
+  const tier = getCardTier(playerStats.mpGoals);
+  const currentGoals = playerStats.mpGoals || 0;
+
+  const titleEl = $("#profileTierTitleText");
+  if (titleEl) titleEl.textContent = `${tier.badge} ${tier.cardTitle} — ${tier.name}`;
+
+  const goalsEl = $("#profileGoalsCounter");
+  if (goalsEl) goalsEl.textContent = `⚽ ${currentGoals} GOLS`;
+
+  const fillEl = $("#profileProgressFill");
+  const progTextEl = $("#profileProgressText");
+  const nextTextEl = $("#profileNextTierText");
+
+  if (tier.id === "legend") {
+    if (fillEl) fillEl.style.width = "100%";
+    if (progTextEl) progTextEl.textContent = `${currentGoals} Gols (CARTA MÁXIMA)`;
+    if (nextTextEl) nextTextEl.textContent = "👑 LENDA SUPREMA DO FUTEBOL DE VÁRZEA!";
+  } else if (tier.id === "gold") {
+    const minG = 400, maxG = 1000;
+    const pct = Math.min(100, Math.max(0, ((currentGoals - minG) / (maxG - minG)) * 100));
+    if (fillEl) fillEl.style.width = `${pct.toFixed(1)}%`;
+    if (progTextEl) progTextEl.textContent = `${currentGoals} / 1000 Gols`;
+    if (nextTextEl) nextTextEl.textContent = `Faltam ${1000 - currentGoals} gols para CARTA LEGEND 👑`;
+  } else {
+    const minG = 0, maxG = 400;
+    const pct = Math.min(100, Math.max(0, (currentGoals / maxG) * 100));
+    if (fillEl) fillEl.style.width = `${pct.toFixed(1)}%`;
+    if (progTextEl) progTextEl.textContent = `${currentGoals} / 400 Gols`;
+    if (nextTextEl) nextTextEl.textContent = `Faltam ${400 - currentGoals} gols para CARTA DOURADA PRO 🥇`;
+  }
+
+  const sG = $("#statValGoals"); if (sG) sG.textContent = currentGoals;
+  const sM = $("#statValMatches"); if (sM) sM.textContent = playerStats.mpMatches || 0;
+  const sW = $("#statValWins"); if (sW) sW.textContent = playerStats.mpWins || 0;
+  const sR = $("#statValWinRate");
+  if (sR) {
+    const m = playerStats.mpMatches || 0;
+    const w = playerStats.mpWins || 0;
+    sR.textContent = m > 0 ? `${Math.round((w / m) * 100)}%` : "0%";
+  }
+
+  const mount = $("#profileCardMount");
+  if (mount) {
+    mount.innerHTML = "";
+    mount.appendChild(createFutCardElement({
+      name: window.firebaseUser ? window.firebaseUser.displayName : (document.querySelector("#mpName")?.value || "CRIA"),
+      mpGoals: currentGoals,
+      customConfig: playerCustomConfig
+    }, { forcedTier: profileActivePreviewTier }));
+  }
+
+  updateTopBarProfileChip();
+}
+
+function openProfileModal() {
+  profileActivePreviewTier = null;
+  document.querySelectorAll(".profileMiniTierBtn").forEach(b => {
+    b.classList.remove("active");
+    if (b.dataset.tier === getCardTier(playerStats.mpGoals).id) b.classList.add("active");
+  });
+  updateProfileUI();
+  const modal = $("#profileModal");
+  if (modal) modal.classList.add("show");
+}
+
+function closeProfileModal() {
+  const modal = $("#profileModal");
+  if (modal) modal.classList.remove("show");
+  setActiveNavTab($("#tabNavPlay"));
+}
+
+const btnCloseProfile = $("#btnCloseProfile");
+if (btnCloseProfile) btnCloseProfile.addEventListener("click", closeProfileModal);
+
+["btnPreviewSilver", "btnPreviewGold", "btnPreviewLegend"].forEach(id => {
+  const btn = $(`#${id}`);
+  if (btn) {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".profileMiniTierBtn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      profileActivePreviewTier = btn.dataset.tier;
+      updateProfileUI();
+    });
+  }
+});
+
+// Apresentação de Partida com Cartas (VS Match Intro)
+let matchIntroActive = false;
+let matchIntroTimer = null;
+
+function showMatchIntro(homeData, awayData, onComplete) {
+  const overlay = $("#matchIntroOverlay");
+  if (!overlay) {
+    if (onComplete) onComplete();
+    return;
+  }
+
+  matchIntroActive = true;
+  clearTimeout(matchIntroTimer);
+
+  const homeMount = $("#introHomeCardMount");
+  const awayMount = $("#introAwayCardMount");
+  if (homeMount) {
+    homeMount.innerHTML = "";
+    homeMount.appendChild(createFutCardElement(homeData));
+  }
+  if (awayMount) {
+    awayMount.innerHTML = "";
+    awayMount.appendChild(createFutCardElement(awayData));
+  }
+
+  overlay.classList.add("show");
+  try { sfx.init(); sfx.playWhistle(false); } catch(e){}
+
+  function finishIntro() {
+    if (!matchIntroActive) return;
+    matchIntroActive = false;
+    clearTimeout(matchIntroTimer);
+    overlay.classList.remove("show");
+    window.removeEventListener("keydown", onKeySkip);
+    overlay.removeEventListener("click", finishIntro);
+    if (onComplete) onComplete();
+  }
+
+  function onKeySkip(e) {
+    if (e.code === "Space" || e.code === "Enter" || e.code === "Escape") {
+      finishIntro();
+    }
+  }
+
+  const skipBtn = $("#introSkipBtn");
+  if (skipBtn) skipBtn.onclick = finishIntro;
+  overlay.onclick = finishIntro;
+  window.addEventListener("keydown", onKeySkip);
+
+  matchIntroTimer = setTimeout(finishIntro, 3000);
+}
+
+// Popup de Subida de Carta (Level Up)
+function showCardLevelUp(tierObj) {
+  const modal = $("#cardLevelUpModal");
+  if (!modal) return;
+
+  const title = $("#levelUpTitle");
+  if (title) title.textContent = `NOVA ${tierObj.cardTitle} DESBLOQUEADA!`;
+
+  const emoji = $("#levelUpEmoji");
+  if (emoji) emoji.textContent = tierObj.badge;
+
+  const desc = $("#levelUpDesc");
+  if (desc) desc.textContent = `Parabéns! Você alcançou ${playerStats.mpGoals} gols no Multiplayer e agora é nível ${tierObj.name}!`;
+
+  const mount = $("#levelUpCardMount");
+  if (mount) {
+    mount.innerHTML = "";
+    mount.appendChild(createFutCardElement({
+      name: window.firebaseUser ? window.firebaseUser.displayName : "CRIA",
+      mpGoals: playerStats.mpGoals,
+      customConfig: playerCustomConfig
+    }));
+  }
+
+  modal.classList.add("show");
+  try { sfx.playFireworks(); } catch(e){}
+
+  const btnClaim = $("#btnClaimLevelUp");
+  if (btnClaim) {
+    btnClaim.onclick = () => modal.classList.remove("show");
+  }
 }
 
 /* ═══════════════ EDITOR DE PIXEL ART / TATUAGEM ═══════════════ */
@@ -6237,22 +7800,29 @@ let customizerRot = 0;
 let isDraggingCustomizer = false;
 
 function startMatchMode(){
-  gameMode = "match";
-  shake = 0;
-  sfx.init();
-  sfx.playWhistle(false);
-  $("#start").style.display = "none";
-  $("#trainingHud").style.display = "none";
-  $("#customizerModal").style.display = "none";
-  $("#topWrap").style.display = "block";
-  const jEl = $("#joy"); if(jEl) jEl.style.display = "block";
-  const bgEl = $("#btnGrid"); if(bgEl) bgEl.style.display = "grid";
-  const mwEl = $("#miniWrap"); if(mwEl) mwEl.style.display = "flex";
-  const chEl = $("#crosshairWrap"); if(chEl) chEl.style.display = "flex";
-  score = [0,0]; timeLeft = CFG.MATCH; over = false; running = true;
-  updateScore(); updateClock(); kickoff(1); drawMini();
-  last = performance.now();
-  startMouseControl();
+  const playerName = (window.firebaseUser ? window.firebaseUser.displayName : (document.querySelector("#mpName")?.value || "CRIA")) || "CRIA";
+  showMatchIntro(
+    { name: playerName, mpGoals: playerStats.mpGoals, customConfig: playerCustomConfig },
+    { name: "CAPITÃO RIVAL", mpGoals: 250, customConfig: { skinColor: "#543018", hairStyle: "mohawk", hairColor: "#f4f4f5", jerseyColor: "#ef4444", jerseySecColor: "#18181b", jerseyStyle: "stripes", foot: -1 } },
+    () => {
+      gameMode = "match";
+      shake = 0;
+      sfx.init();
+      sfx.playWhistle(false);
+      $("#start").style.display = "none";
+      $("#trainingHud").style.display = "none";
+      $("#customizerModal").style.display = "none";
+      $("#topWrap").style.display = "block";
+      const jEl = $("#joy"); if(jEl) jEl.style.display = "block";
+      const bgEl = $("#btnGrid"); if(bgEl) bgEl.style.display = "grid";
+      const mwEl = $("#miniWrap"); if(mwEl) mwEl.style.display = "flex";
+      const chEl = $("#crosshairWrap"); if(chEl) chEl.style.display = "flex";
+      score = [0,0]; timeLeft = CFG.MATCH; over = false; running = true;
+      updateScore(); updateClock(); kickoff(1); drawMini();
+      last = performance.now();
+      startMouseControl();
+    }
+  );
 }
 
 function startTrainingMode(){
@@ -6710,6 +8280,7 @@ function loop(now){
     if(++miniTick % 4 === 0) drawMini();
   }
 
+  if(typeof updateVFX === "function") updateVFX(dt);
   renderer.render(scene, camera);
 }
 requestAnimationFrame(loop);
@@ -7295,6 +8866,7 @@ if(tabNavSeason) tabNavSeason.addEventListener("click", ()=>{
 });
 if(tabNavProfile) tabNavProfile.addEventListener("click", ()=>{
   setActiveNavTab(tabNavProfile);
+  openProfileModal();
 });
 
 const tBtnReset = $("#tBtnReset");
@@ -7409,7 +8981,13 @@ function mpConnect(){
     mp.connected = true;
     mp.retries = 0;
     clearTimeout(mp.wakeTimer);
-    mpSend(C2S.HELLO, { name, customConfig: playerCustomConfig, uid: window.firebaseUid });
+    mpSend(C2S.HELLO, {
+      name,
+      customConfig: playerCustomConfig,
+      uid: window.firebaseUid,
+      mpGoals: playerStats.mpGoals || 0,
+      cardTier: getCardTier(playerStats.mpGoals).id
+    });
     mpSetStatus("Conectado. Crie uma sala ou entre em uma aberta.");
     mpListRooms();
   };
@@ -7467,12 +9045,38 @@ function mpHandle(msg){
       shake = 0.55;
       sfx.playFireworks(); sfx.playWhistle(true);
       updateClock();
+
+      // Contabilidade de Gols no Multiplayer: apenas gols marcados no modo multiplayer contam
+      if (msg.d && msg.d.scorerEntId && msg.d.scorerEntId === mp.entId) {
+        const prevTier = getCardTier(playerStats.mpGoals).id;
+        playerStats.mpGoals = (playerStats.mpGoals || 0) + 1;
+        const newTierObj = getCardTier(playerStats.mpGoals);
+
+        saveLocalStats();
+        if (window.saveFirebaseStats) window.saveFirebaseStats(playerStats);
+        updateTopBarProfileChip();
+        if (typeof updateProfileUI === "function") updateProfileUI();
+
+        flash(`⚽ GOL MULTIPLAYER! (${playerStats.mpGoals}º GOL)`, "#ffd700", `${newTierObj.badge} ${newTierObj.cardTitle}`);
+
+        if (prevTier !== newTierObj.id) {
+          showCardLevelUp(newTierObj);
+        }
+      }
       break;
     case S2C.MATCH_END:
       sfx.playWhistle(true);
       const mine = (msg.d.score||[0,0])[mp.team], theirs = (msg.d.score||[0,0])[1-mp.team];
-      const res = mine > theirs ? "VITÓRIA DOS CRIAS! 🏆" : mine < theirs ? "FIM DE JOGO • DERROTA" : "EMPATE NA FAVELA!";
-      $("#startText").textContent = `${res} Placar Multiplayer: ${mine} x ${theirs}`;
+      const won = mine > theirs;
+      playerStats.mpMatches = (playerStats.mpMatches || 0) + 1;
+      if (won) playerStats.mpWins = (playerStats.mpWins || 0) + 1;
+      saveLocalStats();
+      if (window.saveFirebaseStats) window.saveFirebaseStats(playerStats);
+      updateTopBarProfileChip();
+
+      const tierInfo = getCardTier(playerStats.mpGoals);
+      const res = won ? "VITÓRIA DOS CRIAS! 🏆" : mine < theirs ? "FIM DE JOGO • DERROTA" : "EMPATE NA FAVELA!";
+      $("#startText").textContent = `${res} Placar: ${mine} x ${theirs} • ${tierInfo.badge} ${tierInfo.cardTitle} (${playerStats.mpGoals} Gols)`;
       setTimeout(() => mpEndMatch(), 300);
       break;
     case S2C.PLAYER_LEFT:
@@ -7568,7 +9172,7 @@ function mpClearRoster(){
   mpWorld.ents.clear(); mpWorld.ball = null;
 }
 
-function createNameTagSprite(name, isAlly, isMe, isKeeper){
+function createNameTagSprite(name, isAlly, isMe, isKeeper, cardTier = "silver"){
   const canvas = document.createElement("canvas");
   canvas.width = 256; canvas.height = 64;
   const ctx = canvas.getContext("2d");
@@ -7585,12 +9189,13 @@ function createNameTagSprite(name, isAlly, isMe, isKeeper){
     ctx.fillRect(16, 12, 224, 40);
   }
 
+  const badgeIcon = cardTier === "legend" ? "👑 " : (cardTier === "gold" ? "🥇 " : "🥈 ");
   ctx.fillStyle = isMe ? "#0a0a0f" : "#18181b";
-  ctx.font = "bold 20px 'Outfit', 'Segoe UI', sans-serif";
+  ctx.font = "bold 19px 'Outfit', 'Segoe UI', sans-serif";
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
-  const label = isMe ? "★ VOCÊ ★" : (name || "CRIA").toUpperCase();
-  ctx.fillText(label.slice(0, 14), 128, 32);
+  const label = isMe ? `★ ${badgeIcon}VOCÊ ★` : `${badgeIcon}${(name || "CRIA").toUpperCase()}`;
+  ctx.fillText(label.slice(0, 16), 128, 32);
 
   const texture = new THREE.CanvasTexture(canvas);
   texture.minFilter = THREE.LinearFilter;
@@ -7619,11 +9224,21 @@ function mpBuildRoster(d){
     if(r.bot) ch.mpBot = true;
     const isMe = r.id === mp.entId;
     const isAlly = r.team === mp.team;
-    const tag = createNameTagSprite(r.name, isAlly, isMe, role === "keeper");
+    const tag = createNameTagSprite(r.name, isAlly, isMe, role === "keeper", r.cardTier || getCardTier(r.mpGoals || 0).id);
     ch.nameTag = tag;
     ch.root.add(tag);
     mp.chars.set(r.id, ch);
   });
+
+  // Apresentação de Partida com Cartas no Multiplayer
+  const allyCapt = (d.roster || []).find(e => e.team === mp.team && !e.bot) || (d.roster || []).find(e => e.team === mp.team) || { name: "CRIA", mpGoals: playerStats.mpGoals, customConfig: playerCustomConfig };
+  const foeCapt = (d.roster || []).find(e => e.team !== mp.team && !e.bot) || (d.roster || []).find(e => e.team !== mp.team) || { name: "RIVAL", mpGoals: 120, customConfig: null };
+
+  showMatchIntro(
+    { name: allyCapt.name, mpGoals: allyCapt.mpGoals || playerStats.mpGoals, customConfig: allyCapt.customConfig || playerCustomConfig },
+    { name: foeCapt.name, mpGoals: foeCapt.mpGoals || 120, customConfig: foeCapt.customConfig || null },
+    () => {}
+  );
 
   // Prepara a cena multiplayer
   gameMode = "multiplayer";
@@ -7648,9 +9263,7 @@ function mpBuildRoster(d){
   startMouseControl();
   last = performance.now();
 
-  // Voz do time: pede a credencial agora que o servidor ja sabe em qual sala e
-  // em qual time voce caiu. Se o VoIP estiver desligado no backend, a resposta
-  // vem vazia e o HUD nem aparece.
+  // Voz do time
   voiceRequestToken();
 }
 

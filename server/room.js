@@ -93,6 +93,8 @@ export class Room {
     if (client.uid) ent.uid = client.uid;
     ent.name = client.name || "CRIA";
     ent.customConfig = client.customConfig || null;
+    ent.mpGoals = client.mpGoals || 0;
+    ent.cardTier = client.cardTier || "silver";
     client.entId = ent.id;
     client.team = ent.team;
     client.room = this;
@@ -156,7 +158,7 @@ export class Room {
     const event = step(this.world, dt, this.inputs);
 
     if (event?.type === "goal") {
-      this.broadcast(S2C.GOAL, { team: event.team, score: this.world.score });
+      this.broadcast(S2C.GOAL, { team: event.team, score: this.world.score, scorerEntId: event.scorerEntId });
       // Comemoracao: time que marcou dança brevemente (até a bola voltar ao jogo)
       for (const e of this.world.ents) {
         if (e.role === "keeper" || e.team !== event.team) continue;
@@ -233,7 +235,9 @@ export class Room {
       roster: this.world.ents.map((e) => ({
         id: e.id, team: e.team, role: e.role, foot: e.foot,
         bot: e.isBot, name: e.name || (e.isBot ? "BOT" : "CRIA"),
-        customConfig: e.customConfig
+        customConfig: e.customConfig,
+        mpGoals: e.mpGoals || 0,
+        cardTier: e.cardTier || (e.isBot ? "silver" : "silver")
       }))
     };
   }

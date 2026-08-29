@@ -19,9 +19,15 @@ import { voiceConfig, voiceToken } from "./voice.js";
 const PORT = process.env.PORT || 8080;
 
 // Teto de snapshots represados por cliente antes de comecar a descartar.
-// ~16 KB e da ordem de 15 snapshots (menos de 1s de jogo): passou disso, a
-// conexao nao esta dando conta e insistir so piora.
-const SNAPSHOT_BACKLOG_MAX = 16 * 1024;
+// Um snapshot de 4v4 tem ~460 bytes, entao 8 KB e da ordem de 17 pacotes —
+// quase um segundo de jogo parado na fila. Passou disso, a conexao nao esta
+// dando conta e insistir so aumenta o atraso.
+const SNAPSHOT_BACKLOG_MAX = 8 * 1024;
+
+// Quantos snapshots foram descartados por congestionamento desde que o
+// processo subiu. Aparece em /health: se esse numero sobe rapido, o problema
+// e a rede dos jogadores (ou o plano do Render), nao a simulacao.
+let snapshotsDropped = 0;
 
 // Origens autorizadas a falar com este backend. Em produção, defina
 // ALLOWED_ORIGINS no Render com os domínios da Vercel separados por vírgula:
@@ -81,6 +87,7 @@ const server = http.createServer((req, res) => {
       rooms: rooms.size,
       players: clients.size,
       voice: voiceConfig().enabled,
+      snapshotsDropped,
       uptime: Math.round(process.uptime())
     }));
     return;
@@ -140,7 +147,6 @@ wss.on("connection", (ws) => {
     team: 0,
     lastSeq: 0,
     alive: true,
-    dropped: 0,          // snapshots pulados por congestionamento
     send(type, data) {
       if (ws.readyState === ws.OPEN) {
         try { ws.send(encode(type, data)); } catch (e) { /* socket caindo */ }
@@ -155,7 +161,7 @@ wss.on("connection", (ws) => {
     // passado em camera lenta.
     sendRaw(text) {
       if (ws.readyState !== ws.OPEN) return;
-      if (ws.bufferedAmount > SNAPSHOT_BACKLOG_MAX) { this.dropped++; return; }
+      if (ws.bufferedAmount > SNAPSHOT_BACKLOG_MAX) { snapshotsDropped++; return; }
       try { ws.send(text); } catch (e) { /* socket caindo */ }
     }
   };

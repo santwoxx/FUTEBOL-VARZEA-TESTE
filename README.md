@@ -179,6 +179,7 @@ a partida continua.
 | `V` | drible |
 | `C` | pulo / cabeceio |
 | `Esc` | soltar o mouse |
+| `B` | falar com o time (online) |
 
 ---
 
@@ -186,18 +187,52 @@ a partida continua.
 
 Medidos nos testes locais:
 
-- **Banda:** ~3,4 KB/s por jogador no 1v1, ~8,7 KB/s no 4v4.
-- **CPU:** ~0,03% de um núcleo por partida.
+- **Banda:** ~3,4 KB/s por jogador no 1v1, ~9,3 KB/s no 4v4 (snapshot de 463 B
+  a 20/s). Com voz, some ~24 kbps por pessoa falando.
+- **CPU do envio de snapshot:** 0,019% de um núcleo por sala 4v4 (era 0,14%).
 - **Conversão de chutes:** ~23% viram gol (cantos ~39%, meio ~15%).
+
+### O que foi otimizado
+
+**Servidor — uma serialização por sala, não por jogador.** O estado é o mesmo
+para todo mundo; só o `ack` (último input processado) muda por cliente. Num 4v4
+eram 8 `JSON.stringify` idênticos do mundo inteiro, 20 vezes por segundo. Agora o
+corpo é serializado uma vez e o `ack` entra por concatenação: **7,5x mais rápido**,
+com saída byte a byte idêntica.
+
+**Servidor — descarta snapshot de quem está afogado.** Se o socket de um cliente
+acumula mais de 8 KB na fila (~17 pacotes, quase um segundo), o próximo snapshot
+é pulado em vez de enfileirado. Insistir só faria ele assistir ao passado em
+câmera lenta; pular deixa a conexão ruim voltar ao presente. `GET /health` expõe
+`snapshotsDropped` — se sobe rápido, o gargalo é rede, não simulação.
+
+**Cliente — interpolação sem alocar.** `mpInterpolate()` roda a cada frame e
+criava um `Map`, um objeto de bola e um objeto por entidade toda vez: ~720
+objetos por segundo de lixo para o coletor, exatamente o tipo de coisa que vira
+engasgo na hora do gol. Agora os objetos são reusados entre frames e o par de
+entidades é achado por índice (a ordem do snapshot é estável) em vez de uma busca
+linear por entidade: **3,1x mais rápido, zero alocação**.
 
 ## VoIP — voz do time
 
 Voz entre jogadores do **mesmo time**, durante a partida, via
 [LiveKit Cloud](https://livekit.io).
 
-- **`T`** — segure para falar (push-to-talk).
-- **`M`** — trava o microfone aberto. Aperte de novo para destravar.
-- Trocar de aba corta a transmissão, mesmo com o mic travado.
+Dois modos, em *SISTEMA & CONTROLES*:
+
+| Modo | Como funciona |
+|---|---|
+| **Apertar para falar** (padrão) | Só transmite enquanto você segura a tecla de voz (`B` por padrão, remapeável junto com o resto dos controles). |
+| **Sempre aberto** | Microfone ligado o tempo todo; a tecla vira liga/desliga. |
+
+O **botão 🎙️ no canto da partida** muta nos dois modos — é uma chave geral, então
+no modo de apertar a tecla não abre nada enquanto ele estiver mudo. Com a mira
+travada o mouse não clica em nada, por isso o botão mostra a tecla escrita nele:
+solte o mouse com `Esc` para clicar, ou use a tecla direto no meio da jogada.
+
+Trocar de aba corta a transmissão mesmo no modo aberto — ninguém quer continuar
+transmitindo o quarto depois de um alt-tab. O modo não muda: volta a valer quando
+a aba recebe foco. Modo e mudo ficam salvos no `localStorage`.
 - **Só a partir do 2v2.** No 1v1 os dois jogadores caem em times opostos, então
   não existe companheiro para ouvir e o HUD de voz nem aparece.
 
@@ -245,7 +280,13 @@ como `sync: false` (o valor vive só no painel) e `server/.env` está no
 - **O SDK (~1,3 MB) só baixa quando a primeira partida começa.** Quem nunca
   joga online não paga esse download.
 - **O microfone é publicado uma vez e depois só muta/desmuta.** Publicar a cada
-  aperto do `T` renegociaria a conexão no meio da jogada.
+  aperto da tecla renegociaria a conexão no meio da jogada.
+- **Um cálculo só decide se transmite** (`voiceShouldTransmit()`): modo, mudo, tecla
+  e foco da aba entram na mesma conta. Duas fontes de verdade aqui dariam no pior
+  bug possível — microfone aberto sem o jogador saber.
+- **Preset de fala, não de música:** 24 kbps em vez dos 48 kbps que o LiveKit usa
+  por padrão, com a redundância (RED) mantida, que é o que segura a conversa em 4G
+  ruim de beira de campo. DTX ligado: silêncio não vira pacote.
 - Você entra na partida ouvindo o time, mas **mudo**.
 
 ### Custo
@@ -261,3 +302,8 @@ minutos gasta ~24 minutos de participante (8 jogadores × 3 min). Acompanhe em
 Voz espacial: ouvir mais alto quem está perto de você no campo. O LiveKit
 entrega as faixas separadas por participante, então dá para ligar cada uma a um
 `PannerNode` do Web Audio usando a posição que o snapshot já traz.
+
+Do lado da rede, o próximo ganho real não é micro-otimização: é trocar o JSON do
+snapshot por binário. Os campos já são numéricos e arredondados a 2 casas — um
+`ArrayBuffer` cortaria os 463 B para perto de 100 B, mas custa a legibilidade que
+hoje deixa depurar a partida com o DevTools aberto.

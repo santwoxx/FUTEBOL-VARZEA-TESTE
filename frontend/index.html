@@ -3008,11 +3008,8 @@ function updateLobbyAccessUI(){
   const mp = document.getElementById("btnPlayRanked");
   const badge = document.getElementById("mpOnlineBadge");
   if(!mp || !badge) return;
-  const blocked = !logged || (window.mpAccess.checked && !window.mpAccess.allowed);
-  mp.classList.toggle("locked", blocked);
-  badge.textContent = !logged ? "ENTRE COM O GOOGLE"
-    : blocked ? "🔒 BETA FECHADA"
-    : "CRIAR / ENTRAR";
+  mp.classList.toggle("locked", !logged);
+  badge.textContent = !logged ? "ENTRE COM O GOOGLE" : "CRIAR / ENTRAR";
 }
 
 /* ─────────────── APOIE O JOGO (LIVEPIX) ─────────────── */
@@ -8099,12 +8096,10 @@ function updatePlayer(dt){
   ring.position.set(player.root.position.x, 0.04, player.root.position.z);
   ring.material.opacity = owner === player ? 0.9 : 0.35;
 
-  // Indicador de mira minimalista
-  const showAim = input.charging;
-  aimLine.visible = showAim;
-  for(let i = 0; i < 3; i++) aimDots[i].visible = showAim;
+  // Indicador de mira e trajetória no chão + Alvo no Gol
+  updateAimIndicators(player.root.position, owner === player, input.charging, input.charge, dt, 0);
 
-  if(showAim){
+  if(input.charging){
     const aimPt = getAimWorldPoint();
     tA.set(aimPt.x - player.root.position.x, 0, aimPt.z - player.root.position.z);
     if(tA.lengthSq() > 0.1){
@@ -8112,30 +8107,6 @@ function updatePlayer(dt){
       player.yaw = Math.atan2(tA.x, tA.z);
     }
     facing(tA);
-
-    const px = player.root.position.x, pz = player.root.position.z;
-    const charge = input.charge;
-    const t = performance.now() * 0.003;
-
-    // Linha fina de laser na direção da mira
-    const lineDist = 1.6 + charge * 1.2;
-    aimLine.position.set(px + tA.x * lineDist, 0.05, pz + tA.z * lineDist);
-    aimLine.rotation.z = player.yaw + Math.PI;
-    aimLine.scale.set(1, 0.6 + charge * 0.8, 1);
-    aimLine.material.opacity = 0.15 + charge * 0.35;
-    aimLine.material.color.setHex(charge > 0.7 ? 0xff4444 : 0xffffff);
-
-    // 3 dots que pulsam para fora
-    for(let i = 0; i < 3; i++){
-      const dist = 0.7 + (i + 1) * 0.55 + charge * 0.4 * (i + 1);
-      const pulse = Math.sin(t + i * 1.8) * 0.06;
-      aimDots[i].position.set(px + tA.x * (dist + pulse), 0.06, pz + tA.z * (dist + pulse));
-      const dotOpacity = (0.2 + charge * 0.6) * (1.0 - i * 0.2);
-      aimDots[i].material.opacity = dotOpacity;
-      const sc = 0.8 + charge * 0.6;
-      aimDots[i].scale.set(sc, sc, sc);
-      aimDots[i].material.color.setHex(charge > 0.7 ? 0xff4444 : 0xffffff);
-    }
   }
 }
 
@@ -8152,7 +8123,7 @@ function getAimWorldPoint(){
       const gx = camera.position.x + tGoal * camAimDir.x;
       const gy = camera.position.y + tGoal * camAimDir.y;
       if(Math.abs(gx) <= GHW + 8 && gy >= -0.5 && gy <= CFG.GOAL_H + 4){
-        aimWorldPoint.set(clamp(gx, -GHW + 0.4, GHW - 0.4), clamp(gy, 0.4, CHUTE.tetoMira), -HH);
+        aimWorldPoint.set(clamp(gx, -GHW + 0.4, GHW - 0.4), clamp(gy, 0.4, (typeof CHUTE !== "undefined" && CHUTE.tetoMira) ? CHUTE.tetoMira : 3.8), -HH);
         return aimWorldPoint;
       }
     }
@@ -8175,6 +8146,68 @@ function getAimWorldPoint(){
   aimWorldPoint.copy(camera.position).addScaledVector(camAimDir, 28);
   aimWorldPoint.y = clamp(aimWorldPoint.y, 0, CFG.GOAL_H);
   return aimWorldPoint;
+}
+
+function updateAimIndicators(playerPos, isOwner, isCharging, charge, dt=0.016, team=0){
+  const showAim = isOwner || isCharging;
+  aimLine.visible = showAim;
+  for(let i = 0; i < aimDots.length; i++) aimDots[i].visible = showAim;
+
+  if(!showAim){
+    goalTargetGroup.visible = false;
+    return;
+  }
+
+  const aimPt = (gameMode === "multiplayer" && typeof mpAimPoint === "function") ? mpAimPoint() : getAimWorldPoint();
+  tA.set(aimPt.x - playerPos.x, 0, aimPt.z - playerPos.z);
+  if(tA.lengthSq() > 0.05){
+    tA.normalize();
+  } else {
+    tA.set(0, 0, team === 0 ? -1 : 1);
+  }
+
+  const px = playerPos.x, pz = playerPos.z;
+  const t = performance.now() * 0.003;
+  const isOver = charge > 0.7;
+  const col = isOver ? 0xff3344 : (isCharging ? 0xffd700 : 0x00f0b8);
+
+  // 1. Linha direcional no gramado
+  const lineDist = 1.8 + (isCharging ? charge * 1.5 : 0.8);
+  aimLine.position.set(px + tA.x * lineDist, 0.05, pz + tA.z * lineDist);
+  aimLine.rotation.z = Math.atan2(tA.x, tA.z) + Math.PI;
+  aimLine.scale.set(1, 0.8 + (isCharging ? charge * 1.2 : 0.4), 1);
+  aimLine.material.opacity = isCharging ? (0.4 + charge * 0.5) : 0.45;
+  aimLine.material.color.setHex(col);
+
+  // 2. Dots de trajetória no chão
+  for(let i = 0; i < 3; i++){
+    const dist = 0.8 + (i + 1) * 0.65 + (isCharging ? charge * 0.5 * (i + 1) : 0);
+    const pulse = Math.sin(t + i * 1.6) * 0.08;
+    aimDots[i].position.set(px + tA.x * (dist + pulse), 0.06, pz + tA.z * (dist + pulse));
+    aimDots[i].material.opacity = isCharging ? ((0.3 + charge * 0.7) * (1.0 - i * 0.15)) : (0.5 - i * 0.12);
+    const sc = 0.9 + (isCharging ? charge * 0.7 : 0.1);
+    aimDots[i].scale.set(sc, sc, sc);
+    aimDots[i].material.color.setHex(col);
+  }
+
+  // 3. Alvo 3D Holográfico no Gol (Mostra a gaveta / canto exato)
+  const targetGoalZ = team === 0 ? -HH : HH;
+  const isNearGoalZ = Math.abs(aimPt.z - targetGoalZ) < 3.0;
+  if(isNearGoalZ && Math.abs(aimPt.x) <= GHW + 1.5){
+    goalTargetGroup.position.set(
+      clamp(aimPt.x, -GHW + 0.35, GHW - 0.35),
+      clamp(aimPt.y || 1.2, 0.35, CFG.GOAL_H - 0.25),
+      targetGoalZ + (team === 0 ? 0.15 : -0.15)
+    );
+    goalTargetGroup.visible = true;
+    goalTargetRing.rotation.z += dt * 3.0;
+    goalTargetRingMat.color.setHex(col);
+    goalTargetRingMat.opacity = isCharging ? 0.95 : 0.75;
+    const gScale = isCharging ? (1.0 + Math.sin(t * 3) * 0.12) : 0.85;
+    goalTargetGroup.scale.set(gScale, gScale, gScale);
+  } else {
+    goalTargetGroup.visible = false;
+  }
 }
 
 /* ═══════════════ GOLEIRO ═══════════════ */
@@ -12786,13 +12819,8 @@ function mpBackendHttp(){
 }
 
 async function openMultiplayerLobby(){
-  // Duas portas antes de gastar um socket: estar logado e estar na beta.
-  // Nenhuma das duas segura de verdade (o servidor é quem confere o token) —
-  // elas só evitam mandar o jogador para uma tela que vai recusá-lo.
+  sfx.init();
   if(!requireLogin("jogar o multiplayer online", openMultiplayerLobby)) return;
-  const acc = await checkMpAccess();
-  updateLobbyAccessUI();
-  if(!acc.allowed){ showAccessGate(acc.reason); return; }
 
   running = false; over = false;
   gameMode = "menu";              // mantém o personagem do lobby visível atrás do modal
@@ -12805,7 +12833,7 @@ async function openMultiplayerLobby(){
     nameInput.value = window.firebaseUser.displayName.slice(0, 14);
   }
   voiceRefreshMicButton();
-  mpSetStatus("Conferindo seu acesso...");
+  mpSetStatus("Conectando ao servidor...");
   await refreshIdToken();         // o servidor recusa token vencido
   mpConnect();
 }
@@ -13856,6 +13884,7 @@ function mpUpdate(dt){
     mpCamera(dt, myChar.root.position);
     ring.position.set(myChar.root.position.x, 0.04, myChar.root.position.z);
     ring.material.opacity = mp.ownerId === mp.entId ? 0.9 : 0.35;
+    updateAimIndicators(myChar.root.position, mp.ownerId === mp.entId, !!mpInputState.shoot, mp.charge || 0, dt, mp.team);
   }
 
   updateMobileControlsUI(mp.ownerId === mp.entId);

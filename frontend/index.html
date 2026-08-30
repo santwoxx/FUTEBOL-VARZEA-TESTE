@@ -3629,6 +3629,11 @@ sun.shadow.bias = -0.0005;
 }
 scene.add(sun, sun.target);
 
+// Luz de estúdio frontal para o atleta no Lobby e Vestiário 3D
+const lobbyKeyLight = new THREE.DirectionalLight(0xffeedd, 1.4);
+lobbyKeyLight.position.set(1.5, 3.5, 4.0);
+scene.add(lobbyKeyLight);
+
 function addFloodlight(x, y, z, tx, tz, color=0xffeedd){
   const light = new THREE.SpotLight(color, 280, 75, Math.PI/3.0, 0.45, 1.8);
   light.position.set(x, y, z);
@@ -14205,6 +14210,8 @@ setTimeout(() => {
 applyPlayerCustomization();
 updateScore(); updateClock(); kickoff(1); drawMini();
 for(let i=0; i<40; i++) updateCamera(0.05);
+last = performance.now();
+requestAnimationFrame(loop);
 </script>
 </body>
 </html>

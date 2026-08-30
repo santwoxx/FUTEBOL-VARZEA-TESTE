@@ -564,6 +564,34 @@ canvas{display:block;width:100%;height:100%}
   border:1px solid rgba(255,255,255,0.12);font-size:12px;font-weight:800;
 }
 
+/* Botão de Tela Cheia / Proteção Anti-Fechamento */
+.lobbyFullscreenBtn{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(255,215,0,0.12);color:#ffd700;
+  border:1px solid rgba(255,215,0,0.3);padding:6px 14px;border-radius:20px;
+  font-family:'Outfit',sans-serif;font-size:12px;font-weight:800;
+  cursor:pointer;transition:all .18s;user-select:none;-webkit-user-select:none;
+}
+.lobbyFullscreenBtn:hover{
+  background:rgba(255,215,0,0.22);border-color:#ffd700;
+  box-shadow:0 0 14px rgba(255,215,0,0.3);transform:scale(1.03);
+}
+.lobbyFullscreenBtn:active{transform:scale(0.97)}
+.musicTopBtn.muted{
+  opacity:0.6;border-color:rgba(255,255,255,0.2);color:rgba(255,255,255,0.6);
+  background:rgba(255,255,255,0.06);
+}
+.fsBtnIcon{font-size:14px;line-height:1}
+.hudFsBtn{
+  position:absolute;top:max(10px,env(safe-area-inset-top));right:max(16px,env(safe-area-inset-right));
+  background:rgba(14,9,20,0.85);border:1.5px solid rgba(255,215,0,0.4);color:#ffd700;
+  border-radius:12px;padding:8px 12px;cursor:pointer;z-index:6;
+  transition:all .18s;backdrop-filter:blur(10px);box-shadow:0 6px 20px rgba(0,0,0,0.5);
+  display:none;align-items:center;gap:6px;font-family:'Outfit',sans-serif;font-weight:800;font-size:12px;
+}
+.hudFsBtn:hover{background:rgba(255,215,0,0.22);border-color:#ffd700;transform:scale(1.04)}
+.hudFsBtn:active{transform:scale(0.96)}
+
 /* 2. Área Central / Menu Lateral Esquerdo */
 .lobbyMainContent{
   flex:1;display:flex;align-items:center;padding:0 36px;
@@ -870,6 +898,50 @@ canvas{display:block;width:100%;height:100%}
 }
 #mpStatus.error{color:#ff8080;background:rgba(255,68,85,0.08);border-color:rgba(255,68,85,0.25)}
 #mpStatus.matched{color:#ffd700;background:rgba(255,215,0,0.1);border-color:rgba(255,215,0,0.3)}
+/* Escolha de posição no lobby principal: fica logo acima de PARTIDA RÁPIDA
+   porque é uma decisão que se toma ANTES de entrar em campo. */
+.lobbyRolePick{
+  display:flex;align-items:center;gap:8px;margin-bottom:6px;
+  background:rgba(0,0,0,0.28);border-radius:12px;padding:7px 10px;
+  border:1px solid rgba(255,255,255,0.10);
+}
+.lobbyRoleTitle{
+  font-size:10px;font-weight:900;letter-spacing:1.2px;color:rgba(255,255,255,0.55);
+  text-transform:uppercase;white-space:nowrap;
+}
+.lobbyRoleBtn{
+  flex:1;padding:7px 6px;border-radius:9px;cursor:pointer;
+  background:rgba(255,255,255,0.06);border:2px solid rgba(255,255,255,0.12);
+  color:rgba(255,255,255,0.72);font-family:'Outfit',sans-serif;
+  font-size:12px;font-weight:900;letter-spacing:0.8px;
+  transition:border-color .15s,background .15s,color .15s;
+}
+.lobbyRoleBtn.selected{
+  background:linear-gradient(135deg,rgba(255,215,0,0.22),rgba(255,140,0,0.14));
+  border-color:rgba(255,215,0,0.85);color:#fff;
+}
+
+.mpRoleRow{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mpRoleBtn{
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  padding:10px 8px;border-radius:12px;cursor:pointer;
+  background:rgba(255,255,255,0.05);border:2px solid rgba(255,255,255,0.12);
+  color:rgba(255,255,255,0.75);font-family:'Outfit',sans-serif;
+  transition:border-color .15s,background .15s,color .15s;
+}
+.mpRoleBtn .mpRoleIcon{font-size:20px;line-height:1}
+.mpRoleBtn .mpRoleName{font-size:14px;font-weight:900;letter-spacing:1px}
+.mpRoleBtn small{font-size:9px;font-weight:700;letter-spacing:0.5px;opacity:0.7;text-align:center}
+.mpRoleBtn.selected{
+  background:linear-gradient(135deg,rgba(255,215,0,0.20),rgba(255,140,0,0.12));
+  border-color:rgba(255,215,0,0.85);color:#fff;
+}
+.mpRoleHint{
+  margin-top:8px;font-size:10.5px;line-height:1.5;color:rgba(255,255,255,0.6);
+  background:rgba(0,0,0,0.22);border-radius:9px;padding:8px 10px;
+}
+.mpRoleHint b{color:#ffd700}
+
 .mpRooms{display:none;flex-direction:column;gap:8px;max-height:190px;overflow-y:auto;padding-right:4px}
 .mpRooms.show{display:flex}
 .mpRoomRow{
@@ -1758,9 +1830,19 @@ canvas{display:block;width:100%;height:100%}
       <span class="navKeyBadge">E</span>
     </div>
 
-    <div class="lobbyProfileChip" id="btnAuth" style="cursor:pointer;transition:all 0.2s">
-      <span id="authAvatar" style="font-size:16px">👤</span>
-      <span style="color:#ffd700" id="authName">ENTRAR (GOOGLE)</span>
+    <div style="display:flex;align-items:center;gap:10px">
+      <button id="btnMusicToggleLobby" class="lobbyFullscreenBtn musicTopBtn" type="button" title="Ligar / Desligar Música de Fundo">
+        <span class="fsBtnIcon">🎵</span>
+        <span class="fsBtnLabel">MÚSICA</span>
+      </button>
+      <button id="btnFullscreenLobby" class="lobbyFullscreenBtn" type="button" title="Alternar Tela Cheia (F11) - Bloqueia atalhos do Chrome">
+        <span class="fsBtnIcon">⛶</span>
+        <span class="fsBtnLabel">TELA CHEIA</span>
+      </button>
+      <div class="lobbyProfileChip" id="btnAuth" style="cursor:pointer;transition:all 0.2s">
+        <span id="authAvatar" style="font-size:16px">👤</span>
+        <span style="color:#ffd700" id="authName">ENTRAR (GOOGLE)</span>
+      </div>
     </div>
   </div>
 
@@ -1773,6 +1855,12 @@ canvas{display:block;width:100%;height:100%}
 
       <div class="lobbySectionTitle">MODOS DE JOGO</div>
       
+      <div class="lobbyRolePick">
+        <span class="lobbyRoleTitle">VOCÊ JOGA DE</span>
+        <button class="lobbyRoleBtn selected" data-mprole="field">⚽ LINHA</button>
+        <button class="lobbyRoleBtn" data-mprole="keeper">🧤 GOLEIRO</button>
+      </div>
+
       <button class="lobbyMenuItem primaryHighlight" id="btnPlayMatch">
         <span class="itemIcon">⚽</span>
         <span class="itemText">PARTIDA RÁPIDA</span>
@@ -1856,7 +1944,48 @@ canvas{display:block;width:100%;height:100%}
         <button class="voiceModeBtn" data-voicemode="ptt" type="button">Apertar para falar</button>
         <button class="voiceModeBtn" data-voicemode="open" type="button">Sempre aberto</button>
       </div>
-      <div id="voiceModeHint"></div>
+    <div style="margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.12)">
+      <div style="font-family:'Teko',sans-serif;font-size:22px;color:#ffd700;letter-spacing:1px">ÁUDIO & MÚSICA DE FUNDO</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.7);margin-top:2px">
+        Ajuste os efeitos sonoros das partidas e a trilha sonora de cria.
+      </div>
+      
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px">
+        <span style="font-size:13px;font-weight:700">🎵 Trilha Sonora (Música)</span>
+        <button id="btnSystemMusicToggle" class="musicToggleBtn lobbyFullscreenBtn" type="button">MÚSICA: LIGADA</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:6px">
+        <span style="font-size:11px;color:rgba(255,255,255,0.6);width:50px">Volume</span>
+        <input type="range" id="musicVolSlider" min="0" max="1" step="0.05" value="0.35" style="flex:1;accent-color:#ffd700;cursor:pointer">
+      </div>
+
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px">
+        <span style="font-size:13px;font-weight:700">🔊 Efeitos Sonoros (SFX)</span>
+        <button id="btnSystemSfxToggle" class="sfxToggleBtn lobbyFullscreenBtn" type="button">EFEITOS: LIGADO</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:6px">
+        <span style="font-size:11px;color:rgba(255,255,255,0.6);width:50px">Volume</span>
+        <input type="range" id="sfxVolSlider" min="0" max="1" step="0.05" value="0.8" style="flex:1;accent-color:#ffd700;cursor:pointer">
+      </div>
+    </div>
+
+    <div style="margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.12)">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-family:'Teko',sans-serif;font-size:22px;color:#ffd700;letter-spacing:1px">TELA CHEIA & ANTI-FECHAMENTO</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.7);margin-top:2px">
+            Bloqueia atalhos acidentais do navegador (Ctrl+W, F5, Tab) enquanto joga.
+          </div>
+        </div>
+        <button id="btnSystemFullscreen" class="lobbyFullscreenBtn" type="button" style="margin-left:10px">
+          <span class="fsBtnIcon">⛶</span>
+          <span class="fsBtnLabel">TELA CHEIA</span>
+        </button>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:10px;background:rgba(0,240,180,0.08);border:1px solid rgba(0,240,180,0.25);border-radius:8px;padding:8px 12px;font-size:11px;color:#00f0b8">
+        <span>🛡️</span>
+        <span>Proteção de navegador ativa: atalhos como <b>Ctrl+W</b> e <b>F5</b> não fecham o jogo.</span>
+      </div>
     </div>
 
     <div style="margin-top:20px;display:flex;justify-content:flex-end">
@@ -1953,6 +2082,28 @@ canvas{display:block;width:100%;height:100%}
         <span class="mpTeamBadge" id="mpTeamBadge"></span>
         <span class="mpTeamName" id="mpTeamName">FLAMENGO</span>
         <button class="mpTeamChangeBtn" type="button">MUDAR TIME</button>
+      </div>
+    </div>
+
+    <div class="mpField">
+      <label>SUA POSIÇÃO EM CAMPO</label>
+      <div class="mpRoleRow">
+        <button class="mpRoleBtn selected" data-mprole="field">
+          <span class="mpRoleIcon">⚽</span>
+          <span class="mpRoleName">LINHA</span>
+          <small>DRIBLA, PASSA E FINALIZA</small>
+        </button>
+        <button class="mpRoleBtn" data-mprole="keeper">
+          <span class="mpRoleIcon">🧤</span>
+          <span class="mpRoleName">GOLEIRO</span>
+          <small>MERGULHA, ENCAIXA E REPÕE</small>
+        </button>
+      </div>
+      <div class="mpRoleHint" id="mpRoleHint">
+        Na linha você joga como sempre. No gol, <b>PULO</b> mergulha (com o direcional
+        escolhe o lado, sem direcional sobe reto), <b>DESARME</b> encaixa a bola,
+        <b>CARRINHO</b> soca pra longe, e com ela nas mãos <b>CHUTE</b> dá o tiro de meta
+        e <b>PASSE</b> arremessa.
       </div>
     </div>
 
@@ -2268,6 +2419,11 @@ canvas{display:block;width:100%;height:100%}
   <button id="voiceBtn" type="button" title="Mutar / desmutar o microfone">
     <span class="voiceBtnIcon">🎙️</span>
     <span class="voiceBtnLabel">B</span>
+  </button>
+
+  <button id="hudFullscreenBtn" class="hudFsBtn" type="button" title="Alternar Tela Cheia (F11)">
+    <span class="fsBtnIcon">⛶</span>
+    <span class="fsBtnLabel">TELA CHEIA</span>
   </button>
 
   <div id="powerWrap"><div id="power"></div><div id="powerSafe"></div></div>
@@ -2851,202 +3007,539 @@ function closeDonateModal(){
   if(m) m.classList.remove("show");
 }
 
-/* ═══════════════ ÁUDIO PROCEDURAL (WEB AUDIO API) ═══════════════ */
+/* ═══════════════ ÁUDIO PROCEDURAL DE ALTA QUALIDADE & MÚSICA DE FUNDO ═══════════════ */
 class SoundEngine {
   constructor(){
     this.ctx = null;
-    this.enabled = true;
+    this.masterGain = null;
+    this.sfxGain = null;
+    this.musicGain = null;
+    this.compressor = null;
+    this.sfxEnabled = true;
+    this.musicEnabled = true;
+    this.sfxVolume = 0.8;
+    this.musicVolume = 0.35;
     this.initialized = false;
-  }
-  init(){
-    if(this.initialized) return;
+    this.bgmPlaying = false;
+    this.bgmTimer = null;
+    this.bgmStep = 0;
+    this.bgmMode = "chill"; // "chill" (lobby/menu) ou "match" (em campo)
+
     try {
-      const AudioContext = window.AudioContext || window.webkitAudioContext;
-      this.ctx = new AudioContext();
-      this.initialized = true;
+      const s = localStorage.getItem("fut_sfx_enabled");
+      if (s !== null) this.sfxEnabled = s === "1";
+      const m = localStorage.getItem("fut_music_enabled");
+      if (m !== null) this.musicEnabled = m === "1";
+      const sv = localStorage.getItem("fut_sfx_vol");
+      if (sv !== null) this.sfxVolume = parseFloat(sv) || 0.8;
+      const mv = localStorage.getItem("fut_music_vol");
+      if (mv !== null) this.musicVolume = parseFloat(mv) || 0.35;
     } catch(e){}
   }
+
+  get enabled(){
+    return this.sfxEnabled;
+  }
+  set enabled(v){
+    this.sfxEnabled = v;
+  }
+
+  init(){
+    if(this.ctx && this.ctx.state === "suspended"){
+      this.ctx.resume().catch(()=>{});
+    }
+    if(this.initialized) return;
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      this.ctx = new AudioCtx();
+
+      // Compressor dinâmico no Master para nunca estourar ou distorcer
+      this.compressor = this.ctx.createDynamicsCompressor();
+      this.compressor.threshold.setValueAtTime(-14, this.ctx.currentTime);
+      this.compressor.knee.setValueAtTime(18, this.ctx.currentTime);
+      this.compressor.ratio.setValueAtTime(6, this.ctx.currentTime);
+      this.compressor.attack.setValueAtTime(0.003, this.ctx.currentTime);
+      this.compressor.release.setValueAtTime(0.18, this.ctx.currentTime);
+
+      this.masterGain = this.ctx.createGain();
+      this.masterGain.gain.setValueAtTime(1.0, this.ctx.currentTime);
+
+      this.sfxGain = this.ctx.createGain();
+      this.sfxGain.gain.setValueAtTime(this.sfxEnabled ? this.sfxVolume : 0, this.ctx.currentTime);
+
+      this.musicGain = this.ctx.createGain();
+      this.musicGain.gain.setValueAtTime(this.musicEnabled ? this.musicVolume : 0, this.ctx.currentTime);
+
+      this.sfxGain.connect(this.compressor);
+      this.musicGain.connect(this.compressor);
+      this.compressor.connect(this.masterGain);
+      this.masterGain.connect(this.ctx.destination);
+
+      this.initialized = true;
+      if(this.musicEnabled) this.startMusic();
+    } catch(e){
+      console.warn("AudioContext init error:", e);
+    }
+  }
+
   toggle(){
-    this.enabled = !this.enabled;
-    const btn = document.querySelector("#audioToggle");
-    if(btn) btn.textContent = `SOM: ${this.enabled ? "LIGADO" : "MUTADO"}`;
+    this.toggleSfx();
   }
+
+  setSfxVolume(val){
+    this.sfxVolume = clamp(val, 0, 1);
+    try { localStorage.setItem("fut_sfx_vol", this.sfxVolume); } catch(e){}
+    if(this.sfxGain && this.ctx){
+      this.sfxGain.gain.setTargetAtTime(this.sfxEnabled ? this.sfxVolume : 0, this.ctx.currentTime, 0.05);
+    }
+  }
+
+  setMusicVolume(val){
+    this.musicVolume = clamp(val, 0, 1);
+    try { localStorage.setItem("fut_music_vol", this.musicVolume); } catch(e){}
+    if(this.musicGain && this.ctx){
+      this.musicGain.gain.setTargetAtTime(this.musicEnabled ? this.musicVolume : 0, this.ctx.currentTime, 0.05);
+    }
+  }
+
+  toggleSfx(){
+    this.sfxEnabled = !this.sfxEnabled;
+    try { localStorage.setItem("fut_sfx_enabled", this.sfxEnabled ? "1" : "0"); } catch(e){}
+    if(this.sfxGain && this.ctx){
+      this.sfxGain.gain.setTargetAtTime(this.sfxEnabled ? this.sfxVolume : 0, this.ctx.currentTime, 0.05);
+    }
+    this.updateAudioUI();
+  }
+
+  toggleMusic(){
+    this.musicEnabled = !this.musicEnabled;
+    try { localStorage.setItem("fut_music_enabled", this.musicEnabled ? "1" : "0"); } catch(e){}
+    if(this.musicGain && this.ctx){
+      this.musicGain.gain.setTargetAtTime(this.musicEnabled ? this.musicVolume : 0, this.ctx.currentTime, 0.05);
+    }
+    if(this.musicEnabled){
+      if(!this.bgmPlaying) this.startMusic();
+    }
+    this.updateAudioUI();
+  }
+
+  updateAudioUI(){
+    document.querySelectorAll(".sfxToggleBtn").forEach(btn => {
+      btn.textContent = `EFEITOS: ${this.sfxEnabled ? "LIGADO" : "MUTADO"}`;
+      btn.classList.toggle("active", this.sfxEnabled);
+    });
+    document.querySelectorAll(".musicToggleBtn").forEach(btn => {
+      btn.textContent = `MÚSICA: ${this.musicEnabled ? "LIGADA" : "MUTADA"}`;
+      btn.classList.toggle("active", this.musicEnabled);
+    });
+    document.querySelectorAll(".musicTopBtn").forEach(btn => {
+      btn.innerHTML = `<span class="fsBtnIcon">${this.musicEnabled ? "🎵" : "🔇"}</span><span class="fsBtnLabel">${this.musicEnabled ? "MÚSICA" : "MUDO"}</span>`;
+      btn.classList.toggle("muted", !this.musicEnabled);
+    });
+    const sfxSlider = document.querySelector("#sfxVolSlider");
+    if(sfxSlider) sfxSlider.value = this.sfxVolume;
+    const musicSlider = document.querySelector("#musicVolSlider");
+    if(musicSlider) musicSlider.value = this.musicVolume;
+  }
+
+  // ═══════════════ SFX OTIMIZADOS E AGRADÁVEIS ═══════════════
+
+  // Chute na bola: impacto gordo de sub-grave + estalo aveludado de couro
   playKick(power=0.6){
-    if(!this.enabled || !this.ctx) return;
+    if(!this.sfxEnabled || !this.ctx) return;
+    this.init();
     const t = this.ctx.currentTime;
+    const p = Math.min(1.4, Math.max(0.2, power));
+
+    // Corpo grave (thud de couro)
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
     osc.type = "sine";
-    osc.frequency.setValueAtTime(145 + power*95, t);
-    osc.frequency.exponentialRampToValueAtTime(30, t + 0.14);
-    gain.gain.setValueAtTime(0.75 * Math.min(1, power + 0.3), t);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
-    osc.connect(gain); gain.connect(this.ctx.destination);
-    osc.start(t); osc.stop(t + 0.16);
+    osc.frequency.setValueAtTime(115 + p * 45, t);
+    osc.frequency.exponentialRampToValueAtTime(36, t + 0.12);
+    gain.gain.setValueAtTime(0.72 * p, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.14);
+    osc.connect(gain); gain.connect(this.sfxGain);
+    osc.start(t); osc.stop(t + 0.14);
 
-    const bufferSize = this.ctx.sampleRate * 0.05;
-    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for(let i=0; i<bufferSize; i++) data[i] = (Math.random()*2 - 1)*Math.exp(-i/(bufferSize*0.25));
+    // Estalo de impacto (punch limpo sem ruído estático estridente)
+    const bufLen = Math.floor(this.ctx.sampleRate * 0.04);
+    const buf = this.ctx.createBuffer(1, bufLen, this.ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for(let i=0; i<bufLen; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufLen * 0.28));
     const noise = this.ctx.createBufferSource();
-    noise.buffer = buffer;
-    const nGain = this.ctx.createGain();
-    nGain.gain.setValueAtTime(0.42 * power, t);
-    noise.connect(nGain); nGain.connect(this.ctx.destination);
-    noise.start(t);
-  }
-  playHeader(){
-    if(!this.enabled || !this.ctx) return;
-    const t = this.ctx.currentTime;
-    const osc = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(95, t);
-    osc.frequency.exponentialRampToValueAtTime(38, t + 0.10);
-    gain.gain.setValueAtTime(0.55, t);
-    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.13);
-    osc.connect(gain); gain.connect(this.ctx.destination);
-    osc.start(t); osc.stop(t + 0.13);
-
-    const bufferSize = this.ctx.sampleRate * 0.06;
-    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for(let i=0; i<bufferSize; i++) data[i] = (Math.random()*2 - 1)*Math.exp(-i/(bufferSize*0.35));
-    const noise = this.ctx.createBufferSource();
-    noise.buffer = buffer;
+    noise.buffer = buf;
     const filter = this.ctx.createBiquadFilter();
-    filter.type = "lowpass";
-    filter.frequency.setValueAtTime(480, t);
+    filter.type = "bandpass";
+    filter.frequency.setValueAtTime(750 + p * 350, t);
+    filter.Q.setValueAtTime(1.2, t);
     const nGain = this.ctx.createGain();
-    nGain.gain.setValueAtTime(0.30, t);
-    noise.connect(filter); filter.connect(nGain); nGain.connect(this.ctx.destination);
+    nGain.gain.setValueAtTime(0.35 * p, t);
+    nGain.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+    noise.connect(filter); filter.connect(nGain); nGain.connect(this.sfxGain);
     noise.start(t);
   }
-  playSteal(){
-    if(!this.enabled || !this.ctx) return;
+
+  // Cabeceio: impacto macio orgânico
+  playHeader(){
+    if(!this.sfxEnabled || !this.ctx) return;
+    this.init();
     const t = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
-    osc.type = "triangle";
-    osc.frequency.setValueAtTime(220, t);
-    osc.frequency.exponentialRampToValueAtTime(80, t + 0.12);
-    gain.gain.setValueAtTime(0.65, t);
-    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.12);
-    osc.connect(gain); gain.connect(this.ctx.destination);
-    osc.start(t); osc.stop(t + 0.12);
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(88, t);
+    osc.frequency.exponentialRampToValueAtTime(34, t + 0.11);
+    gain.gain.setValueAtTime(0.55, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.11);
+    osc.connect(gain); gain.connect(this.sfxGain);
+    osc.start(t); osc.stop(t + 0.11);
   }
-  playPostClank(){
-    if(!this.enabled || !this.ctx) return;
+
+  // Toque rápido / drible / desarme ágil: substitui o "boing" estridente por um corte de grama suave e ágil
+  playSteal(){
+    if(!this.sfxEnabled || !this.ctx) return;
+    this.init();
     const t = this.ctx.currentTime;
-    [520, 860, 1340].forEach((freq, idx)=>{
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(180, t);
+    osc.frequency.exponentialRampToValueAtTime(75, t + 0.07);
+    gain.gain.setValueAtTime(0.32, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
+    osc.connect(gain); gain.connect(this.sfxGain);
+    osc.start(t); osc.stop(t + 0.07);
+
+    const bufLen = Math.floor(this.ctx.sampleRate * 0.03);
+    const buf = this.ctx.createBuffer(1, bufLen, this.ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for(let i=0; i<bufLen; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufLen * 0.2));
+    const noise = this.ctx.createBufferSource();
+    noise.buffer = buf;
+    const filter = this.ctx.createBiquadFilter();
+    filter.type = "bandpass";
+    filter.frequency.setValueAtTime(900, t);
+    const nGain = this.ctx.createGain();
+    nGain.gain.setValueAtTime(0.22, t);
+    nGain.gain.exponentialRampToValueAtTime(0.001, t + 0.03);
+    noise.connect(filter); filter.connect(nGain); nGain.connect(this.sfxGain);
+    noise.start(t);
+  }
+
+  // Apito do árbitro: dual-sine harmonizado com modulação de ar suave
+  playWhistle(isDouble=false){
+    if(!this.sfxEnabled || !this.ctx) return;
+    this.init();
+    const t = this.ctx.currentTime;
+
+    const playTone = (startTime, dur)=>{
+      const osc1 = this.ctx.createOscillator();
+      const osc2 = this.ctx.createOscillator();
+      const lfo = this.ctx.createOscillator();
+      const lfoGain = this.ctx.createGain();
+      const filter = this.ctx.createBiquadFilter();
+      const gain = this.ctx.createGain();
+
+      lfo.frequency.setValueAtTime(22, startTime);
+      lfoGain.gain.setValueAtTime(45, startTime);
+      lfo.connect(osc1.frequency);
+      lfo.connect(osc2.frequency);
+
+      osc1.type = "sine";
+      osc2.type = "sine";
+      osc1.frequency.setValueAtTime(2180, startTime);
+      osc2.frequency.setValueAtTime(2450, startTime);
+
+      filter.type = "lowpass";
+      filter.frequency.setValueAtTime(3200, startTime);
+
+      gain.gain.setValueAtTime(0.0001, startTime);
+      gain.gain.linearRampToValueAtTime(0.18, startTime + 0.018);
+      gain.gain.setValueAtTime(0.18, startTime + dur - 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + dur);
+
+      osc1.connect(filter);
+      osc2.connect(filter);
+      filter.connect(gain);
+      gain.connect(this.sfxGain);
+
+      lfo.start(startTime); osc1.start(startTime); osc2.start(startTime);
+      lfo.stop(startTime + dur); osc1.stop(startTime + dur); osc2.stop(startTime + dur);
+    };
+
+    playTone(t, 0.18);
+    if(isDouble) playTone(t + 0.22, 0.32);
+  }
+
+  // Trave de metal: sino ressonante encorpado e brilhante
+  playPostClank(){
+    if(!this.sfxEnabled || !this.ctx) return;
+    this.init();
+    const t = this.ctx.currentTime;
+    [460, 880, 1320, 1950].forEach((freq, idx)=>{
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
       osc.type = "triangle";
       osc.frequency.setValueAtTime(freq, t);
-      gain.gain.setValueAtTime(0.38 / (idx+1), t);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.48);
-      osc.connect(gain); gain.connect(this.ctx.destination);
-      osc.start(t); osc.stop(t + 0.48);
+      gain.gain.setValueAtTime(0.32 / (idx + 1), t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.55);
+      osc.connect(gain); gain.connect(this.sfxGain);
+      osc.start(t); osc.stop(t + 0.55);
     });
   }
-  playWhistle(isDouble=false){
-    if(!this.enabled || !this.ctx) return;
-    const t = this.ctx.currentTime;
-    const playBlast = (startTime, dur)=>{
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = "sawtooth";
-      osc.frequency.setValueAtTime(2450, startTime);
-      osc.frequency.linearRampToValueAtTime(2700, startTime + dur);
-      gain.gain.setValueAtTime(0.24, startTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, startTime + dur);
-      osc.connect(gain); gain.connect(this.ctx.destination);
-      osc.start(startTime); osc.stop(startTime + dur);
-    };
-    playBlast(t, 0.22);
-    if(isDouble) playBlast(t + 0.26, 0.35);
-  }
+
+  // Carrinho na grama: deslize aveludado
   playTackle(){
-    if(!this.enabled || !this.ctx) return;
+    if(!this.sfxEnabled || !this.ctx) return;
+    this.init();
     const t = this.ctx.currentTime;
-    const bufferSize = this.ctx.sampleRate * 0.18;
-    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for(let i=0; i<bufferSize; i++) data[i] = (Math.random()*2 - 1)*Math.exp(-i/(bufferSize*0.5));
+    const bufLen = Math.floor(this.ctx.sampleRate * 0.16);
+    const buf = this.ctx.createBuffer(1, bufLen, this.ctx.sampleRate);
+    const d = buf.getChannelData(0);
+    for(let i=0; i<bufLen; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufLen * 0.45));
     const noise = this.ctx.createBufferSource();
-    noise.buffer = buffer;
+    noise.buffer = buf;
     const filter = this.ctx.createBiquadFilter();
     filter.type = "lowpass";
-    filter.frequency.setValueAtTime(850, t);
-    filter.frequency.exponentialRampToValueAtTime(150, t + 0.18);
+    filter.frequency.setValueAtTime(520, t);
+    filter.frequency.exponentialRampToValueAtTime(110, t + 0.16);
     const gain = this.ctx.createGain();
-    gain.gain.setValueAtTime(0.5, t);
-    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.18);
-    noise.connect(filter); filter.connect(gain); gain.connect(this.ctx.destination);
+    gain.gain.setValueAtTime(0.38, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
+    noise.connect(filter); filter.connect(gain); gain.connect(this.sfxGain);
     noise.start(t);
   }
+
+  // Fogos e Comemoração de Gol: explosão de estádio e aplauso
   playFireworks(){
-    if(!this.enabled || !this.ctx) return;
+    if(!this.sfxEnabled || !this.ctx) return;
+    this.init();
     for(let i=0; i<3; i++){
       setTimeout(()=>{
-        if(!this.enabled || !this.ctx) return;
+        if(!this.sfxEnabled || !this.ctx) return;
         const t = this.ctx.currentTime;
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
         osc.type = "sine";
-        osc.frequency.setValueAtTime(90, t);
-        osc.frequency.exponentialRampToValueAtTime(25, t + 0.4);
-        gain.gain.setValueAtTime(0.7, t);
-        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.4);
-        osc.connect(gain); gain.connect(this.ctx.destination);
-        osc.start(t); osc.stop(t + 0.4);
-      }, i * 220);
+        osc.frequency.setValueAtTime(95, t);
+        osc.frequency.exponentialRampToValueAtTime(28, t + 0.45);
+        gain.gain.setValueAtTime(0.65, t);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + 0.45);
+        osc.connect(gain); gain.connect(this.sfxGain);
+        osc.start(t); osc.stop(t + 0.45);
+      }, i * 200);
     }
   }
+
+  // Super Chute Carregado: arpejo futurista suave
   playSuperShotReady(){
-    if(!this.enabled || !this.ctx) return;
+    if(!this.sfxEnabled || !this.ctx) return;
+    this.init();
     const t = this.ctx.currentTime;
     [440, 554, 659, 880, 1108].forEach((freq, idx)=>{
       const osc = this.ctx.createOscillator();
       const gain = this.ctx.createGain();
       osc.type = "sine";
-      osc.frequency.setValueAtTime(freq, t + idx * 0.06);
-      gain.gain.setValueAtTime(0.35, t + idx * 0.06);
-      gain.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.06 + 0.35);
-      osc.connect(gain); gain.connect(this.ctx.destination);
-      osc.start(t + idx * 0.06); osc.stop(t + idx * 0.06 + 0.35);
+      osc.frequency.setValueAtTime(freq, t + idx * 0.05);
+      gain.gain.setValueAtTime(0.24, t + idx * 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + idx * 0.05 + 0.3);
+      osc.connect(gain); gain.connect(this.sfxGain);
+      osc.start(t + idx * 0.05); osc.stop(t + idx * 0.05 + 0.3);
     });
   }
+
+  // Câmera lenta: drop cinematográfico suave
   playBulletTime(){
-    if(!this.enabled || !this.ctx) return;
+    if(!this.sfxEnabled || !this.ctx) return;
+    this.init();
     const t = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
-    osc.type = "sawtooth";
-    osc.frequency.setValueAtTime(400, t);
-    osc.frequency.exponentialRampToValueAtTime(65, t + 0.55);
-    gain.gain.setValueAtTime(0.45, t);
-    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.55);
-    osc.connect(gain); gain.connect(this.ctx.destination);
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(240, t);
+    osc.frequency.exponentialRampToValueAtTime(45, t + 0.55);
+    gain.gain.setValueAtTime(0.5, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.55);
+    osc.connect(gain); gain.connect(this.sfxGain);
     osc.start(t); osc.stop(t + 0.55);
   }
+
+  // Disparo do Super Chute: estrondo flamejante de energia
   playSuperShotBlast(){
-    if(!this.enabled || !this.ctx) return;
+    if(!this.sfxEnabled || !this.ctx) return;
+    this.init();
     const t = this.ctx.currentTime;
     const osc = this.ctx.createOscillator();
     const gain = this.ctx.createGain();
-    osc.type = "triangle";
-    osc.frequency.setValueAtTime(140, t);
-    osc.frequency.exponentialRampToValueAtTime(30, t + 0.6);
-    gain.gain.setValueAtTime(0.95, t);
-    gain.gain.exponentialRampToValueAtTime(0.01, t + 0.6);
-    osc.connect(gain); gain.connect(this.ctx.destination);
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(160, t);
+    osc.frequency.exponentialRampToValueAtTime(28, t + 0.6);
+    gain.gain.setValueAtTime(0.85, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.6);
+    osc.connect(gain); gain.connect(this.sfxGain);
     osc.start(t); osc.stop(t + 0.6);
+  }
+
+  // Feedback de clique de menu / abas
+  playUIClick(){
+    if(!this.sfxEnabled || !this.ctx) return;
+    this.init();
+    const t = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(580, t);
+    osc.frequency.exponentialRampToValueAtTime(220, t + 0.04);
+    gain.gain.setValueAtTime(0.18, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.04);
+    osc.connect(gain); gain.connect(this.sfxGain);
+    osc.start(t); osc.stop(t + 0.04);
+  }
+
+  // ═══════════════ TRILHA SONORA PROCEDURAL (BGM) ═══════════════
+  // Beat envolvente estilo Street Soccer / Brazilian Funk-Trap / Bossa Arcade
+
+  startMusic(){
+    if(!this.musicEnabled) return;
+    this.init();
+    if(this.bgmPlaying) return;
+    this.bgmPlaying = true;
+    this.bgmStep = 0;
+    this.scheduleBgmStep();
+  }
+
+  stopMusic(){
+    this.bgmPlaying = false;
+    if(this.bgmTimer){
+      clearTimeout(this.bgmTimer);
+      this.bgmTimer = null;
+    }
+  }
+
+  setBgmMode(mode){
+    this.bgmMode = mode; // "chill" ou "match"
+  }
+
+  scheduleBgmStep(){
+    if(!this.bgmPlaying || !this.ctx) return;
+
+    const bpm = this.bgmMode === "match" ? 116 : 108;
+    const stepDuration = (60 / bpm) / 4;
+    const t = this.ctx.currentTime + 0.02;
+
+    this.playBgmStep(t, this.bgmStep % 32);
+    this.bgmStep = (this.bgmStep + 1) % 32;
+
+    this.bgmTimer = setTimeout(()=>{
+      this.scheduleBgmStep();
+    }, stepDuration * 1000);
+  }
+
+  playBgmStep(t, step){
+    if(!this.musicEnabled || !this.ctx || !this.musicGain) return;
+
+    const chordIdx = Math.floor(step / 8);
+    const chords = [
+      [293.66, 349.23, 440.00, 523.25], // Dm9 (D4, F4, A4, C5)
+      [246.94, 329.63, 392.00, 493.88], // G13 (B3, E4, G4, B4)
+      [261.63, 329.63, 392.00, 493.88], // Cmaj9 (C4, E4, G4, B4)
+      [220.00, 277.18, 349.23, 440.00]  // A7(#9) (A3, C#4, F4, A4)
+    ];
+    const bassNotes = [146.83, 98.00, 130.81, 110.00]; // D3, G2, C3, A2
+
+    // 1. Kick (Bumbo 808): Batida marcada com swing no funk / trap
+    const isKickStep = (step % 8 === 0) || (step % 8 === 3) || (step % 8 === 6 && this.bgmMode === "match");
+    if(isKickStep){
+      const kOsc = this.ctx.createOscillator();
+      const kGain = this.ctx.createGain();
+      kOsc.type = "sine";
+      kOsc.frequency.setValueAtTime(100, t);
+      kOsc.frequency.exponentialRampToValueAtTime(32, t + 0.12);
+      kGain.gain.setValueAtTime(this.bgmMode === "match" ? 0.38 : 0.22, t);
+      kGain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+      kOsc.connect(kGain); kGain.connect(this.musicGain);
+      kOsc.start(t); kOsc.stop(t + 0.12);
+    }
+
+    // 2. Snare / Rim / Caixa com estalo gostoso (passos 4 e 12 nos compassos)
+    const isSnareStep = (step % 8 === 4);
+    if(isSnareStep){
+      const bufLen = Math.floor(this.ctx.sampleRate * 0.08);
+      const buf = this.ctx.createBuffer(1, bufLen, this.ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      for(let i=0; i<bufLen; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufLen * 0.35));
+      const noise = this.ctx.createBufferSource();
+      noise.buffer = buf;
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = "highpass";
+      filter.frequency.setValueAtTime(1200, t);
+      const sGain = this.ctx.createGain();
+      sGain.gain.setValueAtTime(this.bgmMode === "match" ? 0.22 : 0.12, t);
+      sGain.gain.exponentialRampToValueAtTime(0.001, t + 0.08);
+      noise.connect(filter); filter.connect(sGain); sGain.connect(this.musicGain);
+      noise.start(t);
+    }
+
+    // 3. Hi-Hats / Shakers em semicolcheia com swing
+    if(step % 2 === 0 || (this.bgmMode === "match" && step % 4 === 3)){
+      const isAccent = (step % 4 === 2);
+      const bufLen = Math.floor(this.ctx.sampleRate * 0.025);
+      const buf = this.ctx.createBuffer(1, bufLen, this.ctx.sampleRate);
+      const d = buf.getChannelData(0);
+      for(let i=0; i<bufLen; i++) d[i] = (Math.random() * 2 - 1) * Math.exp(-i / (bufLen * 0.25));
+      const noise = this.ctx.createBufferSource();
+      noise.buffer = buf;
+      const filter = this.ctx.createBiquadFilter();
+      filter.type = "highpass";
+      filter.frequency.setValueAtTime(6500, t);
+      const hGain = this.ctx.createGain();
+      hGain.gain.setValueAtTime(isAccent ? 0.08 : 0.035, t);
+      hGain.gain.exponentialRampToValueAtTime(0.001, t + 0.025);
+      noise.connect(filter); filter.connect(hGain); hGain.connect(this.musicGain);
+      noise.start(t);
+    }
+
+    // 4. Teclado / Rhodes suave
+    if(step % 8 === 0 || step % 8 === 4){
+      const chord = chords[chordIdx];
+      chord.forEach((freq, i)=>{
+        const osc = this.ctx.createOscillator();
+        const filter = this.ctx.createBiquadFilter();
+        const gain = this.ctx.createGain();
+        osc.type = "triangle";
+        osc.frequency.setValueAtTime(freq, t);
+        filter.type = "lowpass";
+        filter.frequency.setValueAtTime(950 + (i * 120), t);
+        const dur = (step % 8 === 0) ? 0.38 : 0.22;
+        gain.gain.setValueAtTime(0.001, t);
+        gain.gain.linearRampToValueAtTime(0.065, t + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+        osc.connect(filter); filter.connect(gain); gain.connect(this.musicGain);
+        osc.start(t); osc.stop(t + dur);
+      });
+    }
+
+    // 5. Linha de baixo (Bassline)
+    if(step % 4 === 0 || step % 8 === 2 || step % 8 === 6){
+      const rootFreq = bassNotes[chordIdx];
+      const noteFreq = (step % 8 === 6) ? rootFreq * 1.25 : rootFreq;
+      const bOsc = this.ctx.createOscillator();
+      const bFilter = this.ctx.createBiquadFilter();
+      const bGain = this.ctx.createGain();
+      bOsc.type = "sine";
+      bOsc.frequency.setValueAtTime(noteFreq, t);
+      bFilter.type = "lowpass";
+      bFilter.frequency.setValueAtTime(380, t);
+      bGain.gain.setValueAtTime(0.001, t);
+      bGain.gain.linearRampToValueAtTime(0.24, t + 0.015);
+      bGain.gain.exponentialRampToValueAtTime(0.001, t + 0.24);
+      bOsc.connect(bFilter); bFilter.connect(bGain); bGain.connect(this.musicGain);
+      bOsc.start(t); bOsc.stop(t + 0.24);
+    }
   }
 }
 const sfx = new SoundEngine();
-const audioToggleBtn = document.querySelector("#audioToggle");
-if(audioToggleBtn) audioToggleBtn.addEventListener("click", ()=>sfx.toggle());
 
 /* ═══════════════ CONFIGURAÇÕES DE CAMPO EXPANDIDO ═══════════════ */
 const CFG = {
@@ -6201,7 +6694,7 @@ function animateHumanoid(char, dt, isMoving){
 
   // Retorno automático para idle ao finalizar qualquer animação de ação
   if(char.act <= 0){
-    if(char.state.startsWith("dive") || char.state.startsWith("catch") || char.state === "fall" || char.state === "foul" || char.state === "tackle" || char.state.startsWith("dribble_") || char.state === "steal" || char.state.startsWith("shot") || char.state === "pass" || char.state === "header"){
+    if(char.state.startsWith("dive") || char.state.startsWith("catch") || char.state === "fall" || char.state === "foul" || char.state === "tackle" || char.state.startsWith("dribble_") || char.state === "steal" || char.state.startsWith("shot") || char.state === "pass" || char.state === "header" || char.state === "punch" || char.state === "throw"){
       char.state = "idle";
     }
   }
@@ -7293,7 +7786,13 @@ function kickoff(dir){
   foeC.root.position.set(0, 0, -5.5);     foeC.vel.set(0,0,0);  foeC.state = "idle";
   gkFoe.root.position.set(0, 0, -HH+2.0); gkFoe.vel.set(0,0,0);
   gkOwn.root.position.set(0, 0,  HH-2.0); gkOwn.vel.set(0,0,0);
-  for(const c of chars){ c.root.position.y = 0; c.cool = 0; c.kick = 0; c.state = "idle"; c.act = 0; c.stamina = 100; c.isExhausted = false; }
+  // Se você escolheu o gol, os dois trocam de lugar: você vai para a meta e o
+  // goleiro bot sobe para a linha. Sem isso você nasceria no meio de campo.
+  if(player.role === "keeper"){
+    player.root.position.set(0, 0, HH - 2.0); player.yaw = Math.PI;
+    gkOwn.root.position.set(0, 0, 7.0);
+  }
+  for(const c of chars){ c.root.position.y = 0; c.cool = 0; c.kick = 0; c.state = "idle"; c.act = 0; c.stamina = 100; c.isExhausted = false; c.encaixando = 0; }
   ball.position.set(0, 0.28, dir*1.8); ballVel.set(0,0,0); ballSpin.set(0,0,0);
   camFocus.set(player.root.position.x, player.root.position.y + 1.45, player.root.position.z);
   // Limpa qualquer jogada parada pendente ao recomeçar do meio
@@ -7302,6 +7801,127 @@ function kickoff(dir){
 
 /* ═══════════════ LÓGICA DO JOGADOR ═══════════════ */
 function facing(v){ return v.set(Math.sin(player.yaw),0,Math.cos(player.yaw)); }
+
+// Espelha keeperInput() de server/shared/sim.js: os dois modos jogam igual no
+// gol. PULO mergulha (direcional escolhe o lado, sem direcional sobe reto),
+// DESARME encaixa, CARRINHO soca, e com a bola nas mãos CHUTE e PASSE repõem.
+function updatePlayerGoleiro(dt, ix, iy, mag){
+  const side = player.team === 0 ? 1 : -1;
+  const emAcao = GK_ACOES.indexOf(player.state) >= 0 && player.act > 0;
+
+  // Janela de encaixe: segurar o botão faz a defesa virar posse em vez de rebote
+  if(keys[userKeyBindings.steal] || gkSeguraEncaixe) player.encaixando = GOLEIRO.janelaEncaixe;
+  else player.encaixando = Math.max(0, (player.encaixando || 0) - dt);
+
+  if(owner === player){
+    // Bola nas mãos: parado, repõe no chute (tiro de meta) ou no passe (arremesso)
+    player.vel.x = THREE.MathUtils.damp(player.vel.x, 0, 9, dt);
+    player.vel.z = THREE.MathUtils.damp(player.vel.z, 0, 9, dt);
+    if(player.act <= 0 && player.state !== "throw") player.state = "catch_center";
+    dribble(player, dt);
+  } else if(emAcao){
+    const lambda = player.state === "punch" ? 8 : 2.2;
+    player.vel.x = THREE.MathUtils.damp(player.vel.x, 0, lambda, dt);
+    player.vel.z = THREE.MathUtils.damp(player.vel.z, 0, 6, dt);
+  } else {
+    const sp = (input.sprint || keys[userKeyBindings.sprint]) ? GOLEIRO.velocidade * 1.25 : GOLEIRO.velocidade;
+    if(mag > 0.14){
+      tA.set(0,0,0).addScaledVector(camF, -iy).addScaledVector(camR, ix);
+      tA.y = 0; tA.normalize().multiplyScalar(sp * mag);
+      player.vel.x = THREE.MathUtils.damp(player.vel.x, tA.x, 16, dt);
+      player.vel.z = THREE.MathUtils.damp(player.vel.z, tA.z, 16, dt);
+      player.yaw = Math.atan2(tA.x, tA.z);
+      if(player.act <= 0) player.state = mag > 0.75 ? "sprint" : "run";
+    } else {
+      player.vel.x = THREE.MathUtils.damp(player.vel.x, 0, 13, dt);
+      player.vel.z = THREE.MathUtils.damp(player.vel.z, 0, 13, dt);
+      if(player.act <= 0) player.state = "idle";
+    }
+  }
+
+  // Integração + gravidade, e a prisão na própria área
+  player.vel.y -= 22*dt;
+  player.root.position.addScaledVector(player.vel, dt);
+  const linha = side * HH;
+  player.root.position.x = clamp(player.root.position.x, -GOLEIRO.areaX, GOLEIRO.areaX);
+  if(side > 0) player.root.position.z = clamp(player.root.position.z, linha - GOLEIRO.areaZ, linha - 0.6);
+  else player.root.position.z = clamp(player.root.position.z, linha + 0.6, linha + GOLEIRO.areaZ);
+  if(player.root.position.y <= 0){ player.root.position.y = 0; player.vel.y = 0; }
+
+  animateHumanoid(player, dt, Math.hypot(player.vel.x, player.vel.z) > 0.5);
+}
+
+// Mergulho: o direcional escolhe o lado; sem direcional, sobe reto.
+function goleiroMergulhar(){
+  if(player.role !== "keeper" || owner === player) return;
+  if(player.cool > 0 || player.root.position.y > 0.08) return;
+  if(GK_ACOES.indexOf(player.state) >= 0 && player.act > 0) return;
+  tA.set(0,0,0).addScaledVector(camF, -input.y).addScaledVector(camR, input.x);
+  let lx = tA.x;
+  if(Math.abs(lx) < 0.35){
+    let kx = 0;
+    if(keys[userKeyBindings.left] || keys.arrowleft) kx -= 1;
+    if(keys[userKeyBindings.right] || keys.arrowright) kx += 1;
+    if(kx){ tA.set(0,0,0).addScaledVector(camR, kx); lx = tA.x; }
+  }
+  if(Math.abs(lx) > 0.35){
+    const dir = Math.sign(lx);
+    player.mergWorld = dir;
+    const paraDireitaDele = player.team === 0 ? -dir : dir;
+    player.state = paraDireitaDele > 0 ? "dive_right" : "dive_left";
+    player.act = GOLEIRO.durMerg; player.cool = GOLEIRO.durMerg + GOLEIRO.recupMerg;
+    player.gkDur = GOLEIRO.durMerg;
+    player.vel.x = dir * GOLEIRO.impMerg;
+    player.vel.y = GOLEIRO.impMergY;
+  } else {
+    player.mergWorld = 0;
+    player.state = "dive_high";
+    player.act = GOLEIRO.durSalto; player.cool = GOLEIRO.durSalto + 0.15;
+    player.gkDur = GOLEIRO.durSalto;
+    player.vel.y = GOLEIRO.impSalto;
+  }
+  sfx.playTackle();
+}
+
+// Soco: tira a bola da área sem deixar rebote no pé de ninguém.
+function goleiroSocar(){
+  if(player.role !== "keeper" || player.cool > 0) return;
+  const side = player.team === 0 ? 1 : -1;
+  player.state = "punch"; player.act = GOLEIRO.durSoco;
+  player.cool = GOLEIRO.durSoco + 0.20; player.gkDur = GOLEIRO.durSoco;
+  if(flat(player.root.position, ball.position) < GOLEIRO.socoAlcance && ball.position.y < 3.4){
+    tA.copy(ball.position).sub(player.root.position); tA.y = 0;
+    const l = tA.length() || 1;
+    ballVel.set((tA.x/l) * GOLEIRO.socoForca * 0.7 + (ball.position.x >= 0 ? 6 : -6),
+                5.2,
+                -side * GOLEIRO.socoForca);
+    ballSpin.set(0,0,0);
+    owner = null; lastToucher = player; player.noBall = RECUO_TOQUE;
+  }
+  sfx.playSteal();
+}
+
+// Reposição: com o pé é tiro de meta (forte), com a mão é arremesso (preciso).
+function goleiroRepor(comPe){
+  if(player.role !== "keeper" || owner !== player) return;
+  const side = player.team === 0 ? 1 : -1;
+  const alvo = getAimWorldPoint();
+  tA.set(alvo.x - ball.position.x, 0, alvo.z - ball.position.z);
+  if(tA.lengthSq() < 0.1) tA.set(0, 0, -side); else tA.normalize();
+  const sp = comPe ? GOLEIRO.reposPe : GOLEIRO.reposMao;
+  ball.position.y = Math.max(ball.position.y, comPe ? 0.5 : 1.4);
+  ballVel.set(tA.x * sp, comPe ? 6.0 : 2.6, tA.z * sp);
+  ballSpin.set(0,0,0);
+  player.yaw = Math.atan2(tA.x, tA.z);
+  player.state = comPe ? "shot_technique" : "throw";
+  player.act = comPe ? 0.24 : 0.38;
+  player.gkDur = player.act;
+  player.cool = 0.30; player.noBall = RECUO_TOQUE;
+  owner = null; lastToucher = player;
+  sfx.playKick(comPe ? 0.9 : 0.5);
+}
+
+let gkSeguraEncaixe = false;
 
 function updatePlayer(dt){
   player.act = Math.max(0, player.act - dt);
@@ -7326,6 +7946,8 @@ function updatePlayer(dt){
   } else {
     dirMovMundo.set(0,0,0);
   }
+
+  if(player.role === "keeper"){ updatePlayerGoleiro(dt, ix, iy, mag); return; }
 
   if(player.state && player.state.startsWith("dribble_")){
     // ════════════ EXECUÇÃO DE DRIBLE ATIVO ════════════
@@ -7513,6 +8135,55 @@ function getAimWorldPoint(){
   aimWorldPoint.y = clamp(aimWorldPoint.y, 0, CFG.GOAL_H);
   return aimWorldPoint;
 }
+
+/* ═══════════════ GOLEIRO ═══════════════ */
+// Espelhado em server/shared/sim.js. Só o que o cliente precisa para prever o
+// movimento e o mergulho — o resultado da defesa é sempre do servidor.
+const GOLEIRO = {
+  alcanceParado: 1.25, alcanceMerg: 3.10, desloqMerg: 1.45,
+  alturaParado:  2.10, alturaSalto: 3.30,
+  impMerg:    9.60, impMergY: 4.60, impSalto: 7.40,
+  durMerg:    0.78, durSalto: 0.62, durSoco: 0.40, recupMerg: 0.30,
+  areaX:      9.5,  areaZ: 8.0,     velocidade: 8.6,
+  janelaEncaixe: 0.45, encaixeVelMax: 30.0,
+  socoForca:  17.0, socoAlcance: 2.60,
+  reposMao:   19.0, reposPe: 27.0
+};
+const GK_ACOES = ["dive_left", "dive_right", "dive_high", "punch", "throw", "catch_center"];
+
+// Papel escolhido para a PARTIDA RÁPIDA. O truque é a troca de papéis: quando
+// você escolhe o gol, o boneco que você controla vira o goleiro e o goleiro bot
+// vira jogador de linha. Assim todo o resto do jogo (câmera, entrada, HUD,
+// posse) continua olhando para o mesmo objeto `player` de sempre.
+let papelLocal = "field";
+try {
+  const r = localStorage.getItem("fut_cria_role");
+  if(r === "keeper" || r === "field") papelLocal = r;
+} catch(e) {}
+
+function aplicarPapelLocal(papel){
+  papelLocal = (papel === "keeper") ? "keeper" : "field";
+  try { localStorage.setItem("fut_cria_role", papelLocal); } catch(e) {}
+  if(papelLocal === "keeper"){
+    player.role = "keeper";
+    gkOwn.role  = "gkLinha";   // qualquer coisa que NAO seja "keeper"
+  } else {
+    // "player" e o papel original do boneco local: outros trechos do jogo
+    // (customizacao, cabelo, marcador do minimapa) olham para essa string.
+    player.role = "player";
+    gkOwn.role  = "keeper";
+  }
+  lastGkUI = null;   // rótulos dos botões precisam se refazer
+}
+
+// Goleiros de verdade em campo agora — pode ser o `player`, se ele escolheu o gol.
+function goleirosEmCampo(){
+  gkBuf.length = 0;
+  for(const c of [gkFoe, gkOwn, player]) if(c && c.role === "keeper") gkBuf.push(c);
+  return gkBuf;
+}
+const gkBuf = [];
+function acaoDeGoleiro(st){ return GK_ACOES.indexOf(st) >= 0; }
 
 /* ═══════════════ CHUTE: CANTO, CURVA E CHUTE FURADO ═══════════════ */
 // Espelhado em server/shared/sim.js.
@@ -8959,7 +9630,7 @@ function updateBall(dt){
 // Teste de trajetória varrida (swept): impede que um chute rápido "atravesse"
 // o goleiro entre dois frames. Bola dura espalma, bola mansa encaixa firme.
 function keeperSweptSave(){
-  for(const gk of [gkFoe, gkOwn]){
+  for(const gk of goleirosEmCampo()){
     const side = gk.team === 0 ? 1 : -1;
     if(ballVel.z*side <= 0.5) continue;                      // bola não vem pro gol
     const plane = gk.root.position.z;
@@ -8971,12 +9642,29 @@ function keeperSweptSave(){
     if(t < 0 || t > 1) continue;
     const xAt = ballPrev.x + (ball.position.x - ballPrev.x)*t;
     const yAt = ballPrev.y + (ball.position.y - ballPrev.y)*t;
-    if(yAt > 2.8) continue;                                  // passou alto demais p/ o alcance
-
-    let reachCenter = gk.root.position.x, reach = 1.6;
-    if(gk.state === "dive_right"){ reachCenter += 1.1; reach = 2.5; }
-    if(gk.state === "dive_left") { reachCenter -= 1.1; reach = 2.5; }
-    if(gk.state === "catch_center") reach = 2.0;
+    let reachCenter = gk.root.position.x, reach, teto;
+    const mergulhando = gk.state === "dive_left" || gk.state === "dive_right";
+    if(gk !== player){
+      // Goleiro da máquina: defende por proximidade, como sempre defendeu.
+      reach = 1.6; teto = 2.8;
+      if(gk.state === "dive_right"){ reachCenter += 1.1; reach = 2.5; }
+      if(gk.state === "dive_left") { reachCenter -= 1.1; reach = 2.5; }
+      if(gk.state === "catch_center") reach = 2.0;
+    } else {
+      // Você no gol: parado só pega o que vem em cima. O alcance longo e o alto
+      // só existem se você tiver se jogado para o lado certo, na hora certa.
+      reach = GOLEIRO.alcanceParado; teto = GOLEIRO.alturaParado;
+      if(mergulhando){
+        reach = GOLEIRO.alcanceMerg;
+        reachCenter += (gk.mergWorld || 0) * GOLEIRO.desloqMerg;
+        teto = GOLEIRO.alturaSalto;
+      } else if(gk.state === "dive_high" || gk.state === "punch"){
+        reach = GOLEIRO.alcanceParado + 0.55;
+        teto = GOLEIRO.alturaSalto;
+      }
+      teto += gk.root.position.y;
+    }
+    if(yAt > teto) continue;                                 // passou alto demais p/ o alcance
     if(Math.abs(xAt - reachCenter) > reach) continue;
 
     // Super Chute: se for chute supremo e o goleiro adversário tentar pegar, ele é arremessado
@@ -8995,13 +9683,20 @@ function keeperSweptSave(){
     // Defendeu: posiciona a bola no ponto exato do contato
     ball.position.set(xAt, Math.max(yAt, 0.28), plane);
     const speed = ballVel.length();
-    if(speed >= 20 || yAt > 1.5){
+    // O goleiro bot decide pela dificuldade da bola. Você decide com o botão de
+    // encaixar: segurou na hora do contato e a bola não veio absurda, encaixou.
+    const espalma = (gk === player)
+      ? !((gk.encaixando > 0) && speed < GOLEIRO.encaixeVelMax)
+      : (speed >= 20 || yAt > 1.5);
+    if(espalma){
       // ESPALMA PRA LADO, BOLA VOLTA PRO CAMPO
       ballVel.z = -ballVel.z*0.35;
       ballVel.x = (xAt >= reachCenter ? 1 : -1)*(9.5 + Math.random()*5);
       ballVel.y = 3.0 + Math.random()*1.8;
-      gk.state = xAt > gk.root.position.x ? "dive_right" : "dive_left";
-      gk.act = 0.75; gk.cool = 0.8;
+      if(gk !== player || !(mergulhando || gk.state === "dive_high")){
+        gk.state = xAt > gk.root.position.x ? "dive_right" : "dive_left";
+        gk.act = 0.75; gk.cool = 0.8;
+      }
       owner = null;
       sfx.playPostClank();
       shake = 0.20;
@@ -9009,7 +9704,9 @@ function keeperSweptSave(){
     } else {
       // ENCAIXA FIRME NO PEITO
       ballVel.set(0, 0, 0);
-      gk.state = "catch_center"; gk.act = 0.9; gk.cool = 0.6; gk.kick = 1.2;
+      gk.state = "catch_center"; gk.act = 0.9; gk.cool = 0.6;
+      gk.kick = (gk === player) ? 0.4 : 1.2;   // você repõe quando quiser
+      gk.gkDur = 0.9; gk.encaixando = 0;
       owner = gk;
       sfx.playSteal();
       shake = 0.10;
@@ -9129,6 +9826,16 @@ function dribble(c, dt){
     const dist = prog < 0.45 ? 0.60 : 1.30;
     tB.copy(c.root.position).addScaledVector(tA, dist);
     tB.y = 0.28;
+    ball.position.lerp(tB, smooth(26, dt));
+    ballVel.set(0, 0, 0);
+    return;
+  }
+
+  // Goleiro com a bola segura ela no peito, não conduz no pé.
+  if(c.role === "keeper" && (c.state === "catch_center" || c.state === "catch" || c.state === "throw")){
+    tA.set(Math.sin(c.yaw), 0, Math.cos(c.yaw));
+    tB.copy(c.root.position).addScaledVector(tA, 0.42);
+    tB.y = 1.15;
     ball.position.lerp(tB, smooth(26, dt));
     ballVel.set(0, 0, 0);
     return;
@@ -10396,12 +11103,15 @@ function startMatchMode(){
     () => {
       gameMode = "match";
       shake = 0;
+      aplicarPapelLocal(papelLocal);   // linha ou gol, escolhido no lobby
       sfx.init();
+      sfx.setBgmMode("match");
       sfx.playWhistle(false);
       $("#start").style.display = "none";
       $("#trainingHud").style.display = "none";
       $("#customizerModal").style.display = "none";
       $("#topWrap").style.display = "block";
+      const hf = $("#hudFullscreenBtn"); if(hf) hf.style.display = "flex";
       const jEl = $("#joy"); if(jEl) jEl.style.display = "block";
       const bgEl = $("#btnGrid"); if(bgEl) bgEl.style.display = "grid";
       const mwEl = $("#miniWrap"); if(mwEl) mwEl.style.display = "flex";
@@ -10420,12 +11130,15 @@ function startMatchMode(){
 function startTrainingMode(){
   gameMode = "training";
   shake = 0;
+  aplicarPapelLocal("field");   // treino é sempre na linha
   sfx.init();
+  sfx.setBgmMode("match");
   sfx.playWhistle(false);
   $("#start").style.display = "none";
   $("#trainingHud").style.display = "flex";
   $("#customizerModal").style.display = "none";
   $("#topWrap").style.display = "none";
+  const hf = $("#hudFullscreenBtn"); if(hf) hf.style.display = "flex";
   const jEl = $("#joy"); if(jEl) jEl.style.display = "block";
   const bgEl = $("#btnGrid"); if(bgEl) bgEl.style.display = "grid";
   const mwEl = $("#miniWrap"); if(mwEl) mwEl.style.display = "flex";
@@ -10471,9 +11184,11 @@ function openCustomizerStudio(){
   running = false;
   shake = 0;
   stopMouseControl();
+  sfx.setBgmMode("chill");
   $("#start").style.display = "none";
   $("#trainingHud").style.display = "none";
   $("#topWrap").style.display = "none";
+  const hf = $("#hudFullscreenBtn"); if(hf) hf.style.display = "none";
   $("#customizerModal").style.display = "flex";
   setupCustomizerUI();
   applyPlayerCustomization();
@@ -10524,9 +11239,11 @@ function returnToMainMenu(){
   running = false;
   shake = 0;
   stopMouseControl();
+  sfx.setBgmMode("chill");
   $("#trainingHud").style.display = "none";
   $("#customizerModal").style.display = "none";
   $("#topWrap").style.display = "none";
+  const hf = $("#hudFullscreenBtn"); if(hf) hf.style.display = "none";
   $("#start").style.display = "flex";
   gameMode = "menu";
 }
@@ -10895,7 +11612,10 @@ function loop(now){
     }
 
     updateKeeper(gkFoe, dt);
-    updateKeeper(gkOwn, dt);
+    // Se você escolheu o gol, gkOwn virou jogador de linha: ele passa a se
+    // comportar como um, senão ficaria plantado na meta sem função nenhuma.
+    if(gkOwn.role === "keeper") updateKeeper(gkOwn, dt);
+    else updateField(gkOwn, dt, flat(gkOwn.root.position, ball.position) < 6.0);
 
     updateBall(dt);
     updateCamera(dt);
@@ -10907,7 +11627,113 @@ function loop(now){
   if(typeof updateVFX === "function") updateVFX(dt);
   renderer.render(scene, camera);
 }
-requestAnimationFrame(loop);
+/* ═══════════════════════ PROTEÇÃO DE NAVEGADOR & MODO TELA CHEIA ═══════════════════════ */
+// 1. Evita fechamento acidental da aba/janela do Chrome durante a jogatina
+window.addEventListener("beforeunload", (e) => {
+  e.preventDefault();
+  e.returnValue = "";
+  return "";
+});
+
+// 2. Utilitário para verificar se o usuário está digitando em campos de formulário/chat
+function isTypingInField(e) {
+  const t = e ? (e.target || e.srcElement) : null;
+  if (!t) return false;
+  return t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable || (t.closest && !!t.closest("input, textarea, [contenteditable='true']"));
+}
+
+// 3. Suporte completo a Modo Tela Cheia + Keyboard Lock API (bloqueia Ctrl+W, Tab e atalhos no Chrome)
+function isFullscreenActive() {
+  return !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+}
+
+async function requestKeyboardLock() {
+  if (navigator.keyboard && navigator.keyboard.lock) {
+    try {
+      await navigator.keyboard.lock();
+    } catch(e) {}
+  }
+}
+
+function releaseKeyboardLock() {
+  if (navigator.keyboard && navigator.keyboard.unlock) {
+    try {
+      navigator.keyboard.unlock();
+    } catch(e) {}
+  }
+}
+
+async function toggleGameFullscreen() {
+  try {
+    if (!isFullscreenActive()) {
+      const el = document.documentElement;
+      if (el.requestFullscreen) await el.requestFullscreen();
+      else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
+      else if (el.msRequestFullscreen) await el.msRequestFullscreen();
+      await requestKeyboardLock();
+    } else {
+      if (document.exitFullscreen) await document.exitFullscreen();
+      else if (document.webkitExitFullscreen) await document.webkitExitFullscreen();
+      else if (document.msExitFullscreen) await document.msExitFullscreen();
+      releaseKeyboardLock();
+    }
+  } catch(err) {
+    console.warn("Fullscreen toggle error:", err);
+  }
+}
+
+function updateFullscreenUI() {
+  const isFs = isFullscreenActive();
+  document.querySelectorAll(".fsBtnLabel").forEach(el => {
+    el.textContent = isFs ? "JANELA" : "TELA CHEIA";
+  });
+  document.querySelectorAll(".fsBtnIcon").forEach(el => {
+    el.textContent = isFs ? "🗗" : "⛶";
+  });
+}
+
+document.addEventListener("fullscreenchange", () => {
+  if (isFullscreenActive()) {
+    requestKeyboardLock();
+  }
+  updateFullscreenUI();
+});
+document.addEventListener("webkitfullscreenchange", updateFullscreenUI);
+document.addEventListener("mozfullscreenchange", updateFullscreenUI);
+
+// 4. Limpeza rigorosa de teclas presas ao trocar de aba, perder foco ou minimizar
+function clearAllKeyStates() {
+  for (const k in keys) keys[k] = false;
+  for (const k in mpKeys) mpKeys[k] = false;
+  input.sprint = false;
+  input.charging = false;
+  input.passCharging = false;
+  isLeftMouseDown = false;
+  isRightMouseDown = false;
+  isDraggingCustomizer = false;
+  const spBtn = $("#sprintBtn"); if (spBtn) spBtn.classList.remove("activeKey");
+  const ptBtn = $("#passTackleBtn"); if (ptBtn) ptBtn.classList.remove("activeKey");
+  const mBtn = $("#mainBtn"); if (mBtn) mBtn.classList.remove("activeKey");
+  const sBtn = $("#skillBtn"); if (sBtn) sBtn.classList.remove("activeKey");
+}
+
+window.addEventListener("blur", () => {
+  clearAllKeyStates();
+  mpMouseShoot = mpMousePass = false;
+  if (typeof voice !== "undefined") {
+    voice.held = false;
+    voice.away = true;
+    if (typeof voiceApply === "function") voiceApply();
+  }
+});
+
+window.addEventListener("focus", () => {
+  clearAllKeyStates();
+  if (typeof voice !== "undefined") {
+    voice.away = false;
+    if (typeof voiceApply === "function") voiceApply();
+  }
+});
 
 /* ═══════════════ CONTROLE DE MOUSE E CÂMERA 360° ESTILO ROBLOX ═══════════════ */
 const mouseIndicator = $("#mouseLockIndicator");
@@ -10921,6 +11747,7 @@ function startMouseControl(){
       renderer.domElement.requestPointerLock();
     }
   } catch(e){}
+  requestKeyboardLock();
 }
 
 function stopMouseControl(){
@@ -10929,6 +11756,9 @@ function stopMouseControl(){
   if(mouseIndicator) mouseIndicator.style.display = "none";
   if(document.pointerLockElement){
     try { document.exitPointerLock(); } catch(e){}
+  }
+  if(!isFullscreenActive()){
+    releaseKeyboardLock();
   }
 }
 
@@ -11133,14 +11963,32 @@ const passTackleBtn = $("#passTackleBtn"), passTackleLbl = $("#passTackleLabel")
 const skillBtn = $("#skillBtn"), skillLbl = $("#skillLabel"), skillBdg = $("#skillBadge");
 const sprintBtn = $("#sprintBtn");
 
-let lastHasBallUI = null;
+let lastHasBallUI = null, lastGkUI = null;
 
 // `comBola` chega preenchido pelo multiplayer, onde a posse é do servidor e não
 // do objeto `player` local (que fica estacionado fora de campo na partida online).
 function updateMobileControlsUI(comBola){
   const hasBall = comBola !== undefined ? comBola : (owner === player);
-  if(hasBall !== lastHasBallUI){
+  // No gol os mesmos botões significam outra coisa. Trocar só o rótulo (e não o
+  // botão) mantém o dedo no lugar de sempre.
+  const noGol = (gameMode === "multiplayer") ? souGoleiro() : (player && player.role === "keeper");
+  if(hasBall !== lastHasBallUI || noGol !== lastGkUI){
     lastHasBallUI = hasBall;
+    lastGkUI = noGol;
+    if(noGol){
+      if(mainBtn) mainBtn.classList.toggle("defenseMode", !hasBall);
+      if(mainLbl) mainLbl.textContent = hasBall ? "TIRO DE META" : "ENCAIXAR";
+      if(mainBdg) mainBdg.textContent = hasBall ? "ESQ" : "R";
+
+      if(passTackleBtn) passTackleBtn.classList.toggle("defenseMode", !hasBall);
+      if(passTackleLbl) passTackleLbl.textContent = hasBall ? "ARREMESSO" : "SOCO";
+      if(passTackleBdg) passTackleBdg.textContent = hasBall ? "E" : "Q";
+
+      if(skillBtn) skillBtn.classList.remove("defenseMode");
+      if(skillLbl) skillLbl.textContent = "MERGULHO";
+      if(skillBdg) skillBdg.textContent = "C";
+      return;
+    }
     if(hasBall){
       if(mainBtn) mainBtn.classList.remove("defenseMode");
       if(mainLbl) mainLbl.textContent = "CHUTE";
@@ -11236,8 +12084,20 @@ if(mainBtn){
     if(gameMode === "multiplayer"){
       // Online o boneco é do servidor: o botão vira input de rede. A carga do
       // chute já viaja por input.charging, o desarme precisava de um toque.
+      if(souGoleiro()){
+        // No gol: com a bola é tiro de meta; sem ela, SEGURAR encaixa.
+        if(mpComBola()){ startCharge(); }
+        else { mpSegurando.steal = true; mainBtn.classList.add("activeKey"); }
+        return;
+      }
       if(mpComBola() || mpDistBola() < 3.2){ startCharge(); }
       else { mpMarcarToque("steal"); mainBtn.classList.add("activeKey"); }
+      return;
+    }
+    if(player.role === "keeper"){
+      // No gol: com a bola é tiro de meta; sem ela, SEGURAR encaixa.
+      if(owner === player){ goleiroRepor(true); }
+      else { gkSeguraEncaixe = true; mainBtn.classList.add("activeKey"); }
       return;
     }
     const dToBall = flat(player.root.position, ball.position);
@@ -11249,10 +12109,13 @@ if(mainBtn){
     }
   });
   mainBtn.addEventListener("pointerup", (e)=>{
+    mpSegurando.steal = false; gkSeguraEncaixe = false;
     if(input.charging){ releaseCharge(); }
     else { mainBtn.classList.remove("activeKey"); }
   });
   mainBtn.addEventListener("pointercancel", (e)=>{
+    mpSegurando.steal = false; gkSeguraEncaixe = false;
+    mainBtn.classList.remove("activeKey");
     cancelCharge();
   });
 }
@@ -11263,8 +12126,19 @@ if(passTackleBtn){
     sfx.init();
     if(!running) return;
     if(gameMode === "multiplayer"){
+      if(souGoleiro()){
+        // No gol: com a bola é arremesso; sem ela, soco pra longe.
+        if(mpComBola()){ startPassCharge(); }
+        else { mpMarcarToque("tackle"); passTackleBtn.classList.add("activeKey"); }
+        return;
+      }
       if(mpComBola() || mpDistBola() < 3.5){ startPassCharge(); }
       else { mpMarcarToque("tackle"); passTackleBtn.classList.add("activeKey"); }
+      return;
+    }
+    if(player.role === "keeper"){
+      if(owner === player){ goleiroRepor(false); }
+      else { goleiroSocar(); passTackleBtn.classList.add("activeKey"); }
       return;
     }
     const dToBall = flat(player.root.position, ball.position);
@@ -11292,6 +12166,10 @@ if(skillBtn){
     sfx.init();
     if(!running) return;
     skillBtn.classList.add("activeKey");
+    if(gameMode === "multiplayer" && souGoleiro()){
+      mpMarcarToque("jump");     // no gol o botão de habilidade é o mergulho
+      return;
+    }
     if(gameMode === "multiplayer"){
       // Sem isto o drible NÃO EXISTIA no celular durante a partida online:
       // mpInputState.dribble só era alimentado pelo teclado, e este botão
@@ -11302,6 +12180,7 @@ if(skillBtn){
       mpMarcarToque(noAlto || d > 3.2 ? "jump" : "dribble");
       return;
     }
+    if(player.role === "keeper"){ goleiroMergulhar(); return; }
     const dToBall = flat(player.root.position, ball.position);
     const ballAirborneNearby = ball.position.y > 1.15 && ball.position.y < 3.4 && dToBall < 2.6;
     if(ballAirborneNearby){
@@ -11376,11 +12255,40 @@ if(sprintBtn){
   });
 }
 
-/* ═══════════ ATALHOS DE TECLADO COMPLETOS PARA PC ═══════════ */
+/* ═══════════ ATALHOS DE TECLADO COMPLETOS PARA PC & PROTEÇÃO ANTI-FECHAMENTO ═══════════ */
 addEventListener("keydown", e=>{
-  sfx.init();
+  if(activeBindAction) return; // tratado pelo listener de captura do rebind
+  if(isTypingInField(e)) return; // digitação livre em caixas de texto
+
   const k = e.key.toLowerCase();
-  if(keys[k]) return; keys[k] = true;
+
+  // F11: alternar modo tela cheia com Keyboard Lock API
+  if(e.key === "F11"){
+    e.preventDefault();
+    toggleGameFullscreen();
+    return;
+  }
+
+  // Previne ações nativas do Chrome que fecham a aba, recarregam ou rolam a página
+  if(
+    k === " " || k === "space" ||
+    k === "tab" ||
+    k === "arrowup" || k === "arrowdown" || k === "arrowleft" || k === "arrowright" ||
+    k === "pageup" || k === "pagedown" || k === "home" || k === "end" ||
+    k === "f1" || k === "f3" || k === "f5" ||
+    e.ctrlKey || e.altKey || e.metaKey
+  ){
+    // Mantém DevTools liberado para desenvolvimento (F12 / Ctrl+Shift+I / J)
+    if(k !== "f12" && !(e.ctrlKey && e.shiftKey && (k === "i" || k === "j"))){
+      e.preventDefault();
+    }
+  }
+
+  sfx.init();
+
+  if(keys[k]) return;
+  keys[k] = true;
+  mpKeys[k] = true;
 
   // Se o modal de comemorações estiver aberto:
   const celModal = $("#celebrationModal");
@@ -11392,6 +12300,17 @@ addEventListener("keydown", e=>{
     if(k === "4" || k === "numpad4"){ playCelebration(3); return; }
     if(k === "5" || k === "numpad5"){ playCelebration(4); return; }
   }
+
+  if(k === "escape"){
+    if(isMouseLooking) stopMouseControl();
+    const sysModal = $("#systemModal");
+    if(sysModal && sysModal.style.display === "flex") sysModal.style.display = "none";
+    closeDonateModal();
+    if(typeof gatePendingAction !== "undefined") gatePendingAction = null;
+    if(typeof hideGate === "function") hideGate();
+  }
+
+  if(k === "t" && gameMode === "training"){ resetTrainingBall(); }
 
   if(!running){
     // Navegação pelas abas superiores do Lobby com A e E
@@ -11430,6 +12349,16 @@ addEventListener("keydown", e=>{
   if(k === "1" || k === "numpad1"){ if(owner === player) passToMate(mateA); }
   if(k === "2" || k === "numpad2"){ if(owner === player) passToMate(mateB); }
 
+  if(player.role === "keeper"){
+    // No gol o teclado tem outro significado: os mesmos dedos, outras ações.
+    if(k === userKeyBindings.jump || k === userKeyBindings.dribble){ goleiroMergulhar(); if(skillBtn) skillBtn.classList.add("activeKey"); }
+    if(k === userKeyBindings.tackle){ goleiroSocar(); if(passTackleBtn) passTackleBtn.classList.add("activeKey"); }
+    if(k === userKeyBindings.shoot){ goleiroRepor(true); }
+    if(k === userKeyBindings.pass){ goleiroRepor(false); }
+    if(k === userKeyBindings.sprint){ input.sprint = true; if(sprintBtn) sprintBtn.classList.add("activeKey"); }
+    return;
+  }
+
   if(k === userKeyBindings.shoot){ if(!registerKickPress()){ startCharge(); } }
   if(k === userKeyBindings.pass){ startPassCharge(); }
   if(k === userKeyBindings.steal){ doSteal(); if(mainBtn) mainBtn.classList.add("activeKey"); }
@@ -11445,7 +12374,11 @@ addEventListener("keydown", e=>{
 });
 
 addEventListener("keyup", e=>{
-  const k = e.key.toLowerCase(); keys[k] = false;
+  if(isTypingInField(e)) return;
+  const k = e.key.toLowerCase();
+  keys[k] = false;
+  mpKeys[k] = false;
+
   if(k === userKeyBindings.shoot){ releaseCharge(); }
   if(k === userKeyBindings.pass){ if(input.passCharging){ releasePassCharge(); } else if(passTackleBtn) passTackleBtn.classList.remove("activeKey"); }
   if(k === userKeyBindings.tackle){ if(passTackleBtn) passTackleBtn.classList.remove("activeKey"); }
@@ -11639,8 +12572,57 @@ if(tBtnReset) tBtnReset.addEventListener("click", resetTrainingBall);
 const tBtnMenu = $("#tBtnMenu");
 if(tBtnMenu) tBtnMenu.addEventListener("click", returnToMainMenu);
 
+const btnFullscreenLobby = $("#btnFullscreenLobby");
+if(btnFullscreenLobby) btnFullscreenLobby.addEventListener("click", toggleGameFullscreen);
+
+const btnSystemFullscreen = $("#btnSystemFullscreen");
+if(btnSystemFullscreen) btnSystemFullscreen.addEventListener("click", toggleGameFullscreen);
+
+const hudFullscreenBtn = $("#hudFullscreenBtn");
+if(hudFullscreenBtn) hudFullscreenBtn.addEventListener("click", toggleGameFullscreen);
+
+const btnMusicToggleLobby = $("#btnMusicToggleLobby");
+if(btnMusicToggleLobby) btnMusicToggleLobby.addEventListener("click", (e)=>{
+  e.stopPropagation();
+  sfx.init();
+  sfx.toggleMusic();
+});
+
+const btnSystemMusicToggle = $("#btnSystemMusicToggle");
+if(btnSystemMusicToggle) btnSystemMusicToggle.addEventListener("click", (e)=>{
+  e.stopPropagation();
+  sfx.init();
+  sfx.toggleMusic();
+});
+
+const btnSystemSfxToggle = $("#btnSystemSfxToggle");
+if(btnSystemSfxToggle) btnSystemSfxToggle.addEventListener("click", (e)=>{
+  e.stopPropagation();
+  sfx.init();
+  sfx.toggleSfx();
+});
+
+const musicVolSlider = $("#musicVolSlider");
+if(musicVolSlider) musicVolSlider.addEventListener("input", (e)=>{
+  sfx.init();
+  sfx.setMusicVolume(parseFloat(e.target.value));
+});
+
+const sfxVolSlider = $("#sfxVolSlider");
+if(sfxVolSlider) sfxVolSlider.addEventListener("input", (e)=>{
+  sfx.init();
+  sfx.setSfxVolume(parseFloat(e.target.value));
+});
+
+sfx.updateAudioUI();
+
 addEventListener("resize", ()=>{ fitCamera(); renderer.setSize(innerWidth, innerHeight); });
-document.addEventListener("visibilitychange", ()=>{ last = performance.now(); });
+document.addEventListener("visibilitychange", ()=>{
+  last = performance.now();
+  if(document.hidden){
+    clearAllKeyStates();
+  }
+});
 
 /* ═══════════════════════ MULTIPLAYER ONLINE — INTEGRAÇÃO WEBSOCKET ═══════════════════════ */
 
@@ -11654,11 +12636,13 @@ const S2C = { WELCOME:"welcome", QUEUED:"queued", ROOM_CREATED:"room_created", R
               ERROR:"error" };
 
 // Mapeia o estado numérico do servidor (shared/constants.js STATE) p/ string de animação do jogo
+// Espelha STATE_NAME de server/shared/constants.js — a ORDEM é o protocolo.
 const MP_STATE_NAME = [
   "idle","run","sprint","kick_charge","shot_technique","shot_power",
   "pass","tackle","steal","dribble_stepover","dribble_elastico",
   "dribble_roulette","dribble_dragback","dribble_rainbow","dribble_carretilha",
-  "jump","header","fall","dive_left","dive_right","catch_center","dance"
+  "jump","header","fall","dive_left","dive_right","catch_center","dance",
+  "dive_high","punch","throw"
 ];
 
 // Duração (s) de cada ação para o cliente reproduzir a animação completa
@@ -11667,8 +12651,9 @@ const MP_STATE_DUR = {
   shot_power: 0.30, shot_technique: 0.24, pass: 0.28, tackle: TACKLE.duration, steal: 0.40,
   dribble_stepover: 0.70, dribble_elastico: 0.55, dribble_roulette: 0.75,
   dribble_dragback: 0.60, dribble_rainbow: 0.80, dribble_carretilha: 0.62,
-  jump: 0.55, header: 0.62, fall: 1.25, dive_left: 0.75, dive_right: 0.75,
-  catch_center: 0.90, dance: 0.9
+  jump: 0.55, header: 0.62, fall: 1.25, dive_left: 0.78, dive_right: 0.78,
+  catch_center: 0.90, dance: 0.9,
+  dive_high: 0.62, punch: 0.40, throw: 0.38
 };
 
 const mpInputState = { dx:0, dz:0, sprint:false, shoot:false, pass:false, tackle:false,
@@ -11682,6 +12667,29 @@ const mp = {
   score: [0,0], timeLeft: 0, ownerId: 0, running: false, ping: 0, frozen: false,
   localX:0, localY:0, localZ:0, localYaw:Math.PI, localVx:0, localVz:0, ready:false
 };
+
+// Posição escolhida no lobby ("field" ou "keeper"). Viaja no HELLO: é o servidor
+// quem decide de fato, porque a meta pode já estar ocupada.
+let mpRoleEscolhida = "field";
+try {
+  const r = localStorage.getItem("fut_cria_role");
+  if(r === "keeper" || r === "field") mpRoleEscolhida = r;
+} catch(e) {}
+// Uma escolha só, válida para a partida rápida e para o online. Os dois
+// seletores (lobby e sala online) escrevem aqui e leem daqui.
+function mpSetRole(r){
+  mpRoleEscolhida = (r === "keeper") ? "keeper" : "field";
+  papelLocal = mpRoleEscolhida;
+  try { localStorage.setItem("fut_cria_role", mpRoleEscolhida); } catch(e) {}
+  document.querySelectorAll(".mpRoleBtn, .lobbyRoleBtn").forEach(b =>
+    b.classList.toggle("selected", b.dataset.mprole === mpRoleEscolhida));
+}
+// Sou o goleiro NESTA partida? Quem manda é o elenco que o servidor devolveu,
+// não o botão do lobby — se a meta estava ocupada, o servidor me pôs na linha.
+function souGoleiro(){
+  const c = mp.chars.get(mp.entId);
+  return !!(c && c.role === "keeper");
+}
 
 const MP_INTERP = 0.10, MP_MAX_SNAP = 24, MP_ACC_NUM = 1/30;
 const MP_MAX_RETRIES = 12;   // ~48s de tentativas: cobre o cold start do Render free
@@ -11771,7 +12779,8 @@ function mpConnect(){
       uid: window.firebaseUid,
       idToken: window.fbIdToken,
       mpGoals: playerStats.mpGoals || 0,
-      cardTier: getCardTier(playerStats.mpGoals).id
+      cardTier: getCardTier(playerStats.mpGoals).id,
+      role: mpRoleEscolhida
     });
     mpSetStatus("Conectado. Crie uma sala ou entre em uma aberta.");
     mpListRooms();
@@ -11950,7 +12959,7 @@ function mpListRooms(){
 function mpCreateRoom(mode){
   const name = (document.querySelector("#mpName").value || "CRIA").slice(0,14);
   if(!mp.connected){ mpSetStatus("Conectando ao servidor primeiro...", "error"); mpConnect(); return; }
-  mpSend(C2S.HELLO, { name, customConfig: playerCustomConfig, uid: window.firebaseUid, idToken: window.fbIdToken });
+  mpSend(C2S.HELLO, { name, customConfig: playerCustomConfig, uid: window.firebaseUid, idToken: window.fbIdToken, role: mpRoleEscolhida });
   mpSend(C2S.CREATE_ROOM, { mode });
   mpSetStatus(`Criando sala ${mode.toUpperCase()}...`);
 }
@@ -11958,7 +12967,7 @@ function mpCreateRoom(mode){
 function mpJoinRoom(id){
   const name = (document.querySelector("#mpName").value || "CRIA").slice(0,14);
   if(!mp.connected){ mpSetStatus("Conectando ao servidor primeiro...", "error"); mpConnect(); return; }
-  mpSend(C2S.HELLO, { name, customConfig: playerCustomConfig, uid: window.firebaseUid, idToken: window.fbIdToken });
+  mpSend(C2S.HELLO, { name, customConfig: playerCustomConfig, uid: window.firebaseUid, idToken: window.fbIdToken, role: mpRoleEscolhida });
   mpSend(C2S.JOIN_ROOM, { id });
 }
 
@@ -11979,8 +12988,9 @@ function mpClearRoster(){
   mp.snaps.length = 0; mp.history.length = 0; mp.ready = false;
   mp.hudScore = null; mp.hudClock = null;
   mp.localState = "idle"; mp.localAct = 0;
-  mp.dribbleSlot = 0; mp.localDribCd = 0;
-  lastHasBallUI = null;   // força os rótulos dos botões a se refazerem no novo modo
+  mp.dribbleSlot = 0; mp.localDribCd = 0; mp.localGkCd = 0;
+  mpSegurando.steal = false;
+  lastHasBallUI = null; lastGkUI = null;   // força os rótulos a se refazerem no novo modo
   for(let i = 0; i < MP_TOQUES.length; i++) mpToque[MP_TOQUES[i]] = false;
   mpWorld.ents.clear(); mpWorld.ball = null;
 }
@@ -12056,7 +13066,7 @@ function mpBuildRoster(d){
   // Prepara a cena multiplayer
   gameMode = "multiplayer";
   running = true; over = false; shake = 0; celebration = null; setPiece = null;
-  sfx.init(); sfx.playWhistle(false);
+  sfx.init(); sfx.setBgmMode("match"); sfx.playWhistle(false);
   // Parqueia os personagens do single-player para fora da visão da câmera
   for(const c of chars){ c.root.position.set(-90, -30, 0); c.vel.set(0,0,0); }
   $("#start").style.display = "none";
@@ -12064,12 +13074,16 @@ function mpBuildRoster(d){
   $("#trainingHud").style.display = "none";
   $("#customizerModal").style.display = "none";
   $("#topWrap").style.display = "block";
+  const hf = $("#hudFullscreenBtn"); if(hf) hf.style.display = "flex";
   const isTouchDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
   const jEl = $("#joy"); if(jEl) jEl.style.display = isTouchDevice ? "block" : "none";
   const bgEl = $("#btnGrid"); if(bgEl) bgEl.style.display = isTouchDevice ? "grid" : "none";
   const mwEl = $("#miniWrap"); if(mwEl) mwEl.style.display = "block";
   const chEl = $("#crosshairWrap"); if(chEl) chEl.style.display = "flex";
-  camYaw = BASE_YAW; camPitch = 0.28; camDistance = 10; targetDist = 10;
+  // Time 1 defende o outro lado: começar olhando para BASE_YAW deixaria o
+  // jogador de costas para o campo no primeiro quadro. No gol isso é pior ainda.
+  camYaw = mp.team === 0 ? BASE_YAW : 0;
+  camPitch = 0.28; camDistance = 10; targetDist = 10;
   mp.ready = false; mp.frozen = false;
   mp.running = true;
   mpAccum = 0;
@@ -12082,6 +13096,7 @@ function mpBuildRoster(d){
 
 function mpEndMatch(){
   voiceStop();
+  sfx.setBgmMode("chill");
   mp.charge = 0;
   if(pw){ pw.style.display = "none"; pw.classList.remove("over"); }
   if(crosshairWrap) crosshairWrap.classList.remove("charging");
@@ -12090,6 +13105,7 @@ function mpEndMatch(){
   stopMouseControl();
   $("#start").style.display = "flex";
   $("#topWrap").style.display = "none";
+  const hf = $("#hudFullscreenBtn"); if(hf) hf.style.display = "none";
   $("#joy").style.display = "none";
   $("#btnGrid").style.display = "none";
   $("#crosshairWrap").style.display = "none";
@@ -12156,6 +13172,15 @@ function mpIntegrarLocal(dt){
   mp.localZ = clamp(mp.localZ, -HH+0.8, HH-0.8);
 }
 
+// Mesma prisão do prenderNaArea() do servidor: o goleiro não vira atacante.
+function mpPrenderNaArea(){
+  const side = mp.team === 0 ? 1 : -1;
+  const linha = side * HH;
+  mp.localX = clamp(mp.localX, -GOLEIRO.areaX, GOLEIRO.areaX);
+  if(side > 0) mp.localZ = clamp(mp.localZ, linha - GOLEIRO.areaZ, linha - 0.6);
+  else mp.localZ = clamp(mp.localZ, linha + 0.6, linha + GOLEIRO.areaZ);
+}
+
 function mpApplyLocalInput(input, dt, hasBall){
   // Saque e comemoração de gol: o servidor segura todo mundo parado. Prever
   // movimento aqui só geraria correção depois.
@@ -12163,6 +13188,34 @@ function mpApplyLocalInput(input, dt, hasBall){
 
   mp.localAct = Math.max(0, (mp.localAct || 0) - dt);
   const st = mp.localState || "idle";
+
+  // Goleiro: não dribla, não dá carrinho e vive preso à área. Durante mergulho,
+  // soco ou reposição o corpo só segue o impulso, igual ao servidor faz.
+  if(souGoleiro()){
+    if(acaoDeGoleiro(st) && (mp.localAct || 0) > 0){
+      const lambda = st === "punch" ? 8 : (st === "throw" || st === "catch_center") ? 9 : 2.2;
+      mp.localVx = mpDamp(mp.localVx, 0, lambda, dt);
+      mp.localVz = mpDamp(mp.localVz, 0, 6, dt);
+      mpIntegrarLocal(dt);
+      mpPrenderNaArea();
+      return;
+    }
+    const magG = Math.hypot(input.dx, input.dz);
+    const spG = input.sprint ? GOLEIRO.velocidade * 1.25 : GOLEIRO.velocidade;
+    if(magG > 0.14){
+      const nx = input.dx/magG, nz = input.dz/magG, m = Math.min(1, magG);
+      mp.localVx = mpDamp(mp.localVx, nx*spG*m, 16, dt);
+      mp.localVz = mpDamp(mp.localVz, nz*spG*m, 16, dt);
+      mp.localYaw = Math.atan2(nx, nz);
+    } else {
+      mp.localVx = mpDamp(mp.localVx, 0, 13, dt);
+      mp.localVz = mpDamp(mp.localVz, 0, 13, dt);
+      if(mp.serverYaw != null) mp.localYaw = angleLerp(mp.localYaw, mp.serverYaw, 1 - Math.exp(-6*dt));
+    }
+    mpIntegrarLocal(dt);
+    mpPrenderNaArea();
+    return;
+  }
 
   // Drible: o servidor solta um impulso pra frente e ignora o teclado enquanto
   // a ação dura. Isso não dava pra prever enquanto o movimento saía de um
@@ -12341,6 +13394,10 @@ let mpAccum = 0;
 // aí ele nunca chegava ao servidor: o jogador apertava DRIBLE e não acontecia
 // nada, sem nada na tela explicando o porquê.
 const MP_TOQUES = ["dribble", "jump", "steal", "tackle", "callPass"];
+// Encaixar é uma JANELA: o goleiro segura o botão e a defesa daquele instante
+// vira posse em vez de rebote. Por isso vai num mapa de "segurando", separado
+// dos toques de borda.
+const mpSegurando = { steal:false };
 const mpToque = { dribble:false, jump:false, steal:false, tackle:false, callPass:false };
 const mpBruto = { dribble:false, jump:false, steal:false, tackle:false, callPass:false };
 function mpMarcarToque(k){ mpToque[k] = true; }
@@ -12400,6 +13457,46 @@ function mpPreverDrible(){
   shake = marcado ? 0.20 : 0.15;
 }
 
+// Espelha o bloco do PULO em keeperInput() de server/shared/sim.js. O mergulho
+// é a ação mais sensível a atraso do jogo inteiro: 150ms esperando o snapshot é
+// a diferença entre defender e tomar o gol, então o cliente desenha na hora.
+function mpPreverMergulho(){
+  const c = mp.chars.get(mp.entId);
+  if(!c || mp.frozen || !mp.ready) return;
+  if((mp.localGkCd || 0) > 0) return;
+  if(acaoDeGoleiro(mp.localState || "") && (mp.localAct || 0) > 0) return;
+  if(mp.ownerId === mp.entId) return;          // com a bola nas mãos não mergulha
+
+  const lado = mpInputState.dx;
+  let st, dur;
+  if(Math.abs(lado) > 0.35){
+    const dir = Math.sign(lado);
+    // O lado da ANIMAÇÃO é o lado do corpo dele, que olha pro campo
+    const paraDireitaDele = mp.team === 0 ? -dir : dir;
+    st = paraDireitaDele > 0 ? "dive_right" : "dive_left";
+    dur = GOLEIRO.durMerg;
+    mp.localVx = dir * GOLEIRO.impMerg;
+  } else {
+    st = "dive_high";
+    dur = GOLEIRO.durSalto;
+  }
+  mp.localState = st;
+  mp.localAct = dur;
+  mp.localGkCd = dur + (st === "dive_high" ? 0.15 : GOLEIRO.recupMerg);
+  mpPreverAcao(st);
+  sfx.playTackle();
+}
+
+function mpPreverSoco(){
+  const c = mp.chars.get(mp.entId);
+  if(!c || mp.frozen || (mp.localGkCd || 0) > 0) return;
+  mp.localState = "punch";
+  mp.localAct = GOLEIRO.durSoco;
+  mp.localGkCd = GOLEIRO.durSoco + 0.20;
+  mpPreverAcao("punch");
+  sfx.playSteal();
+}
+
 function mpGatherInput(){
   let kx=0, ky=0;
   if(mpKeys[userKeyBindings.left]||mpKeys.arrowleft) kx-=1;
@@ -12420,7 +13517,7 @@ function mpGatherInput(){
     mpInputState.dx/=dl; mpInputState.dz/=dl;
   } else { mpInputState.dx = 0; mpInputState.dz = 0; }
   mpInputState.sprint = !!mpKeys[userKeyBindings.sprint] || !!input.sprint;
-  mpBruto.steal   = !!mpKeys[userKeyBindings.steal];
+  mpBruto.steal   = !!mpKeys[userKeyBindings.steal] || mpSegurando.steal;
   mpBruto.tackle  = !!mpKeys[userKeyBindings.tackle];
   mpBruto.dribble = !!mpKeys[userKeyBindings.dribble] || !!mpKeys.g;
   mpBruto.jump    = !!mpKeys[userKeyBindings.jump];
@@ -12455,8 +13552,12 @@ function mpGatherInput(){
     sfx.playTackle();
     mpPreverAcao("tackle");        // o servidor recusa se estiver com a bola — igual aqui
   }
-  if(mpInputState.dribble && !mpKeys._dribblePressed) mpPreverDrible();
-  if(mpInputState.jump && !mpKeys._jumpPressed) mpPularOuCabecear();
+  const noGol = souGoleiro();
+  if(mpInputState.dribble && !mpKeys._dribblePressed && !noGol) mpPreverDrible();
+  if(mpInputState.jump && !mpKeys._jumpPressed){
+    if(noGol) mpPreverMergulho(); else mpPularOuCabecear();
+  }
+  if(noGol && mpInputState.tackle && !mpKeys._tacklePressed) mpPreverSoco();
   mpKeys._dribblePressed = mpInputState.dribble;
   mpKeys._jumpPressed = mpInputState.jump;
   mpKeys._stealPressed = mpInputState.steal;
@@ -12577,6 +13678,7 @@ function mpUpdate(dt){
 
   if(mp.localKickCooldown > 0) mp.localKickCooldown = Math.max(0, mp.localKickCooldown - dt);
   if(mp.localDribCd > 0) mp.localDribCd = Math.max(0, mp.localDribCd - dt);
+  if(mp.localGkCd > 0) mp.localGkCd = Math.max(0, mp.localGkCd - dt);
 
   const world = mpInterpolate();
   const myChar = mp.chars.get(mp.entId);
@@ -12627,6 +13729,7 @@ function mpUpdate(dt){
       const d = MP_STATE_DUR[newSt];
       c.act = d || 0;
       c.dribbleDuration = d || 0.65;
+      c.gkDur = d || 0.6;
       if(newSt === "tackle"){ c.tackleAct = c.act; if(!c.isMe) sfx.playTackle(); }
       if(newSt === "steal"){ if(!c.isMe) sfx.playSteal(); }
       if(newSt === "shot_power"){ if(!c.isMe) sfx.playKick(1.0); shake = Math.max(shake, 0.22); }
@@ -12975,15 +14078,15 @@ addEventListener("click", () => {
 // O chute/passe por mouse já é roteado no handler global de mousedown/mouseup.
 
 function voiceTypingInField(e){
-  const t = e.target;
-  return !!t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable);
+  return isTypingInField(e);
 }
 
 addEventListener("keydown", (e)=>{
+  if(isTypingInField(e)) return;
   const k = e.key.toLowerCase();
   mpKeys[k] = true;
 
-  if(!voice.room || e.repeat || voiceTypingInField(e)) return;
+  if(!voice.room || e.repeat) return;
   if(k === (userKeyBindings.voice || "b")){
     // No modo aberto segurar a tecla nao faria sentido, entao ela vira o
     // liga/desliga — o mesmo que o botao da tela.
@@ -12993,27 +14096,13 @@ addEventListener("keydown", (e)=>{
 });
 
 addEventListener("keyup", (e)=>{
+  if(isTypingInField(e)) return;
   const k = e.key.toLowerCase();
   mpKeys[k] = false;
   if(k === (userKeyBindings.voice || "b") && voice.held){
     voice.held = false;
     voiceApply();
   }
-});
-
-addEventListener("blur", ()=>{
-  for(const k in mpKeys) mpKeys[k] = false;
-  mpMouseShoot = mpMousePass = false;
-  // Ninguem quer continuar transmitindo o quarto depois de trocar de janela —
-  // vale ate no modo aberto. O modo escolhido nao muda: volta ao dar foco.
-  voice.held = false;
-  voice.away = true;
-  voiceApply();
-});
-
-addEventListener("focus", ()=>{
-  voice.away = false;
-  voiceApply();
 });
 
 // ───── Wiring do modal ─────
@@ -13033,6 +14122,10 @@ if(mpBtnRefresh) mpBtnRefresh.addEventListener("click", ()=>{
   if(!mp.connected) mpConnect();
   else mpListRooms();
 });
+document.querySelectorAll(".mpRoleBtn, .lobbyRoleBtn").forEach(btn => {
+  btn.addEventListener("click", ()=> mpSetRole(btn.dataset.mprole));
+});
+mpSetRole(mpRoleEscolhida);
 document.querySelectorAll(".mpModeBtn").forEach(btn => {
   btn.addEventListener("click", ()=>{
     document.querySelectorAll(".mpModeBtn").forEach(b => b.classList.remove("selected"));

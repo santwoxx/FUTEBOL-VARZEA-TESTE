@@ -26,9 +26,8 @@ service cloud.firestore {
     // Tudo em MINUSCULO, um por linha, separados por virgula.
     function betaEmails() {
       return [
-        "brisasofc@gmail.com"       // adm do jogo
-        // , "amigo1@gmail.com"
-        // , "amigo2@gmail.com"
+        "brisasofc@gmail.com",       // adm do jogo
+        "isaacbomfim.00@gmail.com"
       ];
     }
 

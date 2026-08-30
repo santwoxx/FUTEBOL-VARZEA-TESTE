@@ -3,7 +3,7 @@
 // 4v4 (10 entidades a 20 snapshots/s) cabe folgado nesse formato.
 
 export const C2S = {
-  HELLO: "hello",         // cliente se apresenta (nome, aparencia, ID token do Google)
+  HELLO: "hello",         // cliente se apresenta (nome, aparencia, funcao, ID token)
   QUEUE: "queue",         // entrar na fila de um modo (1v1..4v4)
   LEAVE: "leave",         // sair da fila / da partida
   INPUT: "input",         // estado dos controles do jogador (enviado ~30x/s)
@@ -60,6 +60,7 @@ export function makeInput() {
     dribble: false,
     jump: false,
     dance: false,
+    callPass: false,   // toque: pede a bola para quem estiver conduzindo
     aimx: 0, aimy: 1, aimz: 0   // ponto de mira no mundo (crosshair)
   };
 }

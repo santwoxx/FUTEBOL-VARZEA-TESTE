@@ -55,12 +55,25 @@ export class Room {
     // Se o jogador ja tinha um boneco (reconectou), devolve ele
     if (client.uid) {
       for (const e of this.world.ents) {
-        if (e.uid === client.uid && e.role === "field" && e.isBot) return e;
+        if (e.uid === client.uid && e.isBot) return e;
       }
     }
     const count = [0, 0];
     for (const c of this.clients.values()) count[c.team]++;
     const team = count[0] <= count[1] ? 0 : 1;
+
+    // Quem escolheu ser goleiro pega a meta do time, se ela ainda estiver livre.
+    // Se ja tiver dono, cai para a linha em vez de recusar a entrada — ficar de
+    // fora da partida seria pior do que jogar na linha.
+    if (client.role === "keeper") {
+      for (const e of this.world.ents) {
+        if (e.team === team && e.role === "keeper" && e.isBot) return e;
+      }
+      for (const e of this.world.ents) {
+        if (e.role === "keeper" && e.isBot) return e;
+      }
+    }
+
     // Encontra uma entidade de linha desse time que ainda esteja como bot (preferencialmente sem dono)
     for (const e of this.world.ents) {
       if (e.team === team && e.role === "field" && e.isBot && !e.uid) return e;
@@ -219,6 +232,7 @@ export class Room {
       steal: !!input.steal,
       dribble: !!input.dribble,
       jump: !!input.jump,
+      callPass: !!input.callPass,
       aimx: clampNum(input.aimx, -60, 60),
       aimy: clampNum(input.aimy, 0, 12),
       aimz: clampNum(input.aimz, -60, 60)
@@ -234,10 +248,11 @@ export class Room {
     // perde por jitter de rede.
     const pendente = this.inputs.get(client.entId);
     if (pendente && !pendente.consumido) {
-      safe.dribble = safe.dribble || pendente.dribble;
-      safe.tackle  = safe.tackle  || pendente.tackle;
-      safe.steal   = safe.steal   || pendente.steal;
-      safe.jump    = safe.jump    || pendente.jump;
+      safe.dribble  = safe.dribble  || pendente.dribble;
+      safe.tackle   = safe.tackle   || pendente.tackle;
+      safe.steal    = safe.steal    || pendente.steal;
+      safe.jump     = safe.jump     || pendente.jump;
+      safe.callPass = safe.callPass || pendente.callPass;
     }
 
     this.inputs.set(client.entId, safe);
@@ -256,6 +271,7 @@ export class Room {
       match: CFG.MATCH,
       roster: this.world.ents.map((e) => ({
         id: e.id, team: e.team, role: e.role, foot: e.foot,
+        keeper: e.role === "keeper",
         bot: e.isBot, name: e.name || (e.isBot ? "BOT" : "CRIA"),
         customConfig: e.customConfig,
         mpGoals: e.mpGoals || 0,

@@ -57,6 +57,61 @@ const CHAPEU = {
   stun:       0.50  // atordoamento de quem levou o chapeu
 };
 
+// Chute. Espelhado em frontend/index.html.
+//
+// A conta antiga tirava a altura de saida de uma escala grosseira da mira
+// (targetY/GOAL_H) em vez de resolver a balistica: mirando no angulo (y=3,4m) a
+// bola cruzava a linha entre 1,1m e 2,9m — errava o canto por ate 2,3m e nao
+// dava para escolher altura nenhuma. E o giro rendia 11 CENTIMETROS de curva em
+// 18m, ou seja, curva nenhuma.
+//
+// Agora o chute resolve tres coisas de uma vez:
+//   1. tempo de voo real ate o ponto mirado (contando o arrasto do ar);
+//   2. a altura de saida que faz a bola PASSAR naquele ponto;
+//   3. o quanto o efeito vai entortar a trajetoria, para sair aberto e voltar
+//      no canto em vez de simplesmente errar o alvo.
+const CHUTE = {
+  corte:        0.65, // p a partir daqui e bomba; abaixo, colocado
+  bombaBase:    27.0, // m/s da bomba, antes da carga
+  bombaCarga:   23.0,
+  tecBase:      21.0, // colocado: mais lento, mas cirurgico e com muita curva
+  tecCarga:     12.0,
+  curvaTec:     30.0, // giro maximo do colocado (direcional no disparo)
+  curvaBomba:   12.0, // a bomba entorta menos: e forca, nao capricho
+  aberturaMax:   0.52, // rad: teto do quanto o chute pode sair aberto para curvar
+  espalhaTec:   0.10, // erro lateral (m) na linha do gol
+  espalhaBomba: 0.55, // encher o pe custa pontaria
+  alturaMin:     0.35, // nunca sai rasteiro demais a ponto de raspar no gramado
+  // O gol so e contado 0,8m DEPOIS da linha. Uma bola que cruza subindo ja subiu
+  // mais um pedaco ate la — e um chute mirado no angulo batia no travessao e
+  // voltava. Resolver a balistica para este ponto (e nao para a linha) faz o
+  // chute chegar na altura mirada exatamente onde o gol vale.
+  folgaGol:      0.90,
+  // Teto da mira: o gol tem 4m, mas acima disto a bola cruza acima da
+  // trave no instante em que o gol e conferido.
+  tetoMira:      3.40
+};
+
+// Arrasto do ar e decaimento do giro, iguais aos de stepBall(). Ter os dois aqui
+// permite PREVER onde a bola vai passar em vez de chutar numeros.
+const AR_LAMBDA   = -Math.log(0.996) * 60;   // ~0,2405 /s
+const SPIN_LAMBDA = -Math.log(0.2);          // ~1,609 /s
+
+// Tempo para percorrer `d` metros na horizontal saindo a `sp` m/s.
+function tempoDeVoo(d, sp) {
+  const r = 1 - (AR_LAMBDA * d) / sp;
+  if (r <= 0.05) return d / sp;   // alcance curto para a conta fechada: aproxima
+  return -Math.log(r) / AR_LAMBDA;
+}
+
+// Desvio lateral que o efeito Magnus acumula em `t` segundos. E a integral dupla
+// da aceleracao lateral de stepBall() com o giro decaindo.
+function desvioCurva(spin, sp, t) {
+  const a = spin * 0.055 * sp;
+  const k = SPIN_LAMBDA;
+  return a * (t / k - (1 - Math.exp(-k * t)) / (k * k));
+}
+
 // Passe. Espelhado em frontend/index.html.
 //
 // O atrito do gramado neste jogo e altissimo (0,91^60 por segundo): uma bola que
@@ -80,8 +135,6 @@ const PASSE = {
   loftMax:  8.0   // ...e maxima, para nao virar lob
 };
 
-// Pedido de passe. Vale por pouco tempo de proposito: e um pedido para AGORA,
-// nao uma preferencia permanente.
 // Depois de tocar, o pe que bateu fica um instante sem poder reaver a bola.
 // Sem isso um passe curto era engolido pelo proprio passador: doPass solta a
 // posse, mas no tick seguinte a bola ainda esta a menos de 1,65m dele e abaixo
@@ -89,6 +142,35 @@ const PASSE = {
 // pe. Era isso que fazia o toque curto parecer "sem forca".
 const RECUO_TOQUE = Math.round(0.30 * CFG.TICK_HZ);
 
+// Goleiro sob controle humano. O goleiro bot defende sozinho por proximidade;
+// o humano precisa MERECER a defesa — a mao so alcanca longe se ele mergulhar
+// para o lado certo na hora certa.
+const GOLEIRO = {
+  alcanceParado:  1.25, // alcance (m) so com o corpo, sem se jogar
+  alcanceMerg:    3.10, // ...mergulhando para o lado
+  desloqMerg:     1.45, // deslocamento do centro do alcance no mergulho
+  alturaParado:   2.10, // teto vertical sem pular
+  alturaSalto:    3.30, // ...saltando (defesa no alto)
+  impMerg:        9.60, // impulso lateral do mergulho
+  impMergY:       4.60, // impulso vertical do mergulho
+  impSalto:       7.40, // salto reto para bola alta
+  durMerg:        0.78, // duracao do mergulho
+  durSalto:       0.62,
+  recupMerg:      0.30, // trava extra depois de cair, antes de agir de novo
+  janelaEncaixe:  0.45, // tempo em que o botao de encaixar deixa a defesa virar posse
+  encaixeVelMax:  30.0, // acima disso nem encaixando segura: espalma
+  socoForca:      17.0, // velocidade que o soco imprime na bola
+  socoAlcance:    2.60,
+  durSoco:        0.40,
+  areaX:          9.5,  // ate onde o goleiro pode sair do centro do gol
+  areaZ:          8.0,  // ...e para a frente
+  velocidade:     8.6,
+  reposMao:       19.0, // arremesso com a mao
+  reposPe:        27.0  // tiro de meta com o pe
+};
+
+// Pedido de passe. Vale por pouco tempo de proposito: e um pedido para AGORA,
+// nao uma preferencia permanente.
 const CALL = {
   ticks: Math.round(1.5 * CFG.TICK_HZ), // validade do pedido
   bonus: 1.4,   // peso na escolha do alvo do passe (o dot vai de -1 a 1)
@@ -116,6 +198,8 @@ function createEnt(team, role, foot, isBot, slot) {
     stunned: 0,
     tackleResolved: false,
     callT: -1e9,   // tick do ultimo pedido de passe
+    encaixando: 0, // janela em que a defesa vira posse em vez de rebote
+    mergDir: 0,    // -1 / +1: lado do mergulho em andamento
     name: ""
   };
 }
@@ -308,6 +392,14 @@ function dribbleBall(w, e, dt) {
       break;
     }
     default: {
+      // Goleiro com a bola segura ela no peito, nao conduz no pe.
+      if (e.role === "keeper" && e.state === STATE.CATCH) {
+        b.x = e.x + fx * 0.42;
+        b.z = e.z + fz * 0.42;
+        b.y = 1.15;
+        b.vx = e.vx; b.vy = 0; b.vz = e.vz;
+        return;
+      }
       tx = e.x + fx * 0.88;
       tz = e.z + fz * 0.88;
       break;
@@ -330,11 +422,14 @@ export function pedindoPasse(w, e) {
 
 // ──────────────────────────── acoes de jogo ────────────────────────────────
 
-function doShoot(w, e, power, over = 0) {
+// `lat` (-1..1) e o quanto o jogador estava empurrando o direcional PARA O LADO
+// no instante do disparo: e assim que se escolhe a curva, sem botao novo.
+function doShoot(w, e, power, over = 0, lat = 0) {
   const b = w.ball;
   if (dist2(e.x, e.z, b.x, b.z) > 3.8 || b.y > 2.8) return false;
   w.lastTouchEntId = e.id;
   const p = clamp(power, 0, 1);
+  const bomba = p >= CHUTE.corte;
 
   // Segurar alem da carga cheia nao adiciona forca: o pe passa por baixo da
   // bola. Ela sobe (loft) e perde velocidade horizontal (drag) — o chute vai
@@ -344,31 +439,48 @@ function doShoot(w, e, power, over = 0) {
   const loft = 1 + o * KICK.overLoft;
   const drag = 1 - o * KICK.overPower;
 
-  // Direcao: mira enviada pelo cliente, com fallback para a frente do jogador
+  // Direcao e distancia ate o ponto mirado (o crosshair do cliente)
   let dx = (e.aimx ?? 0) - b.x;
   let dz = (e.aimz ?? 0) - b.z;
-  let len = Math.hypot(dx, dz);
-  if (len < 0.1) { dx = Math.sin(e.yaw); dz = Math.cos(e.yaw); len = 1; }
-  dx /= len; dz /= len;
+  let dAlvo = Math.hypot(dx, dz);
+  if (dAlvo < 0.1) { dx = Math.sin(e.yaw); dz = Math.cos(e.yaw); dAlvo = 14; }
+  else { dx /= dAlvo; dz /= dAlvo; }
 
   b.y = Math.max(b.y, 0.30);
-  const targetY = clamp(e.aimy ?? 1.2, 0.3, CFG.GOAL_H);
-  const hf = targetY / CFG.GOAL_H;
+  const targetY = clamp(e.aimy ?? 1.2, 0.3, CHUTE.tetoMira);
 
-  if (p >= 0.65) {
-    const sp = (26 + 22 * p) * drag;
-    b.vx = dx * sp; b.vz = dz * sp;
-    b.vy = (2.2 + 5.2 * p) * (0.60 + 0.80 * hf) * loft;
-    b.spinY = (Math.random() - 0.5) * 2.0;
-    e.state = STATE.SHOT_POWER; e.act = 0.30; e.cool = 0.34;
-  } else {
-    const sp = (18 + 14 * p) * drag;
-    b.vx = dx * sp; b.vz = dz * sp;
-    b.vy = (1.8 + 3.6 * p) * (0.70 + 0.70 * hf) * loft;
-    // Efeito Magnus buscando o canto
-    b.spinY = ((e.aimx ?? 0) > b.x ? -1 : 1) * (5.5 + p * 4.5);
-    e.state = STATE.SHOT_TECHNIQUE; e.act = 0.24; e.cool = 0.28;
-  }
+  const sp = (bomba ? CHUTE.bombaBase + CHUTE.bombaCarga * p
+                    : CHUTE.tecBase + CHUTE.tecCarga * p) * drag;
+
+  // Curva escolhida no direcional. O colocado entorta muito mais que a bomba.
+  const giroMax = bomba ? CHUTE.curvaBomba : CHUTE.curvaTec;
+  const spin = clamp(lat, -1, 1) * giroMax;
+
+  // Tempo real de voo ate o alvo e o desvio que o efeito vai provocar nesse
+  // tempo. A direcao de saida abre para o lado CONTRARIO ao desvio, entao a
+  // bola sai aberta e o efeito a traz de volta no canto mirado — que e o que
+  // torna a curva util em vez de so um erro bonito.
+  const dSolve = dAlvo + CHUTE.folgaGol;
+  const t = tempoDeVoo(dSolve, sp);
+  const desvio = desvioCurva(spin, sp, t);
+  const abertura = clamp(Math.atan2(desvio, dAlvo), -CHUTE.aberturaMax, CHUTE.aberturaMax);
+  const ang = Math.atan2(dx, dz) + abertura;
+
+  // Erro do pe: a bomba e menos precisa que o colocado.
+  const espalha = bomba ? CHUTE.espalhaBomba : CHUTE.espalhaTec;
+  const erro = (Math.random() - 0.5) * 2 * espalha / Math.max(1, dAlvo);
+  const angErro = ang + erro;
+  dx = Math.sin(angErro); dz = Math.cos(angErro);
+
+  b.vx = dx * sp; b.vz = dz * sp;
+  // Altura de saida resolvida para a bola PASSAR na altura mirada: e isto que
+  // faz "escolher o canto" existir de verdade.
+  b.vy = Math.max(CHUTE.alturaMin, (targetY - b.y) / t + 0.5 * 18 * t) * loft;
+  b.spinY = spin;
+
+  if (bomba) { e.state = STATE.SHOT_POWER; e.act = 0.30; e.cool = 0.34; }
+  else       { e.state = STATE.SHOT_TECHNIQUE; e.act = 0.24; e.cool = 0.28; }
+
   e.yaw = Math.atan2(dx, dz);
   w.ownerId = 0;
   e.semBolaAte = w.tick + RECUO_TOQUE;
@@ -484,6 +596,7 @@ function resolveTackleContact(w, e) {
   let foe = null, dFoe = 999;
   for (const o of w.ents) {
     if (o.team === e.team) continue;
+    if (o.role === "keeper") continue;   // carrinho no goleiro nao existe
     if (o.state === STATE.FALL || o.stunned > 0) continue;
     const d = dist2(e.x, e.z, o.x, o.z);
     if (d < dFoe) { dFoe = d; foe = o; }
@@ -653,7 +766,165 @@ function headerContact(w, e) {
   w.ownerId = 0;
 }
 
+// ───────────────────────── goleiro sob controle humano ─────────────────────
+
+// Esta em acao de defesa (mergulho, salto ou soco)?
+function goleiroOcupado(e) {
+  return e.act > 0 && (e.state === STATE.DIVE_LEFT || e.state === STATE.DIVE_RIGHT ||
+                       e.state === STATE.DIVE_HIGH || e.state === STATE.PUNCH ||
+                       e.state === STATE.CATCH || e.state === STATE.THROW);
+}
+
+// Reposicao: com a bola nas maos, chuta (forte, longe) ou arremessa (rasteiro,
+// preciso). Sao os mesmos botoes de chute e passe do jogador de linha.
+function goleiroRepoe(w, e, comPe) {
+  const b = w.ball;
+  const side = e.team === 0 ? 1 : -1;
+  let dx = (e.aimx ?? 0) - b.x, dz = (e.aimz ?? 0) - b.z;
+  let l = Math.hypot(dx, dz);
+  if (l < 0.1) { dx = 0; dz = -side; l = 1; }
+  dx /= l; dz /= l;
+  const sp = comPe ? GOLEIRO.reposPe : GOLEIRO.reposMao;
+  b.y = Math.max(b.y, comPe ? 0.5 : 1.4);
+  b.vx = dx * sp; b.vz = dz * sp;
+  b.vy = comPe ? 6.0 : 2.6;
+  b.spinY = 0;
+  e.yaw = Math.atan2(dx, dz);
+  e.state = comPe ? STATE.SHOT_TECHNIQUE : STATE.THROW;
+  e.act = comPe ? 0.24 : 0.38;
+  e.cool = 0.30;
+  e.kickCd = 0.8;
+  w.ownerId = 0;
+  w.lastTouchEntId = e.id;
+  e.semBolaAte = w.tick + RECUO_TOQUE;
+}
+
+function keeperInput(w, e, input, dt) {
+  const prev = e.prev || {};
+  const pressed = (k) => input[k] && !prev[k];
+  e.aimx = input.aimx; e.aimy = input.aimy; e.aimz = input.aimz;
+
+  const side = e.team === 0 ? 1 : -1;
+  const comBola = w.ownerId === e.id;
+
+  // Encaixar: segurar o botao abre a janela em que a defesa vira posse em vez
+  // de rebote. E o que separa "espalmou" de "encaixou firme".
+  if (input.steal) e.encaixando = GOLEIRO.janelaEncaixe;
+  else e.encaixando = Math.max(0, e.encaixando - dt);
+
+  if (comBola) {
+    // Bola nas maos: fica parado e repoe no chute ou no passe
+    e.vx = damp(e.vx, 0, 9, dt);
+    e.vz = damp(e.vz, 0, 9, dt);
+    if (e.kickCd <= 0 && (pressed("shoot") || pressed("pass"))) {
+      goleiroRepoe(w, e, !!input.shoot);
+    } else {
+      dribbleBall(w, e, dt);
+      if (e.act <= 0) e.state = STATE.CATCH;
+    }
+    guardarPrev(e, input);
+    return;
+  }
+
+  if (!goleiroOcupado(e) && e.cool <= 0 && e.y <= 0.08) {
+    // PULO = mergulhar. Com direcional para o lado, voa para aquele lado; sem
+    // direcional, sobe reto para a bola alta. E o "pular para pegar a bola".
+    if (pressed("jump")) {
+      // O gol fica sempre num dos fundos (eixo Z), entao o lado do mergulho e
+      // simplesmente o X do mundo — e o input ja chega em coordenadas do mundo.
+      // Nao ha sinal para inverter: o jogador empurra na direcao que ve na tela.
+      if (Math.abs(input.dx) > 0.35) {
+        const dir = Math.sign(input.dx);
+        e.mergDir = dir;
+        e.mergWorld = dir;
+        // A animacao usa o lado do CORPO do goleiro, que olha para o campo.
+        const paraDireitaDele = side > 0 ? -dir : dir;
+        e.state = paraDireitaDele > 0 ? STATE.DIVE_RIGHT : STATE.DIVE_LEFT;
+        e.act = GOLEIRO.durMerg;
+        e.cool = GOLEIRO.durMerg + GOLEIRO.recupMerg;
+        e.vx = dir * GOLEIRO.impMerg;
+        e.vy = GOLEIRO.impMergY;
+      } else {
+        e.mergDir = 0; e.mergWorld = 0;
+        e.state = STATE.DIVE_HIGH;
+        e.act = GOLEIRO.durSalto;
+        e.cool = GOLEIRO.durSalto + 0.15;
+        e.vy = GOLEIRO.impSalto;
+      }
+      guardarPrev(e, input);
+      return;
+    }
+    // CARRINHO = soco: tira a bola da area sem risco de deixar rebote no pe.
+    if (pressed("tackle")) {
+      e.state = STATE.PUNCH; e.act = GOLEIRO.durSoco; e.cool = GOLEIRO.durSoco + 0.20;
+      const b = w.ball;
+      if (dist2(e.x, e.z, b.x, b.z) < GOLEIRO.socoAlcance && b.y < 3.4) {
+        let dx = b.x - e.x, dz = b.z - e.z;
+        const l = Math.hypot(dx, dz) || 1;
+        // Soca para a frente e para o lado de onde a bola veio
+        b.vx = (dx / l) * GOLEIRO.socoForca * 0.7 + (b.x >= 0 ? 1 : -1) * 6;
+        b.vz = -side * GOLEIRO.socoForca;
+        b.vy = 5.2;
+        b.spinY = 0;
+        w.ownerId = 0;
+        w.lastTouchEntId = e.id;
+        e.semBolaAte = w.tick + RECUO_TOQUE;
+      }
+      guardarPrev(e, input);
+      return;
+    }
+  }
+
+  guardarPrev(e, input);
+
+  // Mergulho/salto em andamento: o corpo segue o impulso, sem direcao
+  if (goleiroOcupado(e)) {
+    e.vx = damp(e.vx, 0, e.state === STATE.PUNCH ? 8 : 2.2, dt);
+    e.vz = damp(e.vz, 0, 6, dt);
+    return;
+  }
+
+  // Locomocao normal, presa a area: goleiro nao vira atacante
+  const mag = Math.hypot(input.dx, input.dz);
+  const sp = (input.sprint ? GOLEIRO.velocidade * 1.25 : GOLEIRO.velocidade);
+  if (mag > 0.14) {
+    const nx = input.dx / mag, nz = input.dz / mag, m = Math.min(1, mag);
+    e.vx = damp(e.vx, nx * sp * m, 16, dt);
+    e.vz = damp(e.vz, nz * sp * m, 16, dt);
+    e.yaw = Math.atan2(nx, nz);
+    if (e.act <= 0) e.state = input.sprint ? STATE.SPRINT : STATE.RUN;
+  } else {
+    e.vx = damp(e.vx, 0, 13, dt);
+    e.vz = damp(e.vz, 0, 13, dt);
+    if (e.act <= 0) e.state = STATE.IDLE;
+  }
+}
+
+// Prende o goleiro a propria area depois da integracao.
+function prenderNaArea(e) {
+  const side = e.team === 0 ? 1 : -1;
+  const linha = side * HH;
+  e.x = clamp(e.x, -GOLEIRO.areaX, GOLEIRO.areaX);
+  if (side > 0) e.z = clamp(e.z, linha - GOLEIRO.areaZ, linha - 0.6);
+  else e.z = clamp(e.z, linha + 0.6, linha + GOLEIRO.areaZ);
+}
+
 // ─────────────────────────── movimentacao ──────────────────────────────────
+
+// Quanto o jogador empurrava para o LADO da linha do chute quando soltou o
+// botao (-1 a 1). E o unico controle da curva: nenhum botao novo.
+function lateralDoDirecional(w, e, input) {
+  const mag = Math.hypot(input.dx || 0, input.dz || 0);
+  if (mag < 0.20) return 0;
+  const b = w.ball;
+  let fx = (e.aimx ?? 0) - b.x, fz = (e.aimz ?? 0) - b.z;
+  const fl = Math.hypot(fx, fz);
+  if (fl < 0.1) { fx = Math.sin(e.yaw); fz = Math.cos(e.yaw); }
+  else { fx /= fl; fz /= fl; }
+  // Vetor lateral da linha do chute, mesma convencao do resto do jogo
+  const sx = -fz, sz = fx;
+  return clamp(((input.dx / mag) * sx + (input.dz / mag) * sz) * Math.min(1, mag / 0.85), -1, 1);
+}
 
 // Copia o input para e.prev SEM alocar. Antes era `e.prev = { ...input }`, um
 // objeto novo por jogador por tick — 240 objetos por segundo num 4v4, so para o
@@ -691,6 +962,9 @@ function applyInput(w, e, input, dt) {
     const over = (held - KICK.safe) / (KICK.max - KICK.safe);
     e.charge = 0;
     e.state = STATE.IDLE;
+    // Componente lateral do direcional em relacao a linha do chute: empurrar
+    // para o lado no momento de soltar e o que curva a bola.
+    const lat = lateralDoDirecional(w, e, input);
     // Combo (drible + chute na janela): vira um drible de vitrine, nao um chute
     if (dist2(e.x, e.z, w.ball.x, w.ball.z) <= 3.2 &&
         Math.abs(w.tick - (e.lastDribT ?? -1e9)) <= COMBO_WINDOW * CFG.TICK_HZ) {
@@ -699,7 +973,7 @@ function applyInput(w, e, input, dt) {
       guardarPrev(e, input);
       return;
     }
-    doShoot(w, e, p, over);
+    doShoot(w, e, p, over, lat);
   }
 
   // Carregamento de passe
@@ -990,32 +1264,62 @@ function keeperSave(w, px, py, pz) {
 
     const xAt = px + (b.x - px) * t;
     const yAt = py + (b.y - py) * t;
-    if (yAt > 2.8) continue;                    // passou por cima do alcance
 
     let reachCenter = gk.x;
-    let reach = 1.6;
-    if (gk.state === STATE.DIVE_RIGHT) { reachCenter += 1.1; reach = 2.5; }
-    if (gk.state === STATE.DIVE_LEFT) { reachCenter -= 1.1; reach = 2.5; }
-    if (gk.state === STATE.CATCH) reach = 2.0;
+    let reach, teto;
+    const mergulhando = gk.state === STATE.DIVE_LEFT || gk.state === STATE.DIVE_RIGHT;
 
+    if (gk.isBot) {
+      // Goleiro da maquina: defende por proximidade, como sempre defendeu.
+      reach = 1.6; teto = 2.8;
+      if (gk.state === STATE.DIVE_RIGHT) { reachCenter += 1.1; reach = 2.5; }
+      if (gk.state === STATE.DIVE_LEFT) { reachCenter -= 1.1; reach = 2.5; }
+      if (gk.state === STATE.CATCH) reach = 2.0;
+    } else {
+      // Goleiro humano: parado, so pega o que vem em cima dele. O alcance longo
+      // e o alto so existem se ele tiver se jogado para o lado certo — e essa
+      // escolha que faz a posicao valer a pena.
+      reach = GOLEIRO.alcanceParado;
+      teto = GOLEIRO.alturaParado;
+      if (mergulhando) {
+        reach = GOLEIRO.alcanceMerg;
+        reachCenter += (gk.mergWorld || 0) * GOLEIRO.desloqMerg;
+        teto = GOLEIRO.alturaSalto;
+      } else if (gk.state === STATE.DIVE_HIGH || gk.state === STATE.PUNCH) {
+        reach = GOLEIRO.alcanceParado + 0.55;
+        teto = GOLEIRO.alturaSalto;
+      }
+      // O corpo no ar acompanha: a altura da mao sobe com o proprio salto
+      teto += gk.y;
+    }
+
+    if (yAt > teto) continue;                   // passou por cima do alcance
     if (Math.abs(xAt - reachCenter) > reach) continue;
 
     // Defendeu: coloca a bola no ponto de contato
     b.x = xAt; b.y = Math.max(yAt, CFG.BALL_R); b.z = plane;
     const speed = Math.hypot(b.vx, b.vy, b.vz);
-    const hard = speed >= 20 || yAt > 1.5;
+    // O bot decide pela dificuldade da bola. O humano decide com o botao de
+    // encaixar: segurou na hora do contato e a bola nao veio absurda, encaixou.
+    const hard = gk.isBot
+      ? (speed >= 20 || yAt > 1.5)
+      : !(gk.encaixando > 0 && speed < GOLEIRO.encaixeVelMax);
     if (hard) {
       // Espalma para o lado
       b.vz = -b.vz * 0.35;
       b.vx = (xAt >= reachCenter ? 1 : -1) * (9.5 + Math.random() * 5);
       b.vy = 3.0 + Math.random() * 1.8;
-      gk.state = xAt > gk.x ? STATE.DIVE_RIGHT : STATE.DIVE_LEFT;
-      gk.act = 0.75; gk.cool = 0.8;
+      if (gk.isBot || !(mergulhando || gk.state === STATE.DIVE_HIGH)) {
+        gk.state = xAt > gk.x ? STATE.DIVE_RIGHT : STATE.DIVE_LEFT;
+        gk.act = 0.75; gk.cool = 0.8;
+      }
       w.ownerId = 0;
     } else {
       // Encaixa firme
       b.vx = b.vy = b.vz = 0;
-      gk.state = STATE.CATCH; gk.act = 0.9; gk.cool = 0.6; gk.kickCd = 1.2;
+      gk.state = STATE.CATCH; gk.act = 0.9; gk.cool = 0.6;
+      gk.kickCd = gk.isBot ? 1.2 : 0.5;   // o humano repoe quando quiser
+      gk.encaixando = 0;
       w.ownerId = gk.id;
     }
     return true;
@@ -1145,6 +1449,7 @@ export function step(w, dt, inputs) {
     e.act = Math.max(0, e.act - dt);
     e.kickCd = Math.max(0, e.kickCd - dt);
     e.stunned = Math.max(0, e.stunned - dt);
+    if (e.role === "keeper" && e.isBot) e.encaixando = 0;
 
     // Fim de animacao volta para idle
     if (e.act <= 0 && e.state !== STATE.IDLE && e.state !== STATE.RUN &&
@@ -1156,7 +1461,8 @@ export function step(w, dt, inputs) {
 
     const input = inputs.get(e.id);
     if (input && !e.isBot) {
-      applyInput(w, e, input, dt);
+      if (e.role === "keeper") keeperInput(w, e, input, dt);
+      else applyInput(w, e, input, dt);
     } else {
       botThink(w, e, dt);
     }
@@ -1168,6 +1474,7 @@ export function step(w, dt, inputs) {
     e.z += e.vz * dt;
     e.x = clamp(e.x, -HW + 0.8, HW - 0.8);
     e.z = clamp(e.z, -HH + 0.8, HH - 0.8);
+    if (e.role === "keeper" && !e.isBot) prenderNaArea(e);
     if (e.y <= 0) {
       if (e.state === STATE.JUMP && e.vy < 0) { e.state = STATE.IDLE; e.act = 0; }
       e.y = 0; e.vy = 0;

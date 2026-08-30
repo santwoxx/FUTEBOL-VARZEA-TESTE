@@ -71,7 +71,12 @@ export const STATE = {
   DIVE_LEFT: 18,
   DIVE_RIGHT: 19,
   CATCH: 20,
-  DANCE: 21
+  DANCE: 21,
+  // Acoes exclusivas do goleiro humano. Acrescentadas NO FIM de proposito: os
+  // indices anteriores viajam nos snapshots e nao podem mudar de significado.
+  DIVE_HIGH: 22,   // defesa no alto, saltando reto
+  PUNCH: 23,       // espalmada de soco: tira a bola da area
+  THROW: 24        // reposicao com a mao
 };
 
 // Nome textual usado pelo sistema de animacao do cliente (ordem == indice STATE)
@@ -79,5 +84,6 @@ export const STATE_NAME = [
   "idle", "run", "sprint", "kick_charge", "shot_technique", "shot_power",
   "pass", "tackle", "steal", "dribble_stepover", "dribble_elastico",
   "dribble_roulette", "dribble_dragback", "dribble_rainbow", "dribble_carretilha",
-  "jump", "header", "fall", "dive_left", "dive_right", "catch_center", "dance"
+  "jump", "header", "fall", "dive_left", "dive_right", "catch_center", "dance",
+  "dive_high", "punch", "throw"
 ];

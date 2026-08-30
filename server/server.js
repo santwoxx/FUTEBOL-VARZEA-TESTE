@@ -205,6 +205,9 @@ wss.on("connection", (ws) => {
         if (msg.d?.customConfig) client.customConfig = msg.d.customConfig;
         client.uid = msg.d?.uid || null;
         client.mpGoals = typeof msg.d?.mpGoals === "number" ? msg.d.mpGoals : 0;
+        // Funcao escolhida no lobby. So "keeper" muda alguma coisa; qualquer
+        // outro valor cai na linha, que e o padrao.
+        client.role = msg.d?.role === "keeper" ? "keeper" : "field";
         client.cardTier = typeof msg.d?.cardTier === "string" ? msg.d.cardTier : "silver";
 
         // O lobby manda HELLO de novo antes de criar/entrar numa sala (o token

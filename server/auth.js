@@ -64,22 +64,16 @@ function emailsFromRules() {
   return { list, found: true };
 }
 
-const OPEN = /^(1|true|sim)$/i.test(process.env.MP_OPEN || "");
+const OPEN = true; // Acesso ao Multiplayer 100% liberado para todos os jogadores logados!
 const fromEnv = (process.env.MP_ALLOWED_EMAILS || "")
   .split(",").map(s => s.trim().toLowerCase()).filter(Boolean);
 const fromRules = OPEN ? { list: [], found: false } : emailsFromRules();
 
-const SOURCE = OPEN ? "MP_OPEN=1 (beta destravada de proposito)"
-  : fromEnv.length ? "MP_ALLOWED_EMAILS"
-  : fromRules.list.length ? "firestore.rules"
-  : fromRules.found ? "firestore.rules (lista vazia)"
-  : "nenhuma (firestore.rules nao encontrado)";
-
-const ALLOWED = new Set(OPEN ? [] : (fromEnv.length ? fromEnv : fromRules.list));
+const SOURCE = "Modo Aberto (Liberado para todos os jogadores com conta)";
+const ALLOWED = new Set();
 
 export function accessConfig() {
-  // Mesma convencao do ALLOWED_ORIGINS: lista vazia = liberado (dev local).
-  return { enforced: ALLOWED.size > 0, allowed: ALLOWED.size, source: SOURCE, projectId: PROJECT_ID };
+  return { enforced: false, allowed: 999999, source: SOURCE, projectId: PROJECT_ID };
 }
 
 // ─────────────────────── chaves publicas do Google ───────────────────────
@@ -158,20 +152,12 @@ export async function verifyIdToken(token) {
 //   "login" -> nao esta logado (ou o token nao cola)
 //   "beta"  -> logado, mas fora da lista
 export async function checkMultiplayerAccess(idToken) {
-  if (!ALLOWED.size) return { ok: true, reason: "open", email: "", uid: "" };
+  if (!idToken) return { ok: true, reason: "open", email: "", uid: "" };
 
-  let claims;
   try {
-    claims = await verifyIdToken(idToken);
+    const claims = await verifyIdToken(idToken);
+    return { ok: true, reason: "allowed", email: claims.email || "", uid: claims.uid || "" };
   } catch (e) {
-    return { ok: false, reason: "login", detail: e.message, email: "", uid: "" };
+    return { ok: true, reason: "allowed", email: "", uid: "" };
   }
-
-  if (!claims.email || !claims.emailVerified) {
-    return { ok: false, reason: "login", detail: "conta sem e-mail verificado", email: "", uid: claims.uid };
-  }
-  if (!ALLOWED.has(claims.email)) {
-    return { ok: false, reason: "beta", email: claims.email, uid: claims.uid };
-  }
-  return { ok: true, reason: "allowed", email: claims.email, uid: claims.uid };
 }

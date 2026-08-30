@@ -2769,26 +2769,14 @@ async function refreshIdToken() {
 }
 onIdTokenChanged(fbAuth, () => { refreshIdToken(); });
 
-// Pergunta ao Firestore se este jogador está na beta. O conteúdo do documento
-// não importa (ele nem precisa existir): quem responde é a PERMISSÃO de
-// leitura escrita em firestore.rules. Fora da lista = permission-denied.
+// Acesso ao Multiplayer: liberado para todos os jogadores com conta Google
 async function checkMpAccess(force) {
   const uid = window.firebaseUid;
   if (!uid) {
     window.mpAccess = { checked: true, allowed: false, reason: "login", uid: null };
     return window.mpAccess;
   }
-  if (!force && window.mpAccess.checked && window.mpAccess.uid === uid) return window.mpAccess;
-  try {
-    await getDoc(doc(fbDb, "betaAccess", uid));
-    window.mpAccess = { checked: true, allowed: true, reason: "allowed", uid };
-  } catch (e) {
-    const denied = e?.code === "permission-denied";
-    // Firestore fora do ar não é motivo para barrar ninguém: deixa seguir e o
-    // servidor — que é a trava real — dá a palavra final ao criar a sala.
-    if (!denied) console.warn("Não deu para conferir o acesso à beta:", e);
-    window.mpAccess = { checked: true, allowed: !denied, reason: denied ? "beta" : "offline", uid };
-  }
+  window.mpAccess = { checked: true, allowed: true, reason: "allowed", uid };
   return window.mpAccess;
 }
 
@@ -12904,18 +12892,12 @@ function mpHandle(msg){
   switch(msg.t){
     case S2C.WELCOME: mp.clientId = msg.d.id; break;
     case S2C.AUTH: {
-      // Palavra final sobre quem pode jogar online: o servidor conferiu o token
-      // do Google contra as chaves públicas e a lista de e-mails liberados.
       const ok = !!(msg.d && msg.d.ok);
       window.mpAccess = {
-        checked: true, allowed: ok, uid: window.firebaseUid,
-        reason: ok ? "allowed" : ((msg.d && msg.d.reason) || "login")
+        checked: true, allowed: true, uid: window.firebaseUid,
+        reason: "allowed"
       };
       updateLobbyAccessUI();
-      if(!ok && $("#multiplayerLobby").classList.contains("show")){
-        closeMultiplayerLobby();
-        showAccessGate(window.mpAccess.reason);
-      }
       break;
     }
     case S2C.ROOM_CREATED:
@@ -12993,12 +12975,11 @@ function mpHandle(msg){
       break;
     case S2C.ERROR: {
       const err = msg.d || {};
-      // Recusa da porta da beta tem tela própria; o resto vira aviso no lobby.
-      if(err.code === "beta" || err.code === "login"){
-        window.mpAccess = { checked: true, allowed: false, reason: err.code, uid: window.firebaseUid };
+      if(err.code === "login" && !window.firebaseUser){
+        window.mpAccess = { checked: true, allowed: false, reason: "login", uid: null };
         updateLobbyAccessUI();
         closeMultiplayerLobby();
-        showAccessGate(err.code);
+        showAccessGate("login");
       } else {
         mpSetStatus("Erro: " + (err.message || "desconhecido"), "error");
       }

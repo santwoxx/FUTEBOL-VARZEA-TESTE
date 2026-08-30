@@ -2424,6 +2424,7 @@ canvas{display:block;width:100%;height:100%}
         <span class="hudBadgeIcon" id="hudBadgeAway"></span>
       </div>
       <div id="clock">02:00</div>
+      <div id="mpPingBadge" style="display:none;font-size:11px;font-weight:800;letter-spacing:0.5px;color:#00f0b8;padding:2px 6px;border-radius:6px;background:rgba(0,240,184,0.12);border:1px solid rgba(0,240,184,0.3);">25ms</div>
     </div>
     <div id="voiceHud">
       <span id="voiceDot"></span>
@@ -12867,9 +12868,18 @@ function mpConnect(){
     });
     mpSetStatus("Conectado. Crie uma sala ou entre em uma aberta.");
     mpListRooms();
+
+    // Heartbeat PING periódico a cada 2.5s: mede latência em tempo real e impede timeout de proxy/Render
+    clearInterval(mp.pingTimer);
+    mp.pingTimer = setInterval(() => {
+      if(mp.ws && mp.ws.readyState === WebSocket.OPEN){
+        mpSend(C2S.PING, { t: Date.now() });
+      }
+    }, 2500);
   };
   ws.onclose = () => {
     clearTimeout(mp.wakeTimer);
+    clearInterval(mp.pingTimer);
     const wasConnected = mp.connected;
     mp.connected = false;
     if(ws !== mp.ws) return;                       // socket antigo, ignora
@@ -12884,7 +12894,14 @@ function mpConnect(){
     }
   };
   ws.onerror = () => { /* o onclose logo em seguida cuida do retry */ };
-  ws.onmessage = (ev) => mpHandle(JSON.parse(ev.data));
+  ws.onmessage = (ev) => {
+    try {
+      const msg = JSON.parse(ev.data);
+      mpHandle(msg);
+    } catch(e) {
+      console.warn("[mp] erro de parse:", e);
+    }
+  };
 }
 
 function mpHandle(msg){
@@ -12968,7 +12985,15 @@ function mpHandle(msg){
     case S2C.PLAYER_LEFT:
       break;
     case S2C.PONG:
-      if(msg.d && msg.d.t) mp.ping = Date.now() - msg.d.t;
+      if(msg.d && msg.d.t){
+        mp.ping = Date.now() - msg.d.t;
+        const pBadge = document.querySelector("#mpPingBadge");
+        if(pBadge && gameMode === "multiplayer"){
+          pBadge.style.display = "inline-block";
+          pBadge.textContent = `${mp.ping}ms`;
+          pBadge.style.color = mp.ping < 65 ? "#00f0b8" : mp.ping < 120 ? "#ffd700" : "#ff3344";
+        }
+      }
       break;
     case S2C.VOICE_TOKEN:
       voiceConnect(msg.d);
@@ -13049,6 +13074,10 @@ function mpJoinRoom(id){
 
 function mpLeave(){
   clearTimeout(mp.wakeTimer);          // cancela retry de cold start pendente
+  clearInterval(mp.pingTimer);
+  mp.pingTimer = null;
+  const pBadge = document.querySelector("#mpPingBadge");
+  if(pBadge) pBadge.style.display = "none";
   mp.retries = 0;
   if(mp.ws && mp.ws.readyState === WebSocket.OPEN){ mpSend(C2S.LEAVE, {}); try{ mp.ws.close(); }catch(e){} }
   mp.ws = null; mp.connected = false;
@@ -13757,7 +13786,7 @@ function mpUpdate(dt){
   mpGatherInput();
   mpUpdateCharge(dt);
 
-  mpAccum += dt;
+  mpAccum = Math.min(0.1, mpAccum + dt);
   const step = MP_ACC_NUM;
   while(mpAccum >= step){
     mpAccum -= step;
@@ -13783,7 +13812,7 @@ function mpUpdate(dt){
     const s = world.ents.get(id);
     if(!s) continue;
     if(c.isMe){
-      c.root.position.set(mp.localX, s.y, mp.localZ);
+      c.root.position.set(mp.localX, mp.localY != null ? mp.localY : s.y, mp.localZ);
       c.yaw = mp.localYaw;
       c.vel.set(mp.localVx, 0, mp.localVz);
       c.speed = Math.hypot(mp.localVx, mp.localVz);

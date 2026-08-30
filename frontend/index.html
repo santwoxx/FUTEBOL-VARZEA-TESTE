@@ -1968,6 +1968,8 @@ canvas{display:block;width:100%;height:100%}
         <button class="voiceModeBtn" data-voicemode="ptt" type="button">Apertar para falar</button>
         <button class="voiceModeBtn" data-voicemode="open" type="button">Sempre aberto</button>
       </div>
+    </div>
+
     <div style="margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.12)">
       <div style="font-family:'Teko',sans-serif;font-size:22px;color:#ffd700;letter-spacing:1px">ÁUDIO & MÚSICA DE FUNDO</div>
       <div style="font-size:12px;color:rgba(255,255,255,0.7);margin-top:2px">
@@ -7729,12 +7731,22 @@ for(let i = 0; i < 3; i++){
   aimDots.push(dot);
 }
 // Linha fina de mira (laser sutil)
-const aimLineGeo = new THREE.PlaneGeometry(0.04, 2.5);
-const aimLineMat = new THREE.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:0, side:THREE.DoubleSide});
+const aimLineGeo = new THREE.PlaneGeometry(0.06, 2.8);
+const aimLineMat = new THREE.MeshBasicMaterial({color:0x00f0b8, transparent:true, opacity:0, side:THREE.DoubleSide});
 const aimLine = new THREE.Mesh(aimLineGeo, aimLineMat);
 aimLine.rotation.x = -Math.PI/2;
 aimLine.visible = false;
 scene.add(aimLine);
+
+// Alvo 3D Holográfico no Gol (Mostra a gaveta e o canto exato onde o chute vai entrar)
+const goalTargetGroup = new THREE.Group();
+const goalTargetRingMat = new THREE.MeshBasicMaterial({color:0x00f0b8, transparent:true, opacity:0.85, side:THREE.DoubleSide});
+const goalTargetRing = new THREE.Mesh(new THREE.RingGeometry(0.32, 0.42, 32), goalTargetRingMat);
+const goalTargetCenter = new THREE.Mesh(new THREE.CircleGeometry(0.08, 16), new THREE.MeshBasicMaterial({color:0xffd700, transparent:true, opacity:0.95, side:THREE.DoubleSide}));
+goalTargetGroup.add(goalTargetRing);
+goalTargetGroup.add(goalTargetCenter);
+goalTargetGroup.visible = false;
+scene.add(goalTargetGroup);
 
 /* ═══════════════ BOLA ═══════════════ */
 const ball = new THREE.Mesh(
@@ -11533,8 +11545,21 @@ function endMatch(){
 }
 
 /* ═══════════════ LOOP PRINCIPAL ═══════════════ */
+let erroDeQuadroAvisado = false;
 function loop(now){
   requestAnimationFrame(loop);
+  try {
+    atualizarQuadro(now);
+  } catch(e){
+    if(!erroDeQuadroAvisado){
+      erroDeQuadroAvisado = true;
+      console.error("[quadro] erro na atualização — o jogo segue desenhando:", e);
+    }
+  }
+  renderer.render(scene, camera);
+}
+
+function atualizarQuadro(now){
   const realDt = Math.min(0.033, (now - last)/1000);
   last = now;
 
@@ -11661,7 +11686,6 @@ function loop(now){
   }
 
   if(typeof updateVFX === "function") updateVFX(dt);
-  renderer.render(scene, camera);
 }
 /* ═══════════════════════ PROTEÇÃO DE NAVEGADOR & MODO TELA CHEIA ═══════════════════════ */
 // 1. Evita fechamento acidental da aba/janela do Chrome durante a jogatina
@@ -12727,7 +12751,14 @@ function souGoleiro(){
   return !!(c && c.role === "keeper");
 }
 
-const MP_INTERP = 0.10, MP_MAX_SNAP = 24, MP_ACC_NUM = 1/30;
+// Atraso de interpolação. Era fixo em 100ms — o suficiente para uma rede boa,
+// e pouco demais para uma ruim: quando dois snapshots atrasavam, o buffer
+// esvaziava e os outros jogadores CONGELAVAM por um quadro. Agora o atraso
+// acompanha o espaçamento real medido dos pacotes: rede boa continua nos 100ms
+// (resposta máxima), rede ruim ganha folga e a imagem para de travar.
+const MP_INTERP_MIN = 0.09, MP_INTERP_MAX = 0.26;
+let mpInterpAtual = 0.10;
+const MP_MAX_SNAP = 24, MP_ACC_NUM = 1/30;
 const MP_MAX_RETRIES = 12;   // ~48s de tentativas: cobre o cold start do Render free
 
 // Atalhos usados pelos botões de toque: no online a posse e a posição do meu
@@ -13025,6 +13056,7 @@ function mpClearRoster(){
   mp.hudScore = null; mp.hudClock = null;
   mp.localState = "idle"; mp.localAct = 0;
   mp.dribbleSlot = 0; mp.localDribCd = 0; mp.localGkCd = 0;
+  mp.ultimoSnapT = 0; mp.piorGap = 0; mpInterpAtual = 0.10;
   mpSegurando.steal = false;
   lastHasBallUI = null; lastGkUI = null;   // força os rótulos a se refazerem no novo modo
   for(let i = 0; i < MP_TOQUES.length; i++) mpToque[MP_TOQUES[i]] = false;
@@ -13152,6 +13184,19 @@ function mpEndMatch(){
 // ───────────────────── snapshot: buffer + interpolação ─────────────────────
 function mpOnSnapshot(d){
   const now = performance.now() / 1000;
+
+  // Espaçamento entre pacotes: o servidor manda a 20 Hz (50ms), mas o que chega
+  // varia com o jitter. Guardamos o pior espaçamento recente e mantemos ~2,2
+  // pacotes de folga — sobe rápido quando a rede piora, desce devagar quando
+  // melhora, para o atraso não ficar oscilando na cara do jogador.
+  if(mp.ultimoSnapT){
+    const gap = now - mp.ultimoSnapT;
+    mp.piorGap = Math.max(gap, (mp.piorGap || 0) * 0.94);
+    const alvo = clamp(mp.piorGap * 2.2, MP_INTERP_MIN, MP_INTERP_MAX);
+    mpInterpAtual += (alvo - mpInterpAtual) * (alvo > mpInterpAtual ? 0.5 : 0.04);
+  }
+  mp.ultimoSnapT = now;
+
   mp.snaps.push({ time: now, data: d });
   if(mp.snaps.length > MP_MAX_SNAP) mp.snaps.shift();
   mp.score = d.s || [0,0];
@@ -13365,7 +13410,7 @@ function mpPairEnt(list, id, i){
 }
 
 function mpInterpolate(){
-  const renderTime = performance.now()/1000 - MP_INTERP;
+  const renderTime = performance.now()/1000 - mpInterpAtual;
   const out = mpWorld;
   out.ball = null;
   if(!mp.snaps.length){ out.ents.clear(); return out; }
@@ -13397,6 +13442,11 @@ function mpInterpolate(){
     mpBallOut.y = clamp(a.data.b[1] + (vy * dt - 0.5 * 18 * dt * dt), 0.28, CFG.CEIL - 0.28);
     mpBallOut.z = a.data.b[2] + vz * dt;
   }
+  // Sem pacote futuro (lag), os companheiros e adversários ficavam PARADOS no
+  // último snapshot e depois davam um salto quando o próximo chegava. Aqui eles
+  // seguem pela própria velocidade, do mesmo jeito que a bola já seguia — o
+  // erro de meio quadro é invisível perto do congelamento que havia antes.
+  const extrap = b ? 0 : Math.min(0.25, Math.max(0, renderTime - a.time));
   const bd = b ? b.data : a.data;
   const ae = a.data.e;
   for(let i = 0; i < ae.length; i++){
@@ -13406,9 +13456,9 @@ function mpInterpolate(){
     // Mutação no lugar: o objeto da entidade sobrevive de um frame para o outro.
     let o = out.ents.get(ea[0]);
     if(!o){ o = { x:0, y:0, z:0, yaw:0, state:0, vx:0, vz:0, charge:0, call:0 }; out.ents.set(ea[0], o); }
-    o.x = ea[1]+(eb[1]-ea[1])*t;
+    o.x = ea[1]+(eb[1]-ea[1])*t + (ea[6]||0)*extrap;
     o.y = ea[2]+(eb[2]-ea[2])*t;
-    o.z = ea[3]+(eb[3]-ea[3])*t;
+    o.z = ea[3]+(eb[3]-ea[3])*t + (ea[7]||0)*extrap;
     o.yaw = ea[4]+dy*t;
     o.state = eb[5];
     o.vx = ea[6]+(eb[6]-ea[6])*t;

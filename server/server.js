@@ -117,6 +117,7 @@ const server = http.createServer((req, res) => {
 // servidor. Só vale quando ALLOWED_ORIGINS está definida.
 const wss = new WebSocketServer({
   server,
+  perMessageDeflate: false, // Desliga compressão para eliminar overhead de CPU e latência
   verifyClient: ({ origin }) => originAllowed(origin)
 });
 const rooms = new Map();      // roomId -> Room
@@ -164,6 +165,13 @@ function withMpAccess(client, run) {
 }
 
 wss.on("connection", (ws) => {
+  try {
+    if (ws._socket) {
+      ws._socket.setNoDelay(true); // Desativa algoritmo de Nagle (0ms buffer de pacotes)
+      ws._socket.setKeepAlive(true, 10000);
+    }
+  } catch(e){}
+
   const client = {
     id: nextClientId++,
     ws,

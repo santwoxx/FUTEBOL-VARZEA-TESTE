@@ -13447,6 +13447,18 @@ function mpPairEnt(list, id, i){
   return null;
 }
 
+// Interpolação Cúbica de Hermite (Padrão Pro Esports / Rocket League / Valorant):
+// Garante continuidade de velocidade (C1), aceleração física suave e zero solavancos
+function hermite1D(p0, v0, p1, v1, dt, t){
+  const t2 = t * t;
+  const t3 = t2 * t;
+  const h00 = 2 * t3 - 3 * t2 + 1;
+  const h10 = t3 - 2 * t2 + t;
+  const h01 = -2 * t3 + 3 * t2;
+  const h11 = t3 - t2;
+  return h00 * p0 + h10 * (v0 || 0) * dt + h01 * p1 + h11 * (v1 || 0) * dt;
+}
+
 function mpInterpolate(){
   const renderTime = performance.now()/1000 - mpInterpAtual;
   const out = mpWorld;
@@ -13463,10 +13475,11 @@ function mpInterpolate(){
   mpBallOut.vy = a.data.b[4] || 0;
   mpBallOut.vz = a.data.b[5] || 0;
   if (b && b.time > a.time) {
-    t = Math.min(1, Math.max(0, (renderTime - a.time)/(b.time - a.time)));
-    mpBallOut.x = a.data.b[0] + (b.data.b[0] - a.data.b[0]) * t;
-    mpBallOut.y = a.data.b[1] + (b.data.b[1] - a.data.b[1]) * t;
-    mpBallOut.z = a.data.b[2] + (b.data.b[2] - a.data.b[2]) * t;
+    const dtSnap = b.time - a.time;
+    t = Math.min(1, Math.max(0, (renderTime - a.time) / dtSnap));
+    mpBallOut.x = hermite1D(a.data.b[0], a.data.b[3]||0, b.data.b[0], b.data.b[3]||0, dtSnap, t);
+    mpBallOut.y = Math.max(0.28, hermite1D(a.data.b[1], a.data.b[4]||0, b.data.b[1], b.data.b[4]||0, dtSnap, t));
+    mpBallOut.z = hermite1D(a.data.b[2], a.data.b[5]||0, b.data.b[2], b.data.b[5]||0, dtSnap, t);
     mpBallOut.vx = (a.data.b[3] || 0) + ((b.data.b[3] || 0) - (a.data.b[3] || 0)) * t;
     mpBallOut.vy = (a.data.b[4] || 0) + ((b.data.b[4] || 0) - (a.data.b[4] || 0)) * t;
     mpBallOut.vz = (a.data.b[5] || 0) + ((b.data.b[5] || 0) - (a.data.b[5] || 0)) * t;
@@ -13480,10 +13493,7 @@ function mpInterpolate(){
     mpBallOut.y = clamp(a.data.b[1] + (vy * dt - 0.5 * 18 * dt * dt), 0.28, CFG.CEIL - 0.28);
     mpBallOut.z = a.data.b[2] + vz * dt;
   }
-  // Sem pacote futuro (lag), os companheiros e adversários ficavam PARADOS no
-  // último snapshot e depois davam um salto quando o próximo chegava. Aqui eles
-  // seguem pela própria velocidade, do mesmo jeito que a bola já seguia — o
-  // erro de meio quadro é invisível perto do congelamento que havia antes.
+  // Sem pacote futuro (lag), os companheiros e adversários seguem por Dead Reckoning
   const extrap = b ? 0 : Math.min(0.25, Math.max(0, renderTime - a.time));
   const bd = b ? b.data : a.data;
   const ae = a.data.e;
@@ -13491,18 +13501,26 @@ function mpInterpolate(){
     const ea = ae[i];
     const eb = mpPairEnt(bd.e, ea[0], i) || ea;
     const dy = ((eb[4]-ea[4]+Math.PI*3)%(Math.PI*2)) - Math.PI;
-    // Mutação no lugar: o objeto da entidade sobrevive de um frame para o outro.
+    // Mutação no lugar: o objeto da entidade sobrevive de um frame para o outro sem GC
     let o = out.ents.get(ea[0]);
     if(!o){ o = { x:0, y:0, z:0, yaw:0, state:0, vx:0, vz:0, charge:0, call:0 }; out.ents.set(ea[0], o); }
-    o.x = ea[1]+(eb[1]-ea[1])*t + (ea[6]||0)*extrap;
-    o.y = ea[2]+(eb[2]-ea[2])*t;
-    o.z = ea[3]+(eb[3]-ea[3])*t + (ea[7]||0)*extrap;
-    o.yaw = ea[4]+dy*t;
+    if(b && b.time > a.time){
+      const dtSnap = b.time - a.time;
+      o.x = hermite1D(ea[1], ea[6]||0, eb[1], eb[6]||0, dtSnap, t);
+      o.y = ea[2] + (eb[2] - ea[2]) * t;
+      o.z = hermite1D(ea[3], ea[7]||0, eb[3], eb[7]||0, dtSnap, t);
+    } else {
+      o.x = ea[1] + (ea[6]||0) * extrap;
+      o.y = ea[2];
+      o.z = ea[3] + (ea[7]||0) * extrap;
+    }
+    const smoothRot = t * t * (3 - 2 * t);
+    o.yaw = ea[4] + dy * smoothRot;
     o.state = eb[5];
-    o.vx = ea[6]+(eb[6]-ea[6])*t;
-    o.vz = ea[7]+(eb[7]-ea[7])*t;
-    o.charge = (ea[8]||0)+((eb[8]||0)-(ea[8]||0))*t;
-    o.call = eb[9] || 0;      // pedido de bola: bandeira, nao interpola
+    o.vx = (ea[6]||0) + ((eb[6]||0) - (ea[6]||0)) * t;
+    o.vz = (ea[7]||0) + ((eb[7]||0) - (ea[7]||0)) * t;
+    o.charge = (ea[8]||0) + ((eb[8]||0) - (ea[8]||0)) * t;
+    o.call = eb[9] || 0;
   }
   return out;
 }

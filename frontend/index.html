@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>CREATIVE FOOTBALL — Favela Edition</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚽</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Teko:wght@600;700&display=swap" rel="stylesheet">
@@ -581,7 +582,30 @@ canvas{display:block;width:100%;height:100%}
   opacity:0.6;border-color:rgba(255,255,255,0.2);color:rgba(255,255,255,0.6);
   background:rgba(255,255,255,0.06);
 }
+.lobbyTopRight{
+  display:flex;align-items:center;gap:8px;flex-shrink:0;
+}
 .fsBtnIcon{font-size:14px;line-height:1}
+
+@media (max-width: 1280px){
+  .lobbyNavTabs{gap:6px}
+  .lobbyTabBtn{font-size:12px;padding:18px 6px;letter-spacing:1px}
+  .navKeyBadge{display:none}
+}
+@media (max-width: 980px){
+  .lobbyTopBar{padding:0 12px;gap:6px}
+  .lobbyBrandLogo{font-size:20px}
+  .lobbyTabBtn{font-size:11px;padding:18px 4px;letter-spacing:0.5px}
+  .lobbyFullscreenBtn{padding:5px 9px;font-size:11px}
+  .lobbyProfileChip{padding:5px 9px;font-size:11px}
+}
+@media (max-width: 720px){
+  .lobbyTopBar{height:auto;flex-wrap:wrap;padding:8px 10px;gap:6px}
+  .lobbyNavTabs{width:100%;justify-content:space-between;order:3;gap:2px}
+  .lobbyTabBtn{padding:8px 3px;font-size:10px}
+  .lobbyMainContent{padding:0 12px}
+}
+
 .hudFsBtn{
   position:absolute;top:max(10px,env(safe-area-inset-top));right:max(16px,env(safe-area-inset-right));
   background:rgba(14,9,20,0.85);border:1.5px solid rgba(255,215,0,0.4);color:#ffd700;
@@ -1830,7 +1854,7 @@ canvas{display:block;width:100%;height:100%}
       <span class="navKeyBadge">E</span>
     </div>
 
-    <div style="display:flex;align-items:center;gap:10px">
+    <div class="lobbyTopRight">
       <button id="btnMusicToggleLobby" class="lobbyFullscreenBtn musicTopBtn" type="button" title="Ligar / Desligar Música de Fundo">
         <span class="fsBtnIcon">🎵</span>
         <span class="fsBtnLabel">MÚSICA</span>
@@ -11535,11 +11559,18 @@ function loop(now){
     animateHumanoid(player, dt, false);
   } else if(gameMode === "menu"){
     shake = 0;
-    // Exibição cinematográfica estável do personagem 3D no Lobby (de frente para a câmera!)
-    player.root.position.set(1.55, 0, 0);
+    const aspect = innerWidth / Math.max(1, innerHeight);
+    // Posição adaptativa para o personagem nunca sumir da tela mesmo em tela dividida / DevTools aberto
+    const isNarrow = aspect < 1.45;
+    const px = isNarrow ? (aspect < 1.05 ? 0.35 : 0.85) : 1.45;
+    const cx = isNarrow ? (aspect < 1.05 ? -0.15 : 0.15) : 0.38;
+    const lx = isNarrow ? (aspect < 1.05 ? 0.35 : 0.70) : 0.88;
+
+    // Exibição cinematográfica estável do personagem 3D no Lobby
+    player.root.position.set(px, 0, 0);
     player.vel.set(0, 0, 0);
-    player.yaw = Math.PI - 0.18; // De frente para o usuário!
-    ball.position.set(1.15, 0.28, 0.35);
+    player.yaw = Math.PI - 0.15; // De frente para o usuário!
+    ball.position.set(px - 0.35, 0.28, 0.35);
     ballVel.set(0, 0, 0);
 
     // Esconde os demais jogadores para que fiquem fora da visão da câmera
@@ -11551,8 +11582,8 @@ function loop(now){
     gkOwn.root.position.set(-90, -30, 0);
     gkFoe.root.position.set(0, -30, -HH);
 
-    camera.position.set(0.40, 1.36, 3.8);
-    camera.lookAt(0.90, 1.22, 0);
+    camera.position.set(cx, 1.36, 3.8);
+    camera.lookAt(lx, 1.22, 0);
     animateHumanoid(player, dt, false);
   } else if(running && celebration){
     // ════════════ GOL: JOGO CONGELADO, CÂMERA NO AUTOR, COMEMORAÇÃO ════════════

@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "104415793129",
+    "project_id": "creative-footbal",
+    "storage_bucket": "creative-footbal.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:104415793129:android:85fa5f2bc6502fd4bd8578",
+        "android_client_info": {
+          "package_name": "com.creativefootball.varzea"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "104415793129-u1dgpmtu6qimncia8p3vgkjhajfv5ub4.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBiehdy-E_gSUP7unyd75DPziIa7q00H3s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "104415793129-u1dgpmtu6qimncia8p3vgkjhajfv5ub4.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

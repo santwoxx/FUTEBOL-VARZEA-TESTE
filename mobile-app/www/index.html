@@ -2835,6 +2835,18 @@ window.googleLogin = googleLogin;
 window.onNativeGoogleAuthSuccess = async function(email, displayName, photoUrl, idToken, uid) {
   console.log("[Native Google Auth] Sucesso! Conta selecionada no aparelho:", email, displayName);
 
+  // Se o Google Play Services retornou um ID Token oficial, autentica no Firebase Auth
+  if (idToken && typeof signInWithCredential === "function") {
+    try {
+      const credential = GoogleAuthProvider.credential(idToken);
+      const res = await signInWithCredential(fbAuth, credential);
+      console.log("[Native Google Auth] Autenticado no Firebase com sucesso:", res.user);
+      return; // O onAuthStateChanged cuidará de atualizar a UI e sincronizar o perfil!
+    } catch (e) {
+      console.warn("[Native Google Auth] signInWithCredential falhou, aplicando sessão nativa direta:", e);
+    }
+  }
+
   const cleanEmail = (email || "").trim().toLowerCase();
   const safeName = displayName || cleanEmail.split("@")[0] || "CRIA";
   const user = {

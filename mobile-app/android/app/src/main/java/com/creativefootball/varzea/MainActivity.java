@@ -57,8 +57,9 @@ public class MainActivity extends BridgeActivity {
             } catch (Exception ignored) {}
         }
         
-        // Configura o seletor nativo de contas do Google do Android
+        // Configura o seletor nativo de contas do Google do Android integrado com o Firebase
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken("104415793129-u1dgpmtu6qimncia8p3vgkjhajfv5ub4.apps.googleusercontent.com")
                 .requestEmail()
                 .requestProfile()
                 .build();

@@ -27,7 +27,8 @@ service cloud.firestore {
     function betaEmails() {
       return [
         "brisasofc@gmail.com",       // adm do jogo
-        "isaacbomfim.00@gmail.com"
+        "isaacbomfim.00@gmail.com",
+        "maquinadefazerdinheiroofc@gmail.com"
       ];
     }
 

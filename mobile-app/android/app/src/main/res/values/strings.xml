@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Futebol Varzea</string>
+    <string name="title_activity_main">Futebol Varzea</string>
+    <string name="package_name">com.creativefootball.varzea</string>
+    <string name="custom_url_scheme">com.creativefootball.varzea</string>
+</resources>

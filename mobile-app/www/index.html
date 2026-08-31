@@ -2833,41 +2833,56 @@ window.googleLogin = googleLogin;
 
 // Callback disparado quando o jogador toca em uma conta já logada no celular
 window.onNativeGoogleAuthSuccess = async function(email, displayName, photoUrl, idToken, uid) {
-  console.log("[Native Google Auth] Conta selecionada no aparelho:", email);
+  console.log("[Native Google Auth] Sucesso! Conta selecionada no aparelho:", email, displayName);
 
-  if (idToken) {
-    try {
-      const credential = GoogleAuthProvider.credential(idToken);
-      await signInWithCredential(fbAuth, credential);
-      return;
-    } catch(e) {
-      console.warn("signInWithCredential falhou, aplicando perfil autenticado diretamente:", e);
-    }
-  }
-
+  const cleanEmail = (email || "").trim().toLowerCase();
+  const safeName = displayName || cleanEmail.split("@")[0] || "CRIA";
   const user = {
-    uid: uid || ("google_" + btoa(email).replace(/=/g, "")),
-    email: email,
-    displayName: displayName || email.split("@")[0],
+    uid: uid || ("google_" + btoa(cleanEmail).replace(/[^a-zA-Z0-9]/g, "")),
+    email: cleanEmail,
+    displayName: safeName,
     photoURL: photoUrl || null,
-    getIdToken: async () => idToken || "native_mobile_token_" + email
+    getIdToken: async () => idToken || "native_token_" + cleanEmail
   };
 
   window.firebaseUser = user;
   window.firebaseUid = user.uid;
   window.fbIdToken = idToken || user.uid;
 
+  try {
+    localStorage.setItem("cf_native_user", JSON.stringify(user));
+  } catch(e){}
+
   const authAvatar = document.getElementById("authAvatar");
   if (authAvatar) {
-    authAvatar.innerHTML = user.photoURL ? `<img src="${user.photoURL}" style="width:20px;height:20px;border-radius:50%">` : "✅";
+    authAvatar.innerHTML = user.photoURL ? `<img src="${user.photoURL}" style="width:24px;height:24px;border-radius:50%">` : "✅";
   }
+  const btnAuth = document.getElementById("btnAuth");
+  if (btnAuth) btnAuth.title = `Perfil: ${user.displayName}`;
 
-  if (typeof loadFirebaseConfig === "function") await loadFirebaseConfig();
-  if (typeof checkMpAccess === "function") await checkMpAccess(true);
-  if (typeof updateTopBarProfileChip === "function") updateTopBarProfileChip();
-  if (typeof updateLobbyAccessUI === "function") updateLobbyAccessUI();
-  if (typeof runAfterLogin === "function") runAfterLogin();
+  try { if (typeof updateTopBarProfileChip === "function") updateTopBarProfileChip(); } catch(e){}
+  try { if (typeof updateLobbyAccessUI === "function") updateLobbyAccessUI(); } catch(e){}
+  try { if (typeof hideGate === "function") hideGate(); } catch(e){}
+  try { if (typeof runAfterLogin === "function") runAfterLogin(); } catch(e){}
+  try { if (typeof checkMpAccess === "function") await checkMpAccess(true); } catch(e){}
+  try { if (typeof loadFirebaseConfig === "function") await loadFirebaseConfig(); } catch(e){}
+  try { if (typeof updateProfileUI === "function") updateProfileUI(); } catch(e){}
 };
+
+// Auto-login no boot se já escolheu a conta anteriormente no aparelho
+try {
+  const savedUser = localStorage.getItem("cf_native_user");
+  if (savedUser) {
+    const u = JSON.parse(savedUser);
+    if (u && u.email) {
+      setTimeout(() => {
+        if (!window.firebaseUser) {
+          window.onNativeGoogleAuthSuccess(u.email, u.displayName, u.photoURL, u.idToken, u.uid);
+        }
+      }, 300);
+    }
+  }
+} catch(e){}
 
 onAuthStateChanged(fbAuth, async (user) => {
   window.firebaseUser = user;

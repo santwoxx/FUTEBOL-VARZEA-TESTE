@@ -7782,6 +7782,7 @@ const bulletTimeState = {
 
 const camF = new THREE.Vector3(0,0,-1), camR = new THREE.Vector3(1,0,0);
 const tA = new THREE.Vector3(), tB = new THREE.Vector3(), tC = new THREE.Vector3();
+const tDir = new THREE.Vector3(), dribbleSideVec = new THREE.Vector3(), mpBallVel = new THREE.Vector3();
 
 let isMouseLooking = true;
 let isRightMouseDown = false;
@@ -8798,14 +8799,19 @@ const COMBO_MOVES = [
   { id: "dribble_rainbow",    name: "CHAPÉU DUPLO! 🌈⚡", sub: "CHUTE + DRIBLE JUNTOS = CHAPÉU NA CARA", duration: 0.80, boost: 6.4 },
   { id: "dribble_carretilha", name: "CARRETILHA DO REI! 👑🔥", sub: "ROLOU NA SOLA E ENFIOU NO MEIO DAS PERNAS", duration: 0.62, boost: 5.6 }
 ];
-const COMBO_WINDOW = 0.18; // segundos de tolerância entre os dois cliques
+const COMBO_WINDOW = 0.22; // segundos de tolerância entre os dois cliques (espelha o servidor)
 let lastDribblePressT = -999, lastKickPressT = -999;
 
-// Repertório do multiplayer, na MESMA ordem de DRIBBLE_MOVES em
-// server/shared/sim.js. A lista local (DRIBBLES) tem cinco movimentos e a do
-// servidor tem seis — usar a lista errada faria a previsão do cliente escolher
-// um drible e o servidor outro, e o boneco trocaria de animação no meio.
-const MP_DRIBBLES = [...DRIBBLES, COMBO_MOVES[1]];
+// Repertório do multiplayer, na MESMA ordem de DRIBBLE_MOVES em server/shared/sim.js (6 movimentos)
+const MP_DRIBBLES = [
+  { id: "dribble_stepover",   name: "PEDALADA DO NEYMAR! ⚡", sub: "PEDALOU PRA CIMA DA MARCAÇÃO", duration: 0.70, boost: 4.8 },
+  { id: "dribble_elastico",   name: "ELÁSTICO DO BRUXO! 🔥", sub: "TOQUE RÁPIDO FORA-DENTRO", duration: 0.55, boost: 5.8 },
+  { id: "dribble_roulette",   name: "GIRO 360° / ROLETA! 🌀", sub: "GIROU COM A SOLA NA BOLA", duration: 0.75, boost: 4.5 },
+  { id: "dribble_dragback",   name: "PUXADINHA DE CRIA! 💫", sub: "PUXOU E ARRANCOU NA FRENTE", duration: 0.60, boost: 5.2 },
+  { id: "dribble_rainbow",    name: "CHAPÉU / LAMBRETA! 🌈", sub: "ELEVAÇÃO POR CIMA DO ZAGUEIRO", duration: 0.80, boost: 6.2 },
+  { id: "dribble_carretilha", name: "CARRETILHA DO REI! 👑🔥", sub: "ROLOU NA SOLA E ENFIOU NO MEIO DAS PERNAS", duration: 0.62, boost: 5.6 }
+];
+const MP_COMBO_MOVES = COMBO_MOVES;
 
 function nowSec(){ return performance.now() / 1000; }
 
@@ -9835,7 +9841,7 @@ function dribble(c, dt){
     // Fase 3: sai lançada pra frente, "enfiada" no meio das pernas do marcador.
     const prog = Math.min(1, Math.max(0, 1 - (c.act / (c.dribbleDuration || 0.62))));
     tA.set(Math.sin(c.yaw), 0, Math.cos(c.yaw));
-    const sideVec = new THREE.Vector3(-tA.z, 0, tA.x);
+    dribbleSideVec.set(-tA.z, 0, tA.x);
     let leadDist, sideOffset;
     if(prog < 0.60){
       const rProg = prog / 0.60;
@@ -9846,7 +9852,7 @@ function dribble(c, dt){
       leadDist = 0.30 + pProg * 1.55;
       sideOffset = (1 - pProg) * 0.20;
     }
-    tB.copy(c.root.position).addScaledVector(tA, leadDist).addScaledVector(sideVec, sideOffset);
+    tB.copy(c.root.position).addScaledVector(tA, leadDist).addScaledVector(dribbleSideVec, sideOffset);
     tB.y = 0.28;
     ball.position.lerp(tB, smooth(30, dt));
     ballVel.set(0, 0, 0);
@@ -9855,9 +9861,9 @@ function dribble(c, dt){
   if(c.state === "dribble_elastico"){
     const prog = Math.min(1, Math.max(0, 1 - (c.act / (c.dribbleDuration || 0.55))));
     tA.set(Math.sin(c.yaw), 0, Math.cos(c.yaw));
-    const sideVec = new THREE.Vector3(-tA.z, 0, tA.x);
+    dribbleSideVec.set(-tA.z, 0, tA.x);
     const sideOffset = prog < 0.42 ? 0.75 : -0.55;
-    tB.copy(c.root.position).addScaledVector(tA, 1.15).addScaledVector(sideVec, sideOffset);
+    tB.copy(c.root.position).addScaledVector(tA, 1.15).addScaledVector(dribbleSideVec, sideOffset);
     tB.y = 0.28;
     ball.position.lerp(tB, smooth(28, dt));
     ballVel.set(0, 0, 0);
@@ -9866,9 +9872,9 @@ function dribble(c, dt){
   if(c.state === "dribble_stepover"){
     const prog = Math.min(1, Math.max(0, 1 - (c.act / (c.dribbleDuration || 0.70))));
     tA.set(Math.sin(c.yaw), 0, Math.cos(c.yaw));
-    const sideVec = new THREE.Vector3(-tA.z, 0, tA.x);
+    dribbleSideVec.set(-tA.z, 0, tA.x);
     const sideOffset = Math.sin(prog * Math.PI * 4) * 0.38;
-    tB.copy(c.root.position).addScaledVector(tA, 1.12).addScaledVector(sideVec, sideOffset);
+    tB.copy(c.root.position).addScaledVector(tA, 1.12).addScaledVector(dribbleSideVec, sideOffset);
     tB.y = 0.28;
     ball.position.lerp(tB, smooth(28, dt));
     ballVel.set(0, 0, 0);
@@ -9906,12 +9912,12 @@ function dribble(c, dt){
 
   // Condução normal com toques rítmicos sincronizados com a passada do jogador
   tA.set(Math.sin(c.yaw), 0, Math.cos(c.yaw));
-  const sideVec = new THREE.Vector3(-tA.z, 0, tA.x);
+  dribbleSideVec.set(-tA.z, 0, tA.x);
   const touchPhase = Math.sin(c.runPhase || 0);
   const leadDist = 0.88 + Math.max(0, touchPhase) * 0.18;
   const sideOffset = touchPhase * 0.06;
 
-  tB.copy(c.root.position).addScaledVector(tA, leadDist).addScaledVector(sideVec, sideOffset);
+  tB.copy(c.root.position).addScaledVector(tA, leadDist).addScaledVector(dribbleSideVec, sideOffset);
   tB.y = 0.28;
   ball.position.lerp(tB, smooth(24, dt));
   ballVel.set(0, 0, 0);
@@ -10313,47 +10319,59 @@ const $ = s => document.querySelector(s);
 const mini = $("#mini"), mg = mini.getContext("2d");
 let miniTick = 0;
 
+function drawMiniDot(x, z, c, r, w, h){
+  const cx = (x + HW) / CFG.W * w;
+  const cz = (z + HH) / CFG.H * h;
+  mg.fillStyle = c;
+  mg.beginPath();
+  mg.arc(cx, cz, r, 0, Math.PI * 2);
+  mg.fill();
+}
+
 function drawMini(){
   const w = mini.width, h = mini.height;
-  const px = x => (x+HW)/CFG.W*w, pz = z => (z+HH)/CFG.H*h;
   mg.clearRect(0,0,w,h);
   mg.fillStyle = "#16101c"; mg.fillRect(0,0,w,h);
   mg.strokeStyle = "rgba(255,215,0,0.35)"; mg.lineWidth = 2;
   mg.beginPath(); mg.moveTo(0,h/2); mg.lineTo(w,h/2); mg.stroke();
   mg.beginPath(); mg.arc(w/2,h/2,w*0.18,0,Math.PI*2); mg.stroke();
 
-  mg.fillStyle = "#f5f5f5"; mg.fillRect(px(-GHW),0,px(GHW)-px(-GHW),5);
-  mg.fillStyle = "#ff3b4e"; mg.fillRect(px(-GHW),h-5,px(GHW)-px(-GHW),5);
-
-  const dot = (p,c,r)=>{mg.fillStyle=c;mg.beginPath();mg.arc(px(p.x),pz(p.z),r,0,Math.PI*2);mg.fill()};
+  const gLeft = (-GHW + HW) / CFG.W * w;
+  const gWidth = (2 * GHW) / CFG.W * w;
+  mg.fillStyle = "#f5f5f5"; mg.fillRect(gLeft,0,gWidth,5);
+  mg.fillStyle = "#ff3b4e"; mg.fillRect(gLeft,h-5,gWidth,5);
 
   if(gameMode === "multiplayer"){
     for(const [id, c] of mp.chars){
       const isAlly = c.team === mp.team;
       const isMe = c.isMe;
-      let color = isAlly ? (isMe ? "#00ffcc" : "#ffd700") : (c.role === "keeper" ? "#ff8800" : "#ff3b4e");
-      dot(c.root.position, color, isMe ? 6.5 : (c.role === "keeper" ? 4.5 : 5.0));
+      const color = isAlly ? (isMe ? "#00ffcc" : "#ffd700") : (c.role === "keeper" ? "#ff8800" : "#ff3b4e");
+      drawMiniDot(c.root.position.x, c.root.position.z, color, isMe ? 6.5 : (c.role === "keeper" ? 4.5 : 5.0), w, h);
       if(isMe){
+        const px = (c.root.position.x + HW) / CFG.W * w;
+        const pz = (c.root.position.z + HH) / CFG.H * h;
         mg.strokeStyle = "#00ffcc"; mg.lineWidth = 2;
-        mg.beginPath(); mg.arc(px(c.root.position.x), pz(c.root.position.z), 8.5, 0, Math.PI*2); mg.stroke();
+        mg.beginPath(); mg.arc(px, pz, 8.5, 0, Math.PI*2); mg.stroke();
       }
     }
-    dot(ball.position, "#ffffff", 4.0);
+    drawMiniDot(ball.position.x, ball.position.z, "#ffffff", 4.0, w, h);
     return;
   }
 
-  dot(foeA.root.position,"#ffffff",4.5);
-  dot(foeB.root.position,"#ffffff",4.5);
-  dot(foeC.root.position,"#ffffff",4.5);
-  dot(gkFoe.root.position,"#ffd700",4.5);
-  dot(gkOwn.root.position,"#ffd700",4.5);
-  dot(mateA.root.position,"#ffd700",5.5);
-  dot(mateB.root.position,"#00d2ff",5.5);
-  dot(ball.position,"#ffaa00",3.5);
-  dot(player.root.position,"#ff3b4e",6.5);
+  drawMiniDot(foeA.root.position.x, foeA.root.position.z, "#ffffff", 4.5, w, h);
+  drawMiniDot(foeB.root.position.x, foeB.root.position.z, "#ffffff", 4.5, w, h);
+  drawMiniDot(foeC.root.position.x, foeC.root.position.z, "#ffffff", 4.5, w, h);
+  drawMiniDot(gkFoe.root.position.x, gkFoe.root.position.z, "#ffd700", 4.5, w, h);
+  drawMiniDot(gkOwn.root.position.x, gkOwn.root.position.z, "#ffd700", 4.5, w, h);
+  drawMiniDot(mateA.root.position.x, mateA.root.position.z, "#ffd700", 5.5, w, h);
+  drawMiniDot(mateB.root.position.x, mateB.root.position.z, "#00d2ff", 5.5, w, h);
+  drawMiniDot(ball.position.x, ball.position.z, "#ffaa00", 3.5, w, h);
+  drawMiniDot(player.root.position.x, player.root.position.z, "#ff3b4e", 6.5, w, h);
 
+  const px = (player.root.position.x + HW) / CFG.W * w;
+  const pz = (player.root.position.z + HH) / CFG.H * h;
   mg.strokeStyle = "#ffd700"; mg.lineWidth = 2;
-  mg.beginPath(); mg.arc(px(player.root.position.x),pz(player.root.position.z),8.5,0,Math.PI*2); mg.stroke();
+  mg.beginPath(); mg.arc(px, pz, 8.5, 0, Math.PI*2); mg.stroke();
 }
 
 function updateScore(){ $("#score").textContent = `${score[0]} — ${score[1]}` }
@@ -13447,8 +13465,8 @@ function mpPairEnt(list, id, i){
   return null;
 }
 
-// Interpolação Cúbica de Hermite (Padrão Pro Esports / Rocket League / Valorant):
-// Garante continuidade de velocidade (C1), aceleração física suave e zero solavancos
+// Interpolação Cúbica Monótona de Hermite (Padrão Pro Esports / Rocket League / Valorant):
+// Garante continuidade de velocidade (C1), aceleração física suave e zero overshoots em quiques/impactos
 function hermite1D(p0, v0, p1, v1, dt, t){
   const t2 = t * t;
   const t3 = t2 * t;
@@ -13456,7 +13474,17 @@ function hermite1D(p0, v0, p1, v1, dt, t){
   const h10 = t3 - 2 * t2 + t;
   const h01 = -2 * t3 + 3 * t2;
   const h11 = t3 - t2;
-  return h00 * p0 + h10 * (v0 || 0) * dt + h01 * p1 + h11 * (v1 || 0) * dt;
+  const safeDt = dt > 0.0001 ? dt : 0.0001;
+  const delta = (p1 - p0) / safeDt;
+  let d0 = v0 || 0, d1 = v1 || 0;
+  if (Math.abs(delta) < 1e-4) {
+    d0 = 0; d1 = 0;
+  } else {
+    const s0 = d0 / delta, s1 = d1 / delta;
+    if (s0 < 0) d0 = 0; else if (s0 > 3) d0 = 3 * delta;
+    if (s1 < 0) d1 = 0; else if (s1 > 3) d1 = 3 * delta;
+  }
+  return h00 * p0 + h10 * d0 * safeDt + h01 * p1 + h11 * d1 * safeDt;
 }
 
 function mpInterpolate(){
@@ -13577,14 +13605,24 @@ function mpPreverDrible(){
   const dBola = Math.hypot(ball.position.x - mp.localX, ball.position.z - mp.localZ);
   if(dBola > 3.2) return;
 
-  const marcado = foeParaChapeu(mp.localX, mp.localZ, mp.localYaw,
-                                ball.position.x, ball.position.z, mpAdversarios());
+  const tNow = nowSec();
+  lastDribblePressT = tNow;
+  const isCombo = (tNow - lastKickPressT <= COMBO_WINDOW);
+
   let info;
-  if(marcado){
-    info = DRIBBLE_CHAPEU;
+  if(isCombo){
+    const comboSlot = Math.floor(tNow * 30) % MP_COMBO_MOVES.length;
+    info = MP_COMBO_MOVES[comboSlot];
+    lastKickPressT = -999;
   } else {
-    mp.dribbleSlot = ((mp.dribbleSlot || 0) + 1) % MP_DRIBBLES.length;
-    info = MP_DRIBBLES[mp.dribbleSlot];
+    const marcado = foeParaChapeu(mp.localX, mp.localZ, mp.localYaw,
+                                  ball.position.x, ball.position.z, mpAdversarios());
+    if(marcado){
+      info = DRIBBLE_CHAPEU;
+    } else {
+      mp.dribbleSlot = ((mp.dribbleSlot || 0) + 1) % MP_DRIBBLES.length;
+      info = MP_DRIBBLES[mp.dribbleSlot];
+    }
   }
 
   mp.localState = info.id;
@@ -13596,7 +13634,7 @@ function mpPreverDrible(){
   mpPreverAcao(info.id);
   flash(info.name, "#ffd700", info.sub);
   sfx.playSteal();
-  shake = marcado ? 0.20 : 0.15;
+  shake = 0.18;
 }
 
 // Espelha o bloco do PULO em keeperInput() de server/shared/sim.js. O mergulho
@@ -13668,6 +13706,15 @@ function mpGatherInput(){
   mpInputState.dance = !!mpKeys[userKeyBindings.dance];
   mpInputState.shoot = mpMouseShoot || !!mpKeys[userKeyBindings.shoot] || !!input.charging;
   mpInputState.pass = mpMousePass || !!mpKeys[userKeyBindings.pass] || !!input.passCharging;
+
+  // Marcação de press de chute para combo instantâneo
+  if(!mpPrevShoot && mpInputState.shoot){
+    lastKickPressT = nowSec();
+    if(nowSec() - lastDribblePressT <= COMBO_WINDOW){
+      const noGol = souGoleiro();
+      if(!noGol) mpPreverDrible();
+    }
+  }
 
   // Detecção local imediata de chute/passe solto para desgrudar a bola sem lag de rede
   if(mpPrevShoot && !mpInputState.shoot){
@@ -13785,12 +13832,13 @@ function mpCamera(dt, target){
   camR.set(-camF.z, 0, camF.x);
   const cp = Math.cos(camPitch), sp = Math.sin(camPitch);
   const dirx = Math.sin(camYaw)*cp, diry = sp, dirz = Math.cos(camYaw)*cp;
+  tDir.set(dirx, diry, dirz);
   const speedRatio = Math.min(1, Math.hypot(mp.localVx, mp.localVz)/13);
   const dynDist = camDistance*(1+speedRatio*0.07);
-  tB.set(camFocus.x, camFocus.y, camFocus.z).add(new THREE.Vector3(dirx, diry, dirz).multiplyScalar(-dynDist));
+  tB.copy(camFocus).addScaledVector(tDir, -dynDist);
   if(tB.y < 0.45) tB.y = 0.45;
   camera.position.lerp(tB, smooth(28, dt));
-  tC.set(camFocus.x, camFocus.y, camFocus.z).add(new THREE.Vector3(dirx, diry, dirz).multiplyScalar(20));
+  tC.copy(camFocus).addScaledVector(tDir, 20);
   camera.lookAt(tC);
   if(shake > 0){
     camera.position.x += (Math.random()-0.5)*shake;
@@ -13852,44 +13900,71 @@ function mpUpdate(dt){
       c.speed = Math.hypot(s.vx, s.vz);
     }
     c.charge = s.charge;
-    // Quem pediu a bola ganha o marcador — inclusive os bots do servidor. No
-    // online o relogio do pedido corre no servidor, entao aqui e so espelhar a
-    // bandeira do snapshot em vez de mexer em c.callT.
     mostrarPedido(c, !!s.call);
     const newSt = MP_STATE_NAME[s.state] || "idle";
+    const isLocomotion = (newSt === "idle" || newSt === "run" || newSt === "sprint" || newSt === "kick_charge");
 
-    // Ação prevista localmente ainda rodando: o fluxo do servidor está ~100ms
-    // atrasado e ainda diz "parado". Tem que ser ignorado POR COMPLETO — deixar
-    // o bloco abaixo rodar zeraria o `act` da animação que acabou de começar no
-    // clique, e ela morreria no quadro seguinte.
-    const locoAtrasada = c.isMe && c.act > 0 &&
-      (newSt === "idle" || newSt === "run" || newSt === "sprint" || newSt === "kick_charge");
-
-    // Ao trocar para uma nova ação autoritativa pelo servidor
-    if(newSt !== c.lastState && !locoAtrasada){
-      c.lastState = newSt;
-      const d = MP_STATE_DUR[newSt];
-      c.act = d || 0;
-      c.dribbleDuration = d || 0.65;
-      c.gkDur = d || 0.6;
-      if(newSt === "tackle"){ c.tackleAct = c.act; if(!c.isMe) sfx.playTackle(); }
-      if(newSt === "steal"){ if(!c.isMe) sfx.playSteal(); }
-      if(newSt === "shot_power"){ if(!c.isMe) sfx.playKick(1.0); shake = Math.max(shake, 0.22); }
-      if(newSt === "shot_technique"){ if(!c.isMe) sfx.playKick(0.70); }
-      if(newSt === "pass"){ if(!c.isMe) sfx.playKick(0.60); }
-      if(newSt.startsWith("dive_") || newSt.startsWith("catch_")){ sfx.playPostClank(); }
-      if(newSt === "dance") c.danceTime = 0;
-      const locomocao = newSt === "idle" || newSt === "run" ||
-                        newSt === "sprint" || newSt === "kick_charge";
-      if(!c.isMe || !locomocao) c.state = newSt;
+    if(c.isMe){
+      // Para o jogador local: se a ação prevista ainda roda e o servidor manda locomoção antiga, não interrompe
+      const locoAtrasada = c.act > 0 && isLocomotion;
+      if(!locoAtrasada && newSt !== c.lastState){
+        c.lastState = newSt;
+        if(!isLocomotion){
+          const d = MP_STATE_DUR[newSt] || 0.4;
+          c.act = d;
+          c.dribbleDuration = d;
+          c.gkDur = d;
+          c.state = newSt;
+          if(newSt === "tackle") c.tackleAct = d;
+          if(newSt === "dance") c.danceTime = 0;
+        }
+      }
+      if(c.act <= 0 && isLocomotion){
+        c.lastState = newSt;
+      }
+    } else {
+      // Para jogadores remotos:
+      if(!isLocomotion){
+        // Dispara ação autoritativa sempre que mudou ou quando a anterior concluiu
+        if(newSt !== c.lastState || c.act <= 0){
+          c.lastState = newSt;
+          const d = MP_STATE_DUR[newSt] || 0.5;
+          c.act = d;
+          c.dribbleDuration = d;
+          c.gkDur = d;
+          c.state = newSt;
+          if(newSt === "tackle"){ c.tackleAct = c.act; sfx.playTackle(); }
+          if(newSt === "steal"){ sfx.playSteal(); }
+          if(newSt === "shot_power"){
+            sfx.playKick(1.0);
+            shake = Math.max(shake, 0.22);
+            if(typeof vfxSpawnKickFire === "function") vfxSpawnKickFire(ball.position, c.root.position, 1.4);
+          }
+          if(newSt === "shot_technique"){
+            sfx.playKick(0.70);
+            if(typeof vfxSpawnKickFire === "function") vfxSpawnKickFire(ball.position, c.root.position, 0.85);
+          }
+          if(newSt === "pass"){ sfx.playKick(0.60); }
+          if(newSt.startsWith("dive_") || newSt.startsWith("catch_")){ sfx.playPostClank(); }
+          if(newSt === "dance") c.danceTime = 0;
+        }
+      } else {
+        if(c.act <= 0){
+          c.lastState = newSt;
+          if(newSt === "kick_charge"){
+            c.state = "kick_charge";
+          } else if(c.speed > 0.4){
+            c.state = (newSt === "sprint" || c.speed > 9.0) ? "sprint" : "run";
+          } else {
+            c.state = "idle";
+          }
+        }
+      }
     }
     animateHumanoid(c, dt, c.speed > 0.5);
   }
 
   // 2. Condução e Sincronização da Bola
-  // O drible previsto localmente também conduz: o servidor só confirma a posse
-  // uns 100 ms depois, e sem isto a bola ficava presa na posição do snapshot
-  // enquanto o boneco já executava a finta — o chapéu subia sem bola.
   const dribleLocal = (mp.localAct || 0) > 0 && (mp.localState || "").startsWith("dribble_");
   const euConduzo = (mp.ownerId === mp.entId || dribleLocal) &&
                     mp.entId !== 0 && (mp.localKickCooldown || 0) <= 0;
@@ -13905,6 +13980,11 @@ function mpUpdate(dt){
     ball.position.set(world.ball.x, world.ball.y, world.ball.z);
     ball.rotation.x += (world.ball.vz || 0) * dt * 2.4;
     ball.rotation.z -= (world.ball.vx || 0) * dt * 2.4;
+    const bSpeed = Math.hypot(world.ball.vx || 0, world.ball.vz || 0, world.ball.vy || 0);
+    if(bSpeed > 16.0 && typeof vfxSpawnBallFireTrail === "function"){
+      mpBallVel.set(world.ball.vx || 0, world.ball.vy || 0, world.ball.vz || 0);
+      vfxSpawnBallFireTrail(ball.position, mpBallVel);
+    }
   }
 
   // 3. Câmera e Marcador de Posse

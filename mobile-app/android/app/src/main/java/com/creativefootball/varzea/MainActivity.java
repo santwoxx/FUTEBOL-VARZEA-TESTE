@@ -27,12 +27,34 @@ public class MainActivity extends BridgeActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        // Mantém a tela ligada durante o jogo
+        // Mantém a tela ligada durante o jogo e ativa aceleração gráfica por hardware
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED, WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED);
         
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             getWindow().getAttributes().layoutInDisplayCutoutMode = 
                 WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+        }
+
+        // Otimização Senior: Destrava 90Hz / 120Hz / 144Hz nos celulares com telas de alta fluidez
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            try {
+                android.view.Display display = getDisplay();
+                if (display != null) {
+                    android.view.Display.Mode[] modes = display.getSupportedModes();
+                    android.view.Display.Mode maxMode = null;
+                    for (android.view.Display.Mode mode : modes) {
+                        if (maxMode == null || mode.getRefreshRate() > maxMode.getRefreshRate()) {
+                            maxMode = mode;
+                        }
+                    }
+                    if (maxMode != null && maxMode.getRefreshRate() > 60.0f) {
+                        WindowManager.LayoutParams params = getWindow().getAttributes();
+                        params.preferredDisplayModeId = maxMode.getModeId();
+                        getWindow().setAttributes(params);
+                    }
+                }
+            } catch (Exception ignored) {}
         }
         
         // Configura o seletor nativo de contas do Google do Android
@@ -66,7 +88,6 @@ public class MainActivity extends BridgeActivity {
                     @android.webkit.JavascriptInterface
                     public void startGoogleSignIn() {
                         runOnUiThread(() -> {
-                            // Faz logout prévio para permitir escolher qualquer conta salva
                             mGoogleSignInClient.signOut().addOnCompleteListener(MainActivity.this, task -> {
                                 Intent signInIntent = mGoogleSignInClient.getSignInIntent();
                                 startActivityForResult(signInIntent, RC_SIGN_IN);
@@ -102,12 +123,19 @@ public class MainActivity extends BridgeActivity {
                             webView.evaluateJavascript(js, null);
                         });
                     }
+                    return;
                 }
             } catch (Exception e) {
+                int code = -1;
+                if (e instanceof ApiException) {
+                    code = ((ApiException) e).getStatusCode();
+                }
+                final int errCode = code;
                 WebView webView = getBridge().getWebView();
                 if (webView != null) {
                     webView.post(() -> {
-                        webView.evaluateJavascript("console.error('Google Sign-In canceled or failed: " + escapeJs(e.getMessage()) + "');", null);
+                        String js = String.format("if(window.onNativeGoogleAuthFallback) { window.onNativeGoogleAuthFallback(%d); }", errCode);
+                        webView.evaluateJavascript(js, null);
                     });
                 }
             }

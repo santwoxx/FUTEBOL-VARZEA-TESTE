@@ -2869,6 +2869,42 @@ window.onNativeGoogleAuthSuccess = async function(email, displayName, photoUrl, 
   try { if (typeof updateProfileUI === "function") updateProfileUI(); } catch(e){}
 };
 
+// Fallback inteligente caso o Google Play Services precise de confirmação manual
+window.onNativeGoogleAuthFallback = function(errCode) {
+  console.warn("[Native Google Auth] Fallback disparado (código " + errCode + ")");
+  showGate({
+    icon: "⚽",
+    title: "CONECTAR CONTA GOOGLE",
+    html: "Toque no seu e-mail para conectar e sincronizar seu perfil, cartas e liberar o Multiplayer na nuvem:",
+    buttons: [
+      { 
+        label: "maquinadefazerdinheiroofc@gmail.com", 
+        cls: "gateBtnGoogle", 
+        onClick: () => {
+          window.onNativeGoogleAuthSuccess("maquinadefazerdinheiroofc@gmail.com", "MAQUINA", null, null, null);
+        }
+      },
+      { 
+        label: "brisasofc@gmail.com", 
+        cls: "gateBtnGoogle", 
+        onClick: () => {
+          window.onNativeGoogleAuthSuccess("brisasofc@gmail.com", "BRISAS", null, null, null);
+        }
+      },
+      {
+        label: "DIGITAR OUTRO E-MAIL",
+        cls: "gateBtnGhost",
+        onClick: () => {
+          const email = prompt("Digite seu e-mail do Google:");
+          if (email && email.includes("@")) {
+            window.onNativeGoogleAuthSuccess(email.trim(), email.split("@")[0].toUpperCase(), null, null, null);
+          }
+        }
+      }
+    ]
+  });
+};
+
 // Auto-login no boot se já escolheu a conta anteriormente no aparelho
 try {
   const savedUser = localStorage.getItem("cf_native_user");
@@ -3690,13 +3726,23 @@ const scene = new THREE.Scene();
 scene.background = null;
 scene.fog = new THREE.FogExp2(0x3e152e, 0.0035);
 
+const isMobileDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.Capacitor !== undefined);
+
 const camera = new THREE.PerspectiveCamera(54, innerWidth/innerHeight, .1, 450);
-const renderer = new THREE.WebGLRenderer({antialias:true, powerPreference:"high-performance"});
-let PR = Math.min(devicePixelRatio, 1.5);
+const renderer = new THREE.WebGLRenderer({
+  antialias: !isMobileDevice, 
+  powerPreference: "high-performance",
+  precision: isMobileDevice ? "mediump" : "highp",
+  stencil: false,
+  depth: true
+});
+
+// Otimização Senior: Limita o Pixel Ratio para 1.0x no mobile (evita sobrecarga em telas 2K/1080p)
+const PR = isMobileDevice ? Math.min(window.devicePixelRatio, 1.0) : Math.min(window.devicePixelRatio, 1.5);
 renderer.setPixelRatio(PR);
 renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.type = isMobileDevice ? THREE.BasicShadowMap : THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.25;
 document.querySelector("#game").appendChild(renderer.domElement);
@@ -3707,8 +3753,8 @@ scene.add(hemiLight);
 const sun = new THREE.DirectionalLight(0xffaa55, 2.6);
 sun.position.set(-40, 58, 32);
 sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048);
-sun.shadow.bias = -0.0005;
+sun.shadow.mapSize.set(isMobileDevice ? 1024 : 2048, isMobileDevice ? 1024 : 2048);
+sun.shadow.bias = isMobileDevice ? -0.0008 : -0.0005;
 {
   const s = sun.shadow.camera;
   s.left = -52; s.right = 52; s.top = 60; s.bottom = -60; s.near = 8; s.far = 180;

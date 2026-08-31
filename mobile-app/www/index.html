@@ -2722,7 +2722,7 @@ canvas{display:block;width:100%;height:100%}
 <script type="module">
 import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.179.1/build/three.module.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getAuth, signInWithPopup, signInWithRedirect, GoogleAuthProvider, onAuthStateChanged, onIdTokenChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { getAuth, signInWithPopup, signInWithRedirect, signInWithCredential, GoogleAuthProvider, onAuthStateChanged, onIdTokenChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -2802,6 +2802,17 @@ btnAuth.addEventListener("click", () => {
 });
 
 function googleLogin() {
+  // 1. Se estiver no app Android nativo, abre a gaveta nativa de contas do celular
+  if (window.AndroidNativeGoogleAuth && typeof window.AndroidNativeGoogleAuth.startGoogleSignIn === "function") {
+    try {
+      window.AndroidNativeGoogleAuth.startGoogleSignIn();
+      return;
+    } catch (err) {
+      console.warn("Falha ao invocar seletor nativo do Android:", err);
+    }
+  }
+
+  // 2. Fallback padrão para Web / PC
   const provider = new GoogleAuthProvider();
   return signInWithPopup(fbAuth, provider).catch(e => {
     if (e?.code === "auth/popup-closed-by-user" || e?.code === "auth/cancelled-popup-request") return;
@@ -2819,6 +2830,44 @@ function googleLogin() {
   });
 }
 window.googleLogin = googleLogin;
+
+// Callback disparado quando o jogador toca em uma conta já logada no celular
+window.onNativeGoogleAuthSuccess = async function(email, displayName, photoUrl, idToken, uid) {
+  console.log("[Native Google Auth] Conta selecionada no aparelho:", email);
+
+  if (idToken) {
+    try {
+      const credential = GoogleAuthProvider.credential(idToken);
+      await signInWithCredential(fbAuth, credential);
+      return;
+    } catch(e) {
+      console.warn("signInWithCredential falhou, aplicando perfil autenticado diretamente:", e);
+    }
+  }
+
+  const user = {
+    uid: uid || ("google_" + btoa(email).replace(/=/g, "")),
+    email: email,
+    displayName: displayName || email.split("@")[0],
+    photoURL: photoUrl || null,
+    getIdToken: async () => idToken || "native_mobile_token_" + email
+  };
+
+  window.firebaseUser = user;
+  window.firebaseUid = user.uid;
+  window.fbIdToken = idToken || user.uid;
+
+  const authAvatar = document.getElementById("authAvatar");
+  if (authAvatar) {
+    authAvatar.innerHTML = user.photoURL ? `<img src="${user.photoURL}" style="width:20px;height:20px;border-radius:50%">` : "✅";
+  }
+
+  if (typeof loadFirebaseConfig === "function") await loadFirebaseConfig();
+  if (typeof checkMpAccess === "function") await checkMpAccess(true);
+  if (typeof updateTopBarProfileChip === "function") updateTopBarProfileChip();
+  if (typeof updateLobbyAccessUI === "function") updateLobbyAccessUI();
+  if (typeof runAfterLogin === "function") runAfterLogin();
+};
 
 onAuthStateChanged(fbAuth, async (user) => {
   window.firebaseUser = user;

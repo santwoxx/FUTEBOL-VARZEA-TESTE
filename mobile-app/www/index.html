@@ -3012,20 +3012,46 @@ function runAfterLogin(){
   if(pending) setTimeout(pending, 80);
 }
 
-// Devolve true quando pode seguir. Quando não pode, abre o portão e guarda a
-// ação para retomar depois do login.
 function requireLogin(what, after){
   if(window.firebaseUser) return true;
+
+  // Se já tiver conta salva no aparelho, restaura imediatamente
+  try {
+    const saved = localStorage.getItem("cf_native_user");
+    if (saved) {
+      const u = JSON.parse(saved);
+      if (u && u.email) {
+        window.onNativeGoogleAuthSuccess(u.email, u.displayName, u.photoURL, u.idToken, u.uid);
+        if (after) setTimeout(after, 40);
+        return true;
+      }
+    }
+  } catch(e){}
+
+  // Para modos locais (Partida Rápida, Treino, Vestiário), cria sessão local automática para jogar na hora!
+  if (what !== "jogar o multiplayer online") {
+    const localUser = {
+      uid: "local_" + Date.now(),
+      email: "cria@creativefootball.com",
+      displayName: "CRIA",
+      photoURL: null,
+      getIdToken: async () => "local_token"
+    };
+    window.firebaseUser = localUser;
+    window.firebaseUid = localUser.uid;
+    try { updateTopBarProfileChip(); updateLobbyAccessUI(); } catch(e){}
+    return true;
+  }
+
+  // Apenas o Multiplayer Online pede a conta Google
   gatePendingAction = after || null;
   showGate({
-    icon: "🎮",
-    title: "ENTRE PARA JOGAR",
-    html: "O CREATIVE FOOTBALL está em fase de testes e só roda com login. Entre com o Google para " +
-          escapeHtml(what || "jogar") + " — leva um clique, e seu <b>perfil, cartas e gols</b> " +
-          "ficam salvos na nuvem.",
+    icon: "🌐",
+    title: "MULTIPLAYER ONLINE",
+    html: "Entre com o Google com 1 toque para sincronizar seu ranking, cartas e jogar contra outros atletas online.",
     buttons: [
       { label: GOOGLE_G + "<span>ENTRAR COM O GOOGLE</span>", cls: "gateBtnGoogle", onClick: googleLogin },
-      { label: "AGORA NÃO", cls: "gateBtnGhost", onClick: () => { gatePendingAction = null; } }
+      { label: "VOLTAR", cls: "gateBtnGhost", onClick: () => { gatePendingAction = null; } }
     ]
   });
   return false;
@@ -14455,18 +14481,6 @@ addEventListener("keydown", e => {
 });
 
 updateLobbyAccessUI();
-
-// Sem login, o portão aparece de cara uma vez por sessão: melhor descobrir que
-// precisa entrar agora do que depois de escolher o modo. Se o Firebase ainda
-// estiver restaurando a sessão, o onAuthStateChanged fecha isto sozinho.
-setTimeout(() => {
-  if(window.firebaseUser) return;
-  try {
-    if(sessionStorage.getItem("cf_gate_seen")) return;
-    sessionStorage.setItem("cf_gate_seen", "1");
-  } catch(e){}
-  requireLogin("entrar em campo", null);
-}, 2200);
 
 applyPlayerCustomization();
 updateScore(); updateClock(); kickoff(1); drawMini();

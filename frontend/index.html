@@ -3072,22 +3072,39 @@ function runAfterLogin(){
 // Devolve true quando pode seguir. Quando não pode, abre o portão e guarda a
 // ação para retomar depois do login.
 function requireLogin(what, after){
+  // Regra unica, igual no PC e no celular:
+  //   · partida rapida, treino e vestiario  -> abertos, sem conta nenhuma;
+  //   · multiplayer online                  -> exige conta Google de verdade,
+  //     e o e-mail ainda precisa estar em betaEmails() do firestore.rules.
+  //
+  // Quem barra de fato e o backend (server/auth.js confere a assinatura do ID
+  // token contra as chaves publicas do Google e so entao compara o e-mail com a
+  // lista). Este portao aqui e so para explicar ao jogador por que o botao esta
+  // trancado — quem abre o DevTools passa por cima dele, e nao ha problema.
+  //
+  // O celular tinha DUAS saidas falsas neste ponto: restaurava uma "conta salva"
+  // com token inventado, e para os modos locais fabricava um usuario
+  // `local_<timestamp>`. As duas sumiram: modo local nao precisa de usuario
+  // nenhum, e conta so existe se o Google assinar.
+  const precisaDeConta = /multiplayer/i.test(what || "");
+  if(!precisaDeConta) return true;
+
   if(window.firebaseUser) return true;
+
   gatePendingAction = after || null;
   showGate({
-    icon: "🎮",
-    title: "ENTRE PARA JOGAR",
-    html: "O CREATIVE FOOTBALL está em fase de testes e só roda com login. Entre com o Google para " +
-          escapeHtml(what || "jogar") + " — leva um clique, e seu <b>perfil, cartas e gols</b> " +
-          "ficam salvos na nuvem.",
+    icon: "🌐",
+    title: "MULTIPLAYER ONLINE",
+    html: "O online esta em <b>beta fechada</b>. Entre com o Google para jogar — " +
+          "seu <b>perfil, cartas e gols</b> tambem ficam salvos na nuvem.<br><br>" +
+          "<span style=\"opacity:.7;font-size:12px\">Partida rapida, treino e vestiario nao precisam de conta.</span>",
     buttons: [
       { label: GOOGLE_G + "<span>ENTRAR COM O GOOGLE</span>", cls: "gateBtnGoogle", onClick: googleLogin },
-      { label: "AGORA NÃO", cls: "gateBtnGhost", onClick: () => { gatePendingAction = null; } }
+      { label: "AGORA NAO", cls: "gateBtnGhost", onClick: () => { gatePendingAction = null; } }
     ]
   });
   return false;
 }
-
 function showAccessGate(reason){
   if(reason === "beta"){
     const email = (window.firebaseUser && window.firebaseUser.email) || "";

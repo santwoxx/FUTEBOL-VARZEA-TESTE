@@ -64,16 +64,31 @@ function emailsFromRules() {
   return { list, found: true };
 }
 
-const OPEN = true; // Acesso ao Multiplayer 100% liberado para todos os jogadores logados!
+// MP_OPEN=1 abre o online para qualquer conta Google valida. Serve para testar
+// duas abas na mesma maquina (duas abas = mesma conta = mesmo uid). Em producao
+// fica desligado, e ai vale a lista.
+const OPEN = process.env.MP_OPEN === "1";
+
+// A lista sai do firestore.rules — o MESMO arquivo que o navegador usa. Assim
+// convidar alguem e uma edicao so, e nao ha como as duas pontas divergirem.
+// MP_ALLOWED_EMAILS continua como atalho para liberar alguem pelo painel do
+// Render sem esperar deploy; se estiver preenchida, manda no lugar do arquivo.
 const fromEnv = (process.env.MP_ALLOWED_EMAILS || "")
   .split(",").map(s => s.trim().toLowerCase()).filter(Boolean);
-const fromRules = OPEN ? { list: [], found: false } : emailsFromRules();
+const fromRules = fromEnv.length ? { list: [], found: false } : emailsFromRules();
 
-const SOURCE = "Modo Aberto (Liberado para todos os jogadores com conta)";
-const ALLOWED = new Set();
+const ALLOWED = new Set(fromEnv.length ? fromEnv : fromRules.list);
+const SOURCE = fromEnv.length
+  ? "MP_ALLOWED_EMAILS (painel do Render)"
+  : (fromRules.found ? "firestore.rules" : "NENHUMA lista encontrada");
 
 export function accessConfig() {
-  return { enforced: false, allowed: 999999, source: SOURCE, projectId: PROJECT_ID };
+  return {
+    enforced: !OPEN,
+    allowed: ALLOWED.size,
+    source: OPEN ? "MP_OPEN=1 (online aberto a qualquer conta)" : SOURCE,
+    projectId: PROJECT_ID
+  };
 }
 
 // ─────────────────────── chaves publicas do Google ───────────────────────
@@ -152,12 +167,26 @@ export async function verifyIdToken(token) {
 //   "login" -> nao esta logado (ou o token nao cola)
 //   "beta"  -> logado, mas fora da lista
 export async function checkMultiplayerAccess(idToken) {
-  if (!idToken) return { ok: true, reason: "open", email: "", uid: "" };
-
+  // Sem token, token forjado ou token vencido: nao entra. O `catch` NAO pode
+  // liberar — foi exatamente assim que a trava tinha sido anulada, e com ela o
+  // uid deixava de ser verificado (o servidor passava a confiar no que vinha no
+  // JSON do cliente).
+  let claims;
   try {
-    const claims = await verifyIdToken(idToken);
-    return { ok: true, reason: "allowed", email: claims.email || "", uid: claims.uid || "" };
+    claims = await verifyIdToken(idToken);
   } catch (e) {
-    return { ok: true, reason: "allowed", email: "", uid: "" };
+    return { ok: false, reason: "login", email: "", uid: "", detail: e.message };
   }
+
+  // Conta Google sem e-mail confirmado nao vale: a lista e por e-mail, e um
+  // e-mail nao verificado pode ser de outra pessoa.
+  if (!claims.emailVerified || !claims.email) {
+    return { ok: false, reason: "login", email: claims.email, uid: claims.uid };
+  }
+
+  if (OPEN) return { ok: true, reason: "open", email: claims.email, uid: claims.uid };
+  if (ALLOWED.has(claims.email)) {
+    return { ok: true, reason: "allowed", email: claims.email, uid: claims.uid };
+  }
+  return { ok: false, reason: "beta", email: claims.email, uid: claims.uid };
 }

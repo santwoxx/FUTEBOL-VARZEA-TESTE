@@ -211,7 +211,12 @@ wss.on("connection", (ws) => {
         const n = String(msg.d?.name || "").slice(0, 14).trim();
         if (n) client.name = n;
         if (msg.d?.customConfig) client.customConfig = msg.d.customConfig;
-        client.uid = msg.d?.uid || null;
+        // O uid NAO vem mais do JSON. Ele e a identidade que a sala usa para
+        // devolver o jogador ao mesmo boneco numa reconexao — e `addClient()`
+        // derruba quem ja estiver na sala com o mesmo uid. Aceitar um uid nao
+        // verificado dava a quem soubesse o uid alheio um botao de expulsar.
+        // Agora ele so e preenchido pelo token conferido, logo abaixo.
+        client.uid = null;
         client.mpGoals = typeof msg.d?.mpGoals === "number" ? msg.d.mpGoals : 0;
         // Funcao escolhida no lobby. So "keeper" muda alguma coisa; qualquer
         // outro valor cai na linha, que e o padrao.
@@ -224,9 +229,8 @@ wss.on("connection", (ws) => {
         client.authReady = checkMultiplayerAccess(msg.d?.idToken).then((r) => {
           client.mpAllowed = r.ok;
           if (r.email) client.email = r.email;
-          // A identidade do token vale mais que o uid que veio no JSON: e esse
-          // uid que a sala usa para devolver o jogador ao mesmo boneco.
-          if (r.uid) client.uid = r.uid;
+          // Unica origem do uid: o token assinado pelo Google.
+          client.uid = r.ok && r.uid ? r.uid : null;
           client.send(S2C.AUTH, { ok: r.ok, reason: r.reason, email: r.email || null });
           return r;
         }).catch((e) => {

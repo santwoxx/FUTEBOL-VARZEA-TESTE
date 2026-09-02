@@ -3093,102 +3093,78 @@ window.googleLogin = googleLogin;
 window.onNativeGoogleAuthSuccess = async function(email, displayName, photoUrl, idToken, uid) {
   console.log("[Native Google Auth] Sucesso! Conta selecionada no aparelho:", email, displayName);
 
-  // Se o Google Play Services retornou um ID Token oficial, autentica no Firebase Auth
-  if (idToken && typeof signInWithCredential === "function") {
-    try {
-      const credential = GoogleAuthProvider.credential(idToken);
-      const res = await signInWithCredential(fbAuth, credential);
-      console.log("[Native Google Auth] Autenticado no Firebase com sucesso:", res.user);
-      return; // O onAuthStateChanged cuidará de atualizar a UI e sincronizar o perfil!
-    } catch (e) {
-      console.warn("[Native Google Auth] signInWithCredential falhou, aplicando sessão nativa direta:", e);
-    }
+  // A conta so vale se o Google Play Services devolveu um ID TOKEN de verdade.
+  // Ele e trocado por uma sessao real do Firebase via signInWithCredential, e
+  // dali em diante o onAuthStateChanged cuida da UI, do perfil e do token que
+  // vai para o servidor de jogo.
+  //
+  // Antes, quando o token nao vinha, o app fabricava um usuario com uid
+  // inventado (`google_<base64 do e-mail>`) e um token de mentira
+  // (`native_token_<e-mail>`), e salvava isso no localStorage para entrar
+  // sozinho no proximo boot. Como o backend tambem estava com a trava anulada,
+  // bastava dizer um e-mail para virar aquela pessoa. Sessao sem token
+  // verificavel nao existe mais: ou o Google assina, ou nao entra.
+  if (!idToken) {
+    console.warn("[Native Google Auth] Conta sem ID token — o login precisa ser refeito.");
+    mostrarFalhaLoginNativo("O Google nao devolveu credencial para esta conta.");
+    return;
   }
-
-  const cleanEmail = (email || "").trim().toLowerCase();
-  const safeName = displayName || cleanEmail.split("@")[0] || "CRIA";
-  const user = {
-    uid: uid || ("google_" + btoa(cleanEmail).replace(/[^a-zA-Z0-9]/g, "")),
-    email: cleanEmail,
-    displayName: safeName,
-    photoURL: photoUrl || null,
-    getIdToken: async () => idToken || "native_token_" + cleanEmail
-  };
-
-  window.firebaseUser = user;
-  window.firebaseUid = user.uid;
-  window.fbIdToken = idToken || user.uid;
-
   try {
-    localStorage.setItem("cf_native_user", JSON.stringify(user));
-  } catch(e){}
-
-  const authAvatar = document.getElementById("authAvatar");
-  if (authAvatar) {
-    authAvatar.innerHTML = user.photoURL ? `<img src="${user.photoURL}" style="width:24px;height:24px;border-radius:50%">` : "✅";
+    const credential = GoogleAuthProvider.credential(idToken);
+    await signInWithCredential(fbAuth, credential);
+    // onAuthStateChanged assume daqui: perfil, cartas, token e acesso ao online.
+  } catch (e) {
+    console.error("[Native Google Auth] signInWithCredential falhou:", e);
+    mostrarFalhaLoginNativo(e && e.message ? e.message : "Falha ao validar a conta no Firebase.");
   }
-  const btnAuth = document.getElementById("btnAuth");
-  if (btnAuth) btnAuth.title = `Perfil: ${user.displayName}`;
-
-  try { if (typeof updateTopBarProfileChip === "function") updateTopBarProfileChip(); } catch(e){}
-  try { if (typeof updateLobbyAccessUI === "function") updateLobbyAccessUI(); } catch(e){}
-  try { if (typeof hideGate === "function") hideGate(); } catch(e){}
-  try { if (typeof runAfterLogin === "function") runAfterLogin(); } catch(e){}
-  try { if (typeof checkMpAccess === "function") await checkMpAccess(true); } catch(e){}
-  try { if (typeof loadFirebaseConfig === "function") await loadFirebaseConfig(); } catch(e){}
-  try { if (typeof updateProfileUI === "function") updateProfileUI(); } catch(e){}
 };
 
-// Fallback inteligente caso o Google Play Services precise de confirmação manual
-window.onNativeGoogleAuthFallback = function(errCode) {
-  console.warn("[Native Google Auth] Fallback disparado (código " + errCode + ")");
-  showGate({
-    icon: "⚽",
-    title: "CONECTAR CONTA GOOGLE",
-    html: "Toque no seu e-mail para conectar e sincronizar seu perfil, cartas e liberar o Multiplayer na nuvem:",
-    buttons: [
-      { 
-        label: "maquinadefazerdinheiroofc@gmail.com", 
-        cls: "gateBtnGoogle", 
-        onClick: () => {
-          window.onNativeGoogleAuthSuccess("maquinadefazerdinheiroofc@gmail.com", "MAQUINA", null, null, null);
-        }
-      },
-      { 
-        label: "brisasofc@gmail.com", 
-        cls: "gateBtnGoogle", 
-        onClick: () => {
-          window.onNativeGoogleAuthSuccess("brisasofc@gmail.com", "BRISAS", null, null, null);
-        }
-      },
-      {
-        label: "DIGITAR OUTRO E-MAIL",
-        cls: "gateBtnGhost",
-        onClick: () => {
-          const email = prompt("Digite seu e-mail do Google:");
-          if (email && email.includes("@")) {
-            window.onNativeGoogleAuthSuccess(email.trim(), email.split("@")[0].toUpperCase(), null, null, null);
-          }
-        }
-      }
-    ]
-  });
-};
+// Uma sessao antiga fabricada pode ter ficado salva de versoes anteriores.
+// Apagar evita que o app tente "entrar" com ela e mostre um perfil que o
+// servidor vai recusar de qualquer forma.
+try { localStorage.removeItem("cf_native_user"); } catch (e) {}
 
-// Auto-login no boot se já escolheu a conta anteriormente no aparelho
-try {
-  const savedUser = localStorage.getItem("cf_native_user");
-  if (savedUser) {
-    const u = JSON.parse(savedUser);
-    if (u && u.email) {
-      setTimeout(() => {
-        if (!window.firebaseUser) {
-          window.onNativeGoogleAuthSuccess(u.email, u.displayName, u.photoURL, u.idToken, u.uid);
-        }
-      }, 300);
-    }
+function mostrarFalhaLoginNativo(motivo) {
+  try {
+    showGate({
+      icon: "🔐",
+      title: "NAO FOI POSSIVEL ENTRAR",
+      html: "Nao deu para validar sua conta Google neste aparelho.<br><br>" +
+            "<span style=\"opacity:.7;font-size:12px\">" + escapeHtml(motivo || "") + "</span>",
+      buttons: [
+        { label: "TENTAR DE NOVO", cls: "gateBtnGoogle", onClick: googleLogin },
+        { label: "AGORA NAO", cls: "gateBtnGhost", onClick: () => {} }
+      ]
+    });
+  } catch (e) { alert("Nao foi possivel entrar: " + (motivo || "")); }
+}
+
+// Quando o seletor nativo falha, o login NAO pode morrer aqui: cai no fluxo web
+// do proprio Firebase, que e autenticacao de verdade e nao depende do SHA-1 do
+// APK estar registrado no projeto.
+//
+// A versao anterior abria uma lista com DOIS E-MAILS CRAVADOS NO APK e um campo
+// "digitar outro e-mail": tocar em qualquer um criava a sessao daquela conta sem
+// verificacao nenhuma. Qualquer pessoa com o APK virava o administrador do jogo.
+//
+// O codigo 10 (DEVELOPER_ERROR) e o caso comum: o certificado que assinou esta
+// build nao esta cadastrado no Firebase. O jogador nao tem o que fazer com essa
+// informacao, entao ele so ve o login normal; o detalhe fica no console.
+window.onNativeGoogleAuthFallback = async function (errCode) {
+  console.warn("[Native Google Auth] Seletor nativo falhou (codigo " + errCode + ")" +
+    (errCode === 10 ? " — SHA-1 desta build nao registrado no Firebase." : ""));
+  try {
+    await signInWithPopup(fbAuth, new GoogleAuthProvider());
+    return;
+  } catch (e) {
+    console.warn("[Login] popup indisponivel na WebView, tentando redirect:", e && e.code);
   }
-} catch(e){}
+  try {
+    await signInWithRedirect(fbAuth, new GoogleAuthProvider());
+  } catch (e) {
+    mostrarFalhaLoginNativo(e && e.message ? e.message : "Nao foi possivel abrir o login do Google.");
+  }
+};
 
 onAuthStateChanged(fbAuth, async (user) => {
   window.firebaseUser = user;
@@ -3319,50 +3295,39 @@ function runAfterLogin(){
 }
 
 function requireLogin(what, after){
+  // Regra unica, igual no PC e no celular:
+  //   · partida rapida, treino e vestiario  -> abertos, sem conta nenhuma;
+  //   · multiplayer online                  -> exige conta Google de verdade,
+  //     e o e-mail ainda precisa estar em betaEmails() do firestore.rules.
+  //
+  // Quem barra de fato e o backend (server/auth.js confere a assinatura do ID
+  // token contra as chaves publicas do Google e so entao compara o e-mail com a
+  // lista). Este portao aqui e so para explicar ao jogador por que o botao esta
+  // trancado — quem abre o DevTools passa por cima dele, e nao ha problema.
+  //
+  // O celular tinha DUAS saidas falsas neste ponto: restaurava uma "conta salva"
+  // com token inventado, e para os modos locais fabricava um usuario
+  // `local_<timestamp>`. As duas sumiram: modo local nao precisa de usuario
+  // nenhum, e conta so existe se o Google assinar.
+  const precisaDeConta = /multiplayer/i.test(what || "");
+  if(!precisaDeConta) return true;
+
   if(window.firebaseUser) return true;
 
-  // Se já tiver conta salva no aparelho, restaura imediatamente
-  try {
-    const saved = localStorage.getItem("cf_native_user");
-    if (saved) {
-      const u = JSON.parse(saved);
-      if (u && u.email) {
-        window.onNativeGoogleAuthSuccess(u.email, u.displayName, u.photoURL, u.idToken, u.uid);
-        if (after) setTimeout(after, 40);
-        return true;
-      }
-    }
-  } catch(e){}
-
-  // Para modos locais (Partida Rápida, Treino, Vestiário), cria sessão local automática para jogar na hora!
-  if (what !== "jogar o multiplayer online") {
-    const localUser = {
-      uid: "local_" + Date.now(),
-      email: "cria@creativefootball.com",
-      displayName: "CRIA",
-      photoURL: null,
-      getIdToken: async () => "local_token"
-    };
-    window.firebaseUser = localUser;
-    window.firebaseUid = localUser.uid;
-    try { updateTopBarProfileChip(); updateLobbyAccessUI(); } catch(e){}
-    return true;
-  }
-
-  // Apenas o Multiplayer Online pede a conta Google
   gatePendingAction = after || null;
   showGate({
     icon: "🌐",
     title: "MULTIPLAYER ONLINE",
-    html: "Entre com o Google com 1 toque para sincronizar seu ranking, cartas e jogar contra outros atletas online.",
+    html: "O online esta em <b>beta fechada</b>. Entre com o Google para jogar — " +
+          "seu <b>perfil, cartas e gols</b> tambem ficam salvos na nuvem.<br><br>" +
+          "<span style=\"opacity:.7;font-size:12px\">Partida rapida, treino e vestiario nao precisam de conta.</span>",
     buttons: [
       { label: GOOGLE_G + "<span>ENTRAR COM O GOOGLE</span>", cls: "gateBtnGoogle", onClick: googleLogin },
-      { label: "VOLTAR", cls: "gateBtnGhost", onClick: () => { gatePendingAction = null; } }
+      { label: "AGORA NAO", cls: "gateBtnGhost", onClick: () => { gatePendingAction = null; } }
     ]
   });
   return false;
 }
-
 function showAccessGate(reason){
   if(reason === "beta"){
     const email = (window.firebaseUser && window.firebaseUser.email) || "";

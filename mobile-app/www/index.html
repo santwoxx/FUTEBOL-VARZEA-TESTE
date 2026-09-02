@@ -213,7 +213,7 @@ canvas{display:block;width:100%;height:100%}
 #score{font-family:'Teko',sans-serif;font-weight:700;font-size:36px;line-height:1;letter-spacing:2px;color:#ffd700;text-shadow:0 2px 12px rgba(255,215,0,0.6);min-width:76px;text-align:center}
 #clock{font-weight:800;font-size:13px;color:#ffaa44;background:rgba(255,140,0,0.18);padding:4px 10px;border-radius:14px;border:1px solid rgba(255,140,0,0.35);font-variant-numeric:tabular-nums}
 /* Voz do time (LiveKit). Fica abaixo do placar, no mesmo idioma visual do HUD. */
-#voiceHud{display:none;align-items:center;gap:8px;background:linear-gradient(135deg,rgba(22,12,30,0.94),rgba(10,8,16,0.96));border:1.5px solid rgba(255,140,0,0.35);border-radius:20px;padding:4px 14px;box-shadow:0 8px 26px rgba(0,0,0,0.6);backdrop-filter:blur(12px);font-size:11px;font-weight:800;letter-spacing:1px;color:#ffaa44;text-transform:uppercase;white-space:nowrap;max-width:92vw;overflow:hidden}
+#voiceHud{display:none;align-items:center;gap:8px;background:linear-gradient(135deg,rgba(22,12,30,0.94),rgba(10,8,16,0.96));border:1.5px solid rgba(255,140,0,0.35);border-radius:20px;padding:4px 14px;box-shadow:0 8px 26px rgba(0,0,0,0.6);font-size:11px;font-weight:800;letter-spacing:1px;color:#ffaa44;text-transform:uppercase;white-space:nowrap;max-width:92vw;overflow:hidden}
 #voiceHud.live{border-color:rgba(92,255,143,0.7);color:#7dff9e;box-shadow:0 8px 26px rgba(0,0,0,0.6),0 0 18px rgba(92,255,143,0.3)}
 #voiceHud.warn{border-color:rgba(255,90,90,0.6);color:#ff9b9b}
 #voiceDot{width:8px;height:8px;border-radius:50%;background:#7a5a3a;flex:none}
@@ -229,7 +229,7 @@ canvas{display:block;width:100%;height:100%}
   display:none;flex-direction:column;align-items:center;justify-content:center;gap:2px;
   width:76px;height:76px;border-radius:24px;border:1.5px solid rgba(255,140,0,0.45);
   background:linear-gradient(135deg,rgba(30,16,40,0.94),rgba(12,9,18,0.96));
-  box-shadow:0 8px 25px rgba(0,0,0,0.65);backdrop-filter:blur(10px);
+  box-shadow:0 8px 25px rgba(0,0,0,0.65);
   color:#ffaa44;font-family:"Outfit",sans-serif;cursor:pointer;pointer-events:auto;
   user-select:none;-webkit-user-select:none;touch-action:manipulation;z-index:6;
   transition:transform .1s,border-color .2s,box-shadow .2s,color .2s;
@@ -244,7 +244,7 @@ canvas{display:block;width:100%;height:100%}
 
 /* ═══════════ MINIMAPA ═══════════ */
 #miniWrap{position:absolute;left:max(14px,env(safe-area-inset-left));top:calc(max(10px,env(safe-area-inset-top)) + 4px);display:none;flex-direction:column;align-items:center;gap:4px}
-#mini{width:80px;height:128px;border-radius:14px;border:1.5px solid rgba(255,215,0,0.4);background:rgba(14,9,20,0.9);box-shadow:0 8px 25px rgba(0,0,0,0.6);backdrop-filter:blur(10px)}
+#mini{width:80px;height:128px;border-radius:14px;border:1.5px solid rgba(255,215,0,0.4);background:rgba(14,9,20,0.9);box-shadow:0 8px 25px rgba(0,0,0,0.6)}
 #miniTag{font-size:8px;font-weight:800;letter-spacing:1.5px;color:#ffaa44;text-transform:uppercase;opacity:0.85}
 
 /* ═══════════ FEEDBACK VISUAL LIMPO (SEM TEXTOS NA TELA) ═══════════ */
@@ -306,14 +306,40 @@ canvas{display:block;width:100%;height:100%}
   align-items:end;justify-items:end;pointer-events:none;z-index:5;
 }
 
+/* backdrop-filter removido do HUD EM JOGO: ele re-borra o canvas 3D a cada
+   quadro, e como estes elementos sao 90-98% opacos o efeito nao aparece.
+   Custava ~12 FPS no aparelho. Menus e modais mantem o blur: la a cena esta
+   parada ou coberta, entao o custo nao existe. */
 .btn{
   position:relative;border:0;color:#fff;font-family:'Outfit',sans-serif;font-weight:900;
   border-radius:22px;box-shadow:0 8px 25px rgba(0,0,0,0.65);
   pointer-events:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:2px;cursor:pointer;transition:transform .1s,box-shadow .15s,background .25s,border-color .25s;
-  backdrop-filter:blur(10px);user-select:none;-webkit-user-select:none;touch-action:none;
+  user-select:none;-webkit-user-select:none;touch-action:none;
 }
-.btn:active,.btn.activeKey{transform:scale(0.90);box-shadow:0 2px 10px rgba(0,0,0,0.9)}
+.btn{transform:scale(var(--hudEscala,1))}
+.btn:active,.btn.activeKey{transform:scale(calc(var(--hudEscala,1) * 0.90));box-shadow:0 2px 10px rgba(0,0,0,0.9)}
+
+/* ═══════════ PIQUE SAI DA GRADE (TOQUE) ═══════════
+   O analogico ja liga a arrancada sozinho quando o jogador empurra o direcional
+   alem de 72% do curso, entao o botao nao decidia mais nada: correr era so
+   empurrar mais o dedo. Tirando ele, sobra espaco e some um alvo de toque
+   inutil no meio da mao.
+
+   Como a grade tem 3 fileiras de tamanhos diferentes (as acoes principais sao
+   as maiores, embaixo, onde o polegar descansa), deixar os 5 botoes reflurem
+   sozinhos jogaria o CHUTE para a esquerda e abriria um buraco justo no canto
+   mais usado. Por isso as posicoes ficam fixas: cada botao continua exatamente
+   onde a mao ja aprendeu, e a folga cai na celula menos alcancavel.
+
+   O fluxo de estamina segue igual — quem manda nele e o `input.sprint` do
+   analogico, e a barra de folego continua no HUD de baixo.                    */
+#sprintBtn{ display:none !important; }
+#btnGrid #callPassBtn  { grid-column:1; grid-row:1; }
+#btnGrid #superShotBtn { grid-column:2; grid-row:1; }
+#btnGrid #skillBtn     { grid-column:2; grid-row:2; }
+#btnGrid #passTackleBtn{ grid-column:1; grid-row:3; }
+#btnGrid #mainActionBtn{ grid-column:2; grid-row:3; }
 
 .kBadge{
   font-size:9px;font-weight:900;letter-spacing:1px;
@@ -393,7 +419,7 @@ canvas{display:block;width:100%;height:100%}
   background:linear-gradient(135deg,rgba(22,12,30,0.92),rgba(10,8,16,0.96));
   border:1.2px solid rgba(0,240,255,0.4);border-radius:20px;
   padding:4px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.6),0 0 15px rgba(0,240,255,0.2);
-  backdrop-filter:blur(10px);z-index:4;pointer-events:none;
+  z-index:4;pointer-events:none;
   transition:opacity .2s ease,border-color .2s ease,box-shadow .2s ease;
 }
 #staminaHud.show{display:flex}
@@ -1839,6 +1865,219 @@ canvas{display:block;width:100%;height:100%}
     transform-origin: bottom right;
   }
 }
+/* ═══════════════════════════════════════════════════════════════════════════
+   CELULAR EM PAISAGEM — TELA BAIXA
+
+   Neste aparelho a janela CSS e 853 x 384. Todas as media queries do jogo eram
+   por LARGURA, e 853px passa por tablet: nenhuma das regras de celular pegava,
+   enquanto o que aperta de verdade e a ALTURA de 384px. Era isso que cortava a
+   roda de comemoracao no topo, empurrava o botao de jogar para fora da tela e
+   fazia a barra do vestiario tapar o proprio atleta.
+
+   Medido antes da correcao, nesta janela:
+     #start ............ conteudo de 527px  (transbordava 143px)
+     .systemCard ....... card de 943px, topo em -280px
+     #celebrationModal . topo em -99px
+     .customizerSidebar  440px de largura = 52% da tela
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (max-height: 500px){
+
+  /* ── Lobby / partida rapida ────────────────────────────────────────────────
+     O miolo tinha 469px onde cabiam 326, entao a barra de baixo (com o botao)
+     caia 125px abaixo da tela. Agora o miolo e a unica parte que rola, e as
+     barras fixas continuam sempre visiveis.                                   */
+  .lobbyTopBar{ height:44px; padding:0 12px; }
+  .lobbyMainContent{
+    flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch; padding-top:8px; padding-bottom:8px;
+    align-items:flex-start;
+  }
+  .lobbyLeftCol{ width:min(94vw, 560px); gap:8px; }
+  .lobbyBottomBar{ height:32px; padding:0 14px; font-size:11px; flex:0 0 auto; }
+  .lobbyBrandLogo{ font-size:14px; }
+  .lobbyTabBtn{ padding:9px 8px; font-size:11px; }
+
+  /* ── Modal de sistema ──────────────────────────────────────────────────────
+     Card de 943px sem teto nem rolagem: metade nascia fora da tela, para cima. */
+  .systemCard{
+    max-height:90dvh; overflow-y:auto; overscroll-behavior:contain;
+    padding:14px 16px; border-radius:18px;
+  }
+  .systemCard h2{ font-size:24px !important; }
+  .keybindGrid{ max-height:30dvh; }
+
+  /* ── Vestiario 3D ──────────────────────────────────────────────────────────
+     A barra ocupava 440px dos 853 e ficava bem em cima do atleta. Estreitando,
+     o boneco que esta sendo editado volta a aparecer — que e o ponto da tela.
+     As abas passam de 3 para 4 colunas: 7 botoes cabem em 2 fileiras em vez de 3. */
+  .customizerSidebar{
+    width:min(42vw, 320px); padding:10px 12px;
+  }
+  /* Numa tela de 384px a lista de opcoes e longa, e rolando ate o meio dela o
+     cabecalho e as abas sumiam — para trocar de "Rosto" para "Camisa" era
+     preciso rolar tudo de volta. Fixando os dois no topo, a navegacao fica
+     sempre a um toque, que e o que faz a tela ser usavel deitada.             */
+  .customizerSidebar{ position:relative; }
+  .customHeader{
+    padding-bottom:6px; margin-bottom:8px;
+    position:sticky; top:0; z-index:3;
+    background:linear-gradient(180deg,rgba(16,10,24,0.99),rgba(16,10,24,0.96));
+    margin-left:-12px; margin-right:-12px; padding-left:12px; padding-right:12px; padding-top:4px;
+  }
+  .customHeader h2{ font-size:22px; }
+  .customTabs{
+    grid-template-columns:repeat(4, 1fr); gap:4px; margin-bottom:8px;
+    position:sticky; top:38px; z-index:3;
+    background:linear-gradient(180deg,rgba(16,10,24,0.99),rgba(16,10,24,0.94));
+    margin-left:-12px; margin-right:-12px; padding:0 12px 6px;
+  }
+  .customTabBtn{ padding:6px 3px; font-size:9.5px; border-radius:8px; gap:2px; }
+  /* O rodape e sticky, entao sobrepoe o fim da lista. Esta folga garante que o
+     ultimo item da aba possa ser lido inteiro em vez de morrer atras do botao. */
+  .tabPanel{ gap:8px; padding-bottom:58px; }
+  .customFooter{ padding-top:8px; }
+
+  /* ── Roda de comemoracao ───────────────────────────────────────────────────
+     230px de roda + rotulo, ancorados a 215px do rodape: precisava de 483px de
+     tela para caber numa que tem 384. Encolhe e desce, sem perder nenhum gomo.
+     A escala vai no wrap, e nao no modal, para nao brigar com a animacao de
+     entrada (que ja anima `transform` no proprio #celebrationModal).           */
+  #celebrationModal{ bottom:76px; right:12px; }
+  .celebrationWheelWrap{ transform:scale(0.62); transform-origin:bottom right; gap:4px; }
+
+  /* ── Portao de login e modais genericos ────────────────────────────────────*/
+  #gateModal .gateCard, #cardLevelUpModal > div{
+    max-height:90dvh; overflow-y:auto;
+  }
+}
+
+/* Telas ainda mais baixas (celulares 20:9 com barra de navegacao aparecendo). */
+@media (max-height: 380px){
+  .lobbyTopBar{ height:38px; }
+  .lobbyBottomBar{ display:none; }          /* so dicas de tecla: nao vale o espaco */
+  .customizerSidebar{ width:min(46vw, 290px); }
+  .celebrationWheelWrap{ transform:scale(0.54); }
+  #celebrationModal{ bottom:64px; }
+}
+/* ═══════════════════════════════════════════════════════════════════════════
+   LOBBY — REORGANIZACAO EM 3 FAIXAS (leitura tipo Free Fire)
+
+   Antes: uma coluna unica a esquerda com 6 botoes empilhados + as abas do topo
+   fazendo exatamente a mesma navegacao (as abas nao trocam de tela, so marcam
+   `active` e abrem os mesmos modais). Isso dava 469px de altura numa janela de
+   384 e ainda escondia o atleta atras da lista.
+
+   Agora: rail de icones a esquerda (destinos secundarios), centro VAZIO de
+   proposito — e por ele que o atleta 3D aparece — e painel de jogo a direita
+   com a acao principal. Nada de HTML ou JS mudou: os mesmos botoes, com os
+   mesmos ids, so foram realocados por grid.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* As abas de cima viraram redundancia depois do rail. Somem da vista, mas
+   continuam no DOM porque os atalhos A/E chamam setActiveNavTab() nelas. */
+.lobbyNavTabs{ display:none !important; }
+.lobbySectionTitle{ display:none; }
+
+.lobbyMainContent{
+  flex:1 1 auto; min-height:0; width:100%;
+  display:flex; align-items:stretch; justify-content:stretch;
+}
+
+.lobbyLeftCol{
+  width:100%; max-width:none;
+  display:grid;
+  grid-template-columns: 104px 1fr minmax(210px, 300px);
+  grid-template-rows: auto auto auto auto;
+  align-content:center;
+  gap:8px 16px;
+  padding:0 max(14px, env(safe-area-inset-right)) 0 max(14px, env(safe-area-inset-left));
+  box-sizing:border-box;
+}
+
+/* ── coluna 1: rail de destinos secundarios ───────────────────────────────── */
+#btnOpenCustomizer{ grid-column:1; grid-row:1; }
+#btnPlayTraining  { grid-column:1; grid-row:2; }
+#btnOpenControls  { grid-column:1; grid-row:3; }
+#btnOpenDonate    { grid-column:1; grid-row:4; }
+
+#btnOpenCustomizer, #btnPlayTraining, #btnOpenControls, #btnOpenDonate{
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:2px; width:100%; padding:7px 4px;
+  border-radius:12px; text-align:center;
+  /* Altura fixa, e nao min-height: "PERSONALIZACAO" quebra em duas linhas e
+     "TREINO" em uma, entao o conteudo deixava o rail com degraus de ate 19px.
+     Um rail de icones so le bem se todos os alvos forem do mesmo tamanho. */
+  height:56px;
+}
+#btnOpenCustomizer .itemIcon, #btnPlayTraining .itemIcon,
+#btnOpenControls .itemIcon, #btnOpenDonate .itemIcon{ font-size:19px; margin:0; }
+#btnOpenCustomizer .itemText, #btnPlayTraining .itemText,
+#btnOpenControls .itemText, #btnOpenDonate .itemText{
+  font-size:9.5px; letter-spacing:.4px; line-height:1.05; font-weight:900;
+}
+/* O selo ("VESTIARIO", "MODO TREINO") e informacao de lista, nao de icone. */
+#btnOpenCustomizer .itemBadge, #btnPlayTraining .itemBadge,
+#btnOpenControls .itemBadge, #btnOpenDonate .itemBadge{ display:none; }
+
+/* ── coluna 3: painel de jogo ─────────────────────────────────────────────── */
+#matchResultBanner{ grid-column:3; grid-row:1; margin:0; }
+.lobbyRolePick    { grid-column:3; grid-row:2; margin:0; }
+#btnPlayMatch     { grid-column:3; grid-row:3; }
+#btnPlayRanked    { grid-column:3; grid-row:4; }
+
+#btnPlayMatch, #btnPlayRanked{
+  display:grid; grid-template-columns:auto 1fr; grid-template-rows:auto auto;
+  align-items:center; gap:0 10px; width:100%; padding:10px 14px; border-radius:14px;
+}
+#btnPlayMatch .itemIcon, #btnPlayRanked .itemIcon{ grid-row:1 / span 2; font-size:24px; }
+#btnPlayMatch .itemText, #btnPlayRanked .itemText{ font-size:15px; text-align:left; letter-spacing:.6px; }
+#btnPlayMatch .itemBadge, #btnPlayRanked .itemBadge{
+  grid-column:2; font-size:9.5px; text-align:left; opacity:.85; letter-spacing:.5px;
+}
+/* Acao principal: e a unica coisa da tela que precisa gritar. */
+#btnPlayMatch{
+  min-height:60px;
+  background:linear-gradient(135deg, rgba(0,214,168,0.96), rgba(0,120,95,0.98));
+  border:1.5px solid rgba(0,255,200,0.55);
+  box-shadow:0 8px 26px rgba(0,180,140,0.34);
+}
+#btnPlayMatch .itemText{ font-size:17px; }
+
+.lobbyRolePick{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.lobbyRolePick .lobbyRoleTitle{ font-size:9.5px; letter-spacing:.6px; opacity:.7; width:100%; }
+.lobbyRoleBtn{ flex:1; padding:6px 8px; font-size:10.5px; }
+
+/* ── paisagem curta: mesma leitura, tudo mais justo ───────────────────────── */
+@media (max-height: 500px){
+  .lobbyLeftCol{
+    grid-template-columns: 92px 1fr minmax(200px, 268px);
+    gap:6px 12px;
+  }
+  #btnOpenCustomizer, #btnPlayTraining, #btnOpenControls, #btnOpenDonate{
+    height:48px; padding:5px 3px;
+  }
+  #btnOpenCustomizer .itemIcon, #btnPlayTraining .itemIcon,
+  #btnOpenControls .itemIcon, #btnOpenDonate .itemIcon{ font-size:16px; }
+  #btnPlayMatch{ min-height:52px; }
+  #btnPlayMatch .itemText{ font-size:15px; }
+  #btnPlayRanked{ padding:8px 12px; }
+}
+
+/* ── telas estreitas / retrato: o rail deita e vira faixa embaixo ─────────── */
+@media (max-width: 620px) and (min-height: 501px){
+  .lobbyLeftCol{
+    grid-template-columns: repeat(4, 1fr);
+    align-content:end; gap:8px;
+  }
+  #matchResultBanner{ grid-column:1 / -1; grid-row:1; }
+  .lobbyRolePick    { grid-column:1 / -1; grid-row:2; }
+  #btnPlayMatch     { grid-column:1 / -1; grid-row:3; }
+  #btnPlayRanked    { grid-column:1 / -1; grid-row:4; }
+  #btnOpenCustomizer{ grid-column:1; grid-row:5; }
+  #btnPlayTraining  { grid-column:2; grid-row:5; }
+  #btnOpenControls  { grid-column:3; grid-row:5; }
+  #btnOpenDonate    { grid-column:4; grid-row:5; }
+}
 </style>
 </head>
 <body>
@@ -1965,6 +2204,25 @@ canvas{display:block;width:100%;height:100%}
 
     <div class="keybindGrid" id="keybindGrid">
       <!-- Generated via JS -->
+    </div>
+
+    <div style="margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.12)">
+      <div style="font-family:'Teko',sans-serif;font-size:22px;color:#ffd700;letter-spacing:1px">SENSIBILIDADE DA CÂMERA</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.7);margin-top:2px">
+        Quanto a câmera gira para cada movimento do dedo (ou do mouse). Vale para os dois.
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;margin-top:10px">
+        <span style="font-size:11px;color:rgba(255,255,255,0.55);font-weight:700">LENTA</span>
+        <input type="range" id="camSensRange" min="0.3" max="2.5" step="0.05" value="1"
+               style="flex:1;accent-color:#ffd700;height:22px">
+        <span style="font-size:11px;color:rgba(255,255,255,0.55);font-weight:700">RÁPIDA</span>
+        <span id="camSensValue" style="min-width:46px;text-align:right;font-family:'Teko',sans-serif;font-size:20px;color:#00f0ff">1.00x</span>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:8px">
+        <button class="camSensPreset lobbyFullscreenBtn" data-sens="0.6" type="button">SUAVE</button>
+        <button class="camSensPreset lobbyFullscreenBtn" data-sens="1.0" type="button">PADRÃO</button>
+        <button class="camSensPreset lobbyFullscreenBtn" data-sens="1.6" type="button">RÁPIDA</button>
+      </div>
     </div>
 
     <div style="margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.12)">
@@ -3741,20 +3999,24 @@ scene.fog = new THREE.FogExp2(0x3e152e, 0.0035);
 const isMobileDevice = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (window.Capacitor !== undefined);
 
 const camera = new THREE.PerspectiveCamera(54, innerWidth/innerHeight, .1, 450);
+// Paridade total com a versão PC: antialias ligado, precisão alta, sem cortes.
+// `stencil:false` é a única diferença e não muda um pixel — o jogo nunca usa
+// buffer de stencil, então alocá-lo só gastaria banda de memória da GPU.
 const renderer = new THREE.WebGLRenderer({
-  antialias: !isMobileDevice, 
+  antialias: true,
   powerPreference: "high-performance",
-  precision: isMobileDevice ? "mediump" : "highp",
+  precision: "highp",
   stencil: false,
   depth: true
 });
 
-// Otimização Senior: Limita o Pixel Ratio para 1.0x no mobile (evita sobrecarga em telas 2K/1080p)
-const PR = isMobileDevice ? Math.min(window.devicePixelRatio, 1.0) : Math.min(window.devicePixelRatio, 1.5);
+// Mesmo teto da versão PC (1.5). O celular tem dpr 2.8, então sem teto ele
+// renderizaria 3,5x mais pixels que um PC — não é "paridade", é castigo.
+const PR = Math.min(window.devicePixelRatio, 1.5);
 renderer.setPixelRatio(PR);
 renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = isMobileDevice ? THREE.BasicShadowMap : THREE.PCFSoftShadowMap;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.25;
 document.querySelector("#game").appendChild(renderer.domElement);
@@ -3765,8 +4027,8 @@ scene.add(hemiLight);
 const sun = new THREE.DirectionalLight(0xffaa55, 2.6);
 sun.position.set(-40, 58, 32);
 sun.castShadow = true;
-sun.shadow.mapSize.set(isMobileDevice ? 1024 : 2048, isMobileDevice ? 1024 : 2048);
-sun.shadow.bias = isMobileDevice ? -0.0008 : -0.0005;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.bias = -0.0005;
 {
   const s = sun.shadow.camera;
   s.left = -52; s.right = 52; s.top = 60; s.bottom = -60; s.near = 8; s.far = 180;
@@ -3791,7 +4053,7 @@ function addFloodlight(x, y, z, tx, tz, color=0xffeedd){
 
 // 1. Textura da Quadra em Alta Resolução (Piso de Concreto Esportivo Pintado com Desgaste Autêntico)
 function makeCourtTexture(){
-  const cw = isMobileDevice ? 1024 : 2048, ch = Math.round(cw * TH / TW);
+  const cw = 2048, ch = Math.round(cw * TH / TW);
   const c = document.createElement("canvas"); c.width = cw; c.height = ch;
   const g = c.getContext("2d");
   const S = u => u * (cw / TW);
@@ -3802,12 +4064,11 @@ function makeCourtTexture(){
   g.fillStyle = "#1e1a22";
   g.fillRect(0, 0, cw, ch);
 
-  // Granulação fina de asfalto otimizada
-  const noiseCount = isMobileDevice ? 500 : 3500;
-  for(let i=0; i<noiseCount; i++){
+  // Granulação fina e micro-poros de asfalto/concreto
+  for(let i=0; i<4500; i++){
     g.fillStyle = Math.random() > 0.5 ? "rgba(50,42,56,0.22)" : "rgba(10,8,14,0.30)";
     const rx = Math.random()*cw, rz = Math.random()*ch;
-    g.fillRect(rx, rz, 4 + Math.random()*10, 4 + Math.random()*10);
+    g.fillRect(rx, rz, 3 + Math.random()*12, 3 + Math.random()*12);
   }
 
   // Área da Quadra (Retângulo Principal com Tinta Epóxi Esportiva Fosca)
@@ -3823,10 +4084,9 @@ function makeCourtTexture(){
   g.fillStyle = courtGrad;
   g.fillRect(qx1, qz1, qw, qh);
 
-  // Micro-textura de resina epóxi otimizada
-  const step = isMobileDevice ? 16 : 8;
-  for(let y=qz1; y<qz1+qh; y+=step){
-    for(let x=qx1; x<qx1+qw; x+=step){
+  // Micro-textura de resina epóxi com rolo de pintura
+  for(let y=qz1; y<qz1+qh; y+=8){
+    for(let x=qx1; x<qx1+qw; x+=8){
       if((x+y)%16 === 0){
         g.fillStyle = Math.random() > 0.5 ? "rgba(255,255,255,0.025)" : "rgba(0,0,0,0.035)";
         g.fillRect(x, y, 6, 6);
@@ -4388,6 +4648,7 @@ const pitch = new THREE.Mesh(
 );
 pitch.rotation.x = -Math.PI/2;
 pitch.receiveShadow = true;
+pitch.userData.naoMesclar = true;   // chao unico: ja e 1 draw call
 scene.add(pitch);
 
 /* ═══════════════ CARREGADOR DE TEXTURAS EXTERNAS DE ALTA RESOLUÇÃO ═══════════════ */
@@ -4399,10 +4660,9 @@ function createUpgradableTexture(externalUrl, fallbackTex, repeatX=1, repeatY=1)
   fallbackTex.wrapT = THREE.RepeatWrapping;
   fallbackTex.repeat.set(repeatX, repeatY);
   fallbackTex.colorSpace = THREE.SRGBColorSpace;
-  fallbackTex.anisotropy = isMobileDevice ? 2 : 8;
+  fallbackTex.anisotropy = 16;
 
-  // No mobile, usa as texturas procedurais ultrarrápidas sem delay de rede
-  if(externalUrl && !isMobileDevice){
+  if(externalUrl){
     texLoader.load(
       externalUrl,
       (tex)=>{
@@ -4410,7 +4670,7 @@ function createUpgradableTexture(externalUrl, fallbackTex, repeatX=1, repeatY=1)
         tex.wrapT = THREE.RepeatWrapping;
         tex.repeat.set(repeatX, repeatY);
         tex.colorSpace = THREE.SRGBColorSpace;
-        tex.anisotropy = 8;
+        tex.anisotropy = 16;
         if(fallbackTex.source && tex.source){
           fallbackTex.source = tex.source;
         } else if(fallbackTex.image && tex.image){
@@ -4427,12 +4687,11 @@ function createUpgradableTexture(externalUrl, fallbackTex, repeatX=1, repeatY=1)
 
 // 1. Textura Panorâmica do Céu ao Pôr do Sol no Rio de Janeiro (Golden Hour / Crepúsculo)
 function makeSkyDomeTexture(){
-  const cw = isMobileDevice ? 512 : 1024, ch = isMobileDevice ? 256 : 512;
-  const c = document.createElement("canvas"); c.width = cw; c.height = ch;
+  const c = document.createElement("canvas"); c.width = 2048; c.height = 1024;
   const g = c.getContext("2d");
-  
+
   // Gradiente crepuscular exuberante do RJ
-  const grad = g.createLinearGradient(0, 0, 0, ch);
+  const grad = g.createLinearGradient(0, 0, 0, 1024);
   grad.addColorStop(0.00, "#08040f");
   grad.addColorStop(0.32, "#180a24");
   grad.addColorStop(0.55, "#3e1233");
@@ -4441,13 +4700,12 @@ function makeSkyDomeTexture(){
   grad.addColorStop(0.93, "#ee8c32");
   grad.addColorStop(1.00, "#ffc254");
   g.fillStyle = grad;
-  g.fillRect(0, 0, cw, ch);
+  g.fillRect(0, 0, 2048, 1024);
 
-  // Nuvens douradas volumétricas
-  const cloudCount = isMobileDevice ? 20 : 100;
-  for(let i=0; i<cloudCount; i++){
-    const cx = (i * 97) % cw, cy = (ch * 0.45) + ((i * 43) % (ch * 0.25));
-    const cr = (cw * 0.03) + ((i * 23) % (cw * 0.05));
+  // Nuvens douradas volumétricas no horizonte
+  for(let i=0; i<140; i++){
+    const cx = (i * 97) % 2048, cy = 480 + ((i * 43) % 260);
+    const cr = 45 + ((i * 23) % 95);
     const cloudGrad = g.createRadialGradient(cx, cy, cr*0.1, cx, cy, cr);
     cloudGrad.addColorStop(0, "rgba(255, 175, 115, 0.28)");
     cloudGrad.addColorStop(0.5, "rgba(180, 65, 90, 0.18)");
@@ -4456,17 +4714,25 @@ function makeSkyDomeTexture(){
     g.beginPath(); g.arc(cx, cy, cr, 0, Math.PI*2); g.fill();
   }
 
-  // Silhuetas distantes dos morros icônicos
+  // Estrelas cintilantes no céu alto
+  g.fillStyle = "#ffffff";
+  for(let i=0; i<280; i++){
+    const sx = (i * 137) % 2048, sy = (i * 83) % 380;
+    g.globalAlpha = 0.3 + ((i * 17) % 70) / 100;
+    g.fillRect(sx, sy, 1.5, 1.5);
+  }
+  g.globalAlpha = 1.0;
+
+  // Silhuetas distantes dos morros icônicos (Pão de Açúcar, Corcovado, Dois Irmãos)
   g.fillStyle = "rgba(14, 6, 20, 0.88)";
   g.beginPath();
-  g.moveTo(0, ch * 0.92);
-  const stepX = isMobileDevice ? 32 : 16;
-  for(let x=0; x<=cw; x+=stepX){
-    const h = ch * 0.78 + Math.sin(x*0.01)* (ch * 0.08) + Math.sin(x*0.04)*(ch * 0.03);
+  g.moveTo(0, 960);
+  for(let x=0; x<=2048; x+=32){
+    const h = 790 + Math.sin(x*0.008)*80 + Math.sin(x*0.025)*35 + (Math.sin(x*0.003 + 1.2) > 0.6 ? -120 : 0);
     g.lineTo(x, h);
   }
-  g.lineTo(cw, ch);
-  g.lineTo(0, ch);
+  g.lineTo(2048, 1024);
+  g.lineTo(0, 1024);
   g.closePath();
   g.fill();
 
@@ -4476,7 +4742,7 @@ function makeSkyDomeTexture(){
 }
 
 // Domo Celeste 360° com Textura Externa de Céu Fotográfico
-const skyDomeGeo = new THREE.SphereGeometry(390, isMobileDevice ? 24 : 48, isMobileDevice ? 16 : 28);
+const skyDomeGeo = new THREE.SphereGeometry(390, 48, 28);
 const skyDomeMat = new THREE.MeshBasicMaterial({
   map: createUpgradableTexture(
     "https://images.unsplash.com/photo-1534447677768-be436bb09401?auto=format&fit=crop&w=2048&q=80",
@@ -4487,26 +4753,32 @@ const skyDomeMat = new THREE.MeshBasicMaterial({
   depthWrite: false
 });
 const skyDome = new THREE.Mesh(skyDomeGeo, skyDomeMat);
+skyDome.userData.naoMesclar = true; // domo gigante: fica fora do merge
 scene.add(skyDome);
 
 // 2. Textura Hiper-Realista de Vegetação e Floresta Tropical dos Morros (Mata Atlântica)
 function makeMorroVegetationTexture(){
-  const size = isMobileDevice ? 256 : 512;
-  const c = document.createElement("canvas"); c.width = size; c.height = size;
+  const c = document.createElement("canvas"); c.width = 1024; c.height = 1024;
   const g = c.getContext("2d");
 
   // Base de solo fértil e rocha escura
   g.fillStyle = "#1b2216";
-  g.fillRect(0, 0, size, size);
+  g.fillRect(0, 0, 1024, 1024);
 
-  // Copas de árvores otimizadas
+  // Copas densas de árvores da floresta tropical
   const greenTones = ["#162e14", "#1f401c", "#183617", "#284e24", "#10220e", "#325c2c", "#1c2b18"];
-  const treeCount = isMobileDevice ? 300 : 2500;
-  for(let i=0; i<treeCount; i++){
-    const gx = Math.random()*size, gy = Math.random()*size;
-    const r = (size * 0.015) + Math.random()*(size * 0.03);
+  for(let i=0; i<6500; i++){
+    const gx = Math.random()*1024, gy = Math.random()*1024;
+    const r = 8 + Math.random()*22;
     g.fillStyle = greenTones[Math.floor(Math.random()*greenTones.length)];
     g.beginPath(); g.arc(gx, gy, r, 0, Math.PI*2); g.fill();
+  }
+
+  // Afloramentos de rocha granítica
+  for(let i=0; i<50; i++){
+    const rx = Math.random()*1024, ry = Math.random()*1024;
+    g.fillStyle = "rgba(42, 38, 48, 0.45)";
+    g.fillRect(rx, ry, 15 + Math.random()*50, 30 + Math.random()*100);
   }
 
   const t = new THREE.CanvasTexture(c);
@@ -4533,6 +4805,7 @@ const groundHill = new THREE.Mesh(
 groundHill.rotation.x = -Math.PI/2;
 groundHill.position.y = -0.32;
 groundHill.receiveShadow = true;
+groundHill.userData.naoMesclar = true;
 scene.add(groundHill);
 
 // Morros Esculpidos no Horizonte da Favela (Dois Irmãos, Corcovado, Urca)
@@ -4569,6 +4842,7 @@ function buildTropicalSun(){
   corona2.lookAt(new THREE.Vector3(0, 0, 0));
   sunGroup.add(corona2);
 
+  sunGroup.traverse(o=>{ o.userData.naoMesclar = true; }); // corona tem blend proprio
   scene.add(sunGroup);
   if(typeof sun !== "undefined" && sun){
     sun.position.set(-125, 92, -175);
@@ -5019,7 +5293,130 @@ function buildFavelaNeighborhood(){
   gWall2.position.set(0, 1.7, (HH+3.8));
   scene.add(gWall2);
 }
+/* ═══════════ MERGE DO CENÁRIO ESTÁTICO ═══════════
+   O bairro tem ~560 casas de ~13 peças cada. Cada peça era um draw call: 2226
+   por quadro, para 46 mil triângulos no total. A GPU nem suava — quem segurava
+   o quadro era o custo de JS/driver de emitir chamada por chamada.
+
+   Como nada disso se move, dá para assar a matriz de cada peça na própria
+   geometria e juntar tudo em uma malha por (material · sombra · quadrante).
+   O resultado é PIXEL IDÊNTICO: mesma geometria, mesmo material, mesma posição
+   no mundo — só que desenhada de uma vez. O quadrante entra na chave para o
+   frustum culling continuar podendo descartar o que está atrás da câmera.       */
+// Assinatura do que o material realmente DESENHA. Cada casa da favela instancia
+// os próprios materiais de parede/telhado/janela, então a cena tem centenas de
+// objetos-material distintos com valores idênticos — e agrupar por uuid deixaria
+// um balde por casa. Dois materiais com os mesmos valores produzem exatamente os
+// mesmos pixels, então podem virar um só. A chave inclui tudo que muda a imagem:
+// se algum campo diferir, os materiais caem em baldes diferentes.
+function assinaturaMaterial(m){
+  const t = (x) => (x && x.uuid) ? x.uuid : "0";
+  return [
+    m.type,
+    m.color ? m.color.getHexString() : "-",
+    m.roughness ?? "-", m.metalness ?? "-",
+    m.emissive ? m.emissive.getHexString() : "-", m.emissiveIntensity ?? "-",
+    t(m.map), t(m.normalMap), t(m.roughnessMap), t(m.metalnessMap),
+    t(m.emissiveMap), t(m.aoMap), t(m.alphaMap), t(m.bumpMap),
+    m.transparent ? 1 : 0, m.opacity, m.alphaTest, m.side,
+    m.flatShading ? 1 : 0, m.wireframe ? 1 : 0, m.vertexColors ? 1 : 0,
+    m.depthWrite ? 1 : 0, m.depthTest ? 1 : 0, m.blending,
+    m.toneMapped ? 1 : 0, m.fog ? 1 : 0, m.shadowSide ?? "-"
+  ].join("~");
+}
+
+function mesclarEstaticos(objetos){
+  const baldes = new Map();
+  const originais = [];
+  const canonico = new Map();   // assinatura -> material representante
+
+  // Travessia manual (e não `traverse`) porque um nó marcado precisa proteger a
+  // subárvore inteira: marcar só a raiz do atleta não adianta se a varredura
+  // descer e engolir os filhos dele.
+  const visitar = (o) => {
+    if(!o || o.isLight) return;
+    if(o.userData.naoMesclar || o.userData.dinamico) return;   // poda o galho todo
+    if(o.isMesh && !o.isSkinnedMesh && !o.isInstancedMesh){
+      const g = o.geometry;
+      if(g && g.attributes && g.attributes.position && !Array.isArray(o.material)){
+        o.updateWorldMatrix(true, false);
+        const p = o.getWorldPosition(new THREE.Vector3());
+        const quad = (p.x < 0 ? "O" : "L") + (p.z < 0 ? "N" : "S");
+        const assin = assinaturaMaterial(o.material);
+        if(!canonico.has(assin)) canonico.set(assin, o.material);
+        const chave = `${assin}|${o.castShadow?1:0}|${o.receiveShadow?1:0}|${o.renderOrder}|${quad}`;
+        let b = baldes.get(chave);
+        if(!b){ b = { material: canonico.get(assin), cast: o.castShadow, recv: o.receiveShadow,
+                      ordem: o.renderOrder, geos: [] }; baldes.set(chave, b); }
+        const gg = (g.index ? g.toNonIndexed() : g.clone());
+        if(!gg.attributes.normal) gg.computeVertexNormals();
+        gg.applyMatrix4(o.matrixWorld);
+        b.geos.push(gg);
+        originais.push(o);
+      }
+    }
+    for(const c of o.children.slice()) visitar(c);
+  };
+
+  for(const raiz of objetos){
+    if(!raiz || raiz.isLight) continue;
+    raiz.updateMatrixWorld(true);
+    visitar(raiz);
+  }
+
+  const mescladas = [];
+  for(const b of baldes.values()){
+    let n = 0;
+    for(const g of b.geos) n += g.attributes.position.count;
+    const pos = new Float32Array(n*3), nor = new Float32Array(n*3), uv = new Float32Array(n*2);
+    let o3 = 0, o2 = 0;
+    for(const g of b.geos){
+      const P = g.attributes.position, N = g.attributes.normal, U = g.attributes.uv;
+      pos.set(P.array.subarray(0, P.count*3), o3);
+      if(N) nor.set(N.array.subarray(0, N.count*3), o3);
+      if(U) uv.set(U.array.subarray(0, U.count*2), o2);
+      o3 += P.count*3; o2 += P.count*2;
+      g.dispose();
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute("normal",   new THREE.BufferAttribute(nor, 3));
+    geo.setAttribute("uv",       new THREE.BufferAttribute(uv, 2));
+    geo.computeBoundingSphere();
+    geo.computeBoundingBox();
+    const m = new THREE.Mesh(geo, b.material);
+    m.castShadow = b.cast; m.receiveShadow = b.recv; m.renderOrder = b.ordem;
+    m.matrixAutoUpdate = false;                 // estático: não recalcula por quadro
+    m.userData.naoMesclar = true;
+    scene.add(m);
+    mescladas.push(m);
+  }
+
+  // Remove as peças originais e devolve a memória das geometrias soltas.
+  for(const o of originais){
+    o.parent && o.parent.remove(o);
+    o.geometry && o.geometry.dispose();
+  }
+  // Grupos que ficaram vazios só custam travessia — saem da cena.
+  for(const raiz of objetos){
+    if(raiz.isLight || raiz.isMesh) continue;
+    let temMesh = false;
+    raiz.traverse((o) => { if(o.isMesh) temMesh = true; });
+    if(!temMesh && raiz.parent) raiz.parent.remove(raiz);
+  }
+  return { malhas: mescladas.length, pecas: originais.length };
+}
+
 buildFavelaNeighborhood();
+
+// Neste ponto o mundo estático está inteiro montado e nenhum atleta existe
+// ainda (os bonecos entram só quando a partida/lobby monta o elenco), então dá
+// para varrer a cena inteira com segurança. O que não pode ser mesclado está
+// marcado com `naoMesclar` na criação.
+{
+  const r = mesclarEstaticos(scene.children.slice());
+  console.log(`[cenário] ${r.pecas} peças estáticas mescladas em ${r.malhas} malhas`);
+}
 
 /* ═══════════════ GOLS ═══════════════ */
 const postMat = new THREE.MeshStandardMaterial({color:0xffffff, roughness:0.35, metalness:0.3});
@@ -5548,6 +5945,16 @@ function makePixelTattooTexture(pixelMatrix){
 
 function createHumanoidCria(team, role, skinIdx=0, foot=1, customConfig=null){
   const root = new THREE.Group();
+  // Ordem YXZ, e nao a padrao XYZ. Com XYZ o Three aplica o X POR ULTIMO, ou
+  // seja, em torno do eixo X do MUNDO — e como `root.rotation.y` guarda a
+  // direcao que o atleta encara, o mesmo `root.rotation.x` inclinava o corpo
+  // para tras encarando +Z e para FRENTE encarando -Z. Era isso que deixava o
+  // carrinho invertido: jogador de linha nasce com yaw = PI, entao numa das
+  // direcoes de ataque o corpo pitchava ao contrario e a perna esticada ia
+  // para tras. Com YXZ o yaw entra depois, e o pitch/roll passa a ser no
+  // referencial do proprio corpo — como as animacoes sempre assumiram.
+  // Vale tambem para o tombo (fall) e a falta (foul), que usam o mesmo eixo.
+  root.rotation.order = "YXZ";
   const cfg = (team === 0 && role === "player") ? (customConfig || playerCustomConfig) : customConfig;
   
   // ════════════ MATERIAIS CONFIGURÁVEIS ════════════
@@ -6257,6 +6664,21 @@ function createHumanoidCria(team, role, skinIdx=0, foot=1, customConfig=null){
 
   const initialHeight = (cfg && cfg.heightScale) ? cfg.heightScale : 1.22;
   root.scale.set(initialHeight, initialHeight, initialHeight);
+
+  // O atleta é dinâmico: os ossos giram todo quadro, então ele fica fora do
+  // merge do cenário. Mas as PEÇAS penduradas em cada osso (dente, dedo, mecha,
+  // trava de chuteira) nunca se mexem em relação ao osso que as carrega — a
+  // pose é do osso, não da peça. Marcá-las como matriz fixa tira ~400 recomposições
+  // de matriz por quadro sem alterar um pixel: quem continua sendo recalculado
+  // é exatamente quem anima.
+  root.userData.dinamico = true;
+  root.userData.naoMesclar = true;
+  root.traverse((o) => {
+    if(o.isMesh && o.children.length === 0){
+      o.updateMatrix();
+      o.matrixAutoUpdate = false;
+    }
+  });
   scene.add(root);
 
   return {
@@ -7192,14 +7614,22 @@ function animateHumanoid(char, dt, isMoving){
       char.torsoGroup.rotation.y = footSign * 0.20 * ease;
       char.headGroup.rotation.x = -0.25 * ease;
 
+      // Quadril NEGATIVO estica a perna para FRENTE. Medido no proprio rig: com
+      // a coxa pendurada em -Y, girar +X leva o pe para -Z (para tras) — e o
+      // modelo encara +Z (olhos e biqueira em z positivo). O carrinho usava
+      // +1.35, entao a perna ficava cravada ATRAS o deslize inteiro enquanto o
+      // corpo viajava para frente: era o "carrinho ao contrario".
+      //   hip  0     -> pe a  +0.23 do corpo
+      //   hip -0.85  -> pe a  +0.87  (frente)
+      //   hip +1.35  -> pe a  -1.03  (atras)  <- o que estava aqui
       // Perna atacante (de carrinho) se estica totalmente para frente como uma lâmina
-      legKick.hipJoint.rotation.x  = THREE.MathUtils.lerp(0.3, 1.35, bendEase);
+      legKick.hipJoint.rotation.x  = THREE.MathUtils.lerp(-0.3, -1.35, bendEase);
       legKick.hipJoint.rotation.z  = footSign * -0.06 * bendEase;
       legKick.kneeJoint.rotation.x = THREE.MathUtils.lerp(0.2, 0.04, bendEase);
       legKick.footGroup.rotation.x = -0.15 * bendEase;
 
       // Perna de apoio vem trazida para frente plana junto ao corpo, sem dobrar o joelho pra baixo
-      legPlant.hipJoint.rotation.x = THREE.MathUtils.lerp(0.0, 0.55, bendEase);
+      legPlant.hipJoint.rotation.x = THREE.MathUtils.lerp(0.0, -0.55, bendEase);
       legPlant.hipJoint.rotation.z = -roll * THREE.MathUtils.lerp(0.0, 0.45, bendEase);
       legPlant.kneeJoint.rotation.x = THREE.MathUtils.lerp(0.1, 0.65, bendEase);
       legPlant.footGroup.rotation.x = 0;
@@ -7226,13 +7656,13 @@ function animateHumanoid(char, dt, isMoving){
       char.headGroup.rotation.x = -0.25;
 
       // Perna atacante esticada para frente desarmando a bola
-      legKick.hipJoint.rotation.x  = 1.35 + g * 0.08;
+      legKick.hipJoint.rotation.x  = -1.35 - g * 0.08;
       legKick.hipJoint.rotation.z  = footSign * -0.06;
       legKick.kneeJoint.rotation.x = 0.04;
       legKick.footGroup.rotation.x = -0.15;
 
       // Perna de apoio recolhida suavemente deitada paralela ao chão (zero contato vertical de joelho)
-      legPlant.hipJoint.rotation.x = 0.55;
+      legPlant.hipJoint.rotation.x = -0.55;
       legPlant.hipJoint.rotation.z = -roll * 0.45;
       legPlant.kneeJoint.rotation.x = 0.65;
       legPlant.footGroup.rotation.x = 0;
@@ -7262,12 +7692,12 @@ function animateHumanoid(char, dt, isMoving){
       char.torsoGroup.rotation.y = (1 - riseEase) * footSign * 0.15;
       char.headGroup.rotation.x = THREE.MathUtils.damp(char.headGroup.rotation.x, 0, 16, dt);
 
-      legKick.hipJoint.rotation.x  = THREE.MathUtils.lerp(1.43, 0.10, unfoldEase);
+      legKick.hipJoint.rotation.x  = THREE.MathUtils.lerp(-1.43, 0.10, unfoldEase);
       legKick.hipJoint.rotation.z  = 0;
       legKick.kneeJoint.rotation.x = THREE.MathUtils.lerp(0.04, 0.08, unfoldEase);
       legKick.footGroup.rotation.x = (1 - unfoldEase) * -0.15;
 
-      legPlant.hipJoint.rotation.x = THREE.MathUtils.lerp(0.55, 0.05, unfoldEase);
+      legPlant.hipJoint.rotation.x = THREE.MathUtils.lerp(-0.55, 0.05, unfoldEase);
       legPlant.hipJoint.rotation.z = THREE.MathUtils.lerp(-roll * 0.45, 0, unfoldEase);
       legPlant.kneeJoint.rotation.x = THREE.MathUtils.lerp(0.65, 0.08, unfoldEase);
       legPlant.footGroup.rotation.x = 0;
@@ -7697,9 +8127,9 @@ function animateHumanoid(char, dt, isMoving){
   char.root.rotation.z = THREE.MathUtils.damp(char.root.rotation.z, 0, 16.0, dt);
 
   // Cadência dinâmica e atlética calibrada com a nova velocidade do chão
-  const sprintFactor = Math.min(1, Math.max(0, (speed - 8.0) / 6.0));
+  const sprintFactor = Math.min(1, Math.max(0, (speed - 7.0) / 5.0));
   // Cadência rápida e ágil
-  const cadence = 6.2 + speed * 1.35;
+  const cadence = 4.5 + speed * 1.25;
   char.runPhase = (char.runPhase + dt * cadence) % (Math.PI * 2);
   const p = char.runPhase;
 
@@ -8185,24 +8615,25 @@ function updatePlayer(dt){
     }
 
     const canSprint = wantsSprint && !player.isExhausted;
-    // Velocidade de corrida e arrancada atlética (Modo Ágil Senior)
-    let speed = canSprint ? 17.5 : 12.8;
-    // Condução da bola fluida e ágil (96%)
-    if(owner === player) speed *= 0.96;
+    // Mesmos numeros do single-player do PC: o mobile tinha subido para
+    // 17.5/12.8 com conducao a 96%, ~20% acima, e junto com o damping mais
+    // agressivo o boneco saia disparado. Igualar devolve a sensacao de pe.
+    let speed = canSprint ? 14.5 : 10.2;
+    // Condução da bola com controle dinâmico rápido (92%)
+    if(owner === player) speed *= 0.92;
 
     if(isMoving){
       tA.set(0,0,0).addScaledVector(camF, -iy).addScaledVector(camR, ix);
       tA.y = 0; tA.normalize().multiplyScalar(speed * mag);
-      // Damping de 24 para resposta imediata ao mudar de direção no analógico
-      player.vel.x = THREE.MathUtils.damp(player.vel.x, tA.x, 24, dt);
-      player.vel.z = THREE.MathUtils.damp(player.vel.z, tA.z, 24, dt);
+      player.vel.x = THREE.MathUtils.damp(player.vel.x, tA.x, 16, dt);
+      player.vel.z = THREE.MathUtils.damp(player.vel.z, tA.z, 16, dt);
       player.yaw = Math.atan2(tA.x, tA.z);
       if(player.state !== "jump" && player.state !== "header" && player.state !== "kick_charge" && player.state !== "pass" && !player.state.startsWith("shot")){
         player.state = canSprint ? "sprint" : "run";
       }
     } else {
-      player.vel.x = THREE.MathUtils.damp(player.vel.x, 0, 18, dt);
-      player.vel.z = THREE.MathUtils.damp(player.vel.z, 0, 18, dt);
+      player.vel.x = THREE.MathUtils.damp(player.vel.x, 0, 13, dt);
+      player.vel.z = THREE.MathUtils.damp(player.vel.z, 0, 13, dt);
       if(player.state !== "jump" && player.state !== "header" && player.state !== "kick_charge" && player.state !== "shot" && player.state !== "shot_power" && player.state !== "shot_technique" && player.state !== "pass" && player.state !== "steal") player.state = "idle";
     }
 
@@ -9068,6 +9499,13 @@ function performHeaderContact(){
 }
 
 /* ═══════════════ SISTEMA DE ESTAMINA / FÔLEGO DOS JOGADORES ═══════════════ */
+// Este HUD roda a cada quadro. Antes ele refazia 5 querySelector e ~12 escritas
+// de estilo/texto por quadro — e no Chromium escrever estilo suja layout/paint
+// mesmo quando o valor e o mesmo. Como o folego so muda de 1 em 1 por cento, o
+// trabalho real acontece ~100 vezes na barra inteira, nao 60 vezes por segundo.
+// Guardar o ultimo valor escrito e so tocar o DOM quando ele muda mantem o HUD
+// pixel a pixel igual e tira o repaint do caminho do quadro.
+const _staminaCache = { pct:-1, exh:null, txt:"", cor:"", show:null, op:"", el:null };
 function updateStaminaHUD(dt){
   const curStamina = (gameMode === "multiplayer")
     ? (mp && mp.stamina !== undefined ? mp.stamina : 100)
@@ -9076,46 +9514,46 @@ function updateStaminaHUD(dt){
     ? !!(mp && mp.isExhausted)
     : !!(player && player.isExhausted);
 
-  const barEl = $("#staminaBar");
-  const textEl = $("#staminaText");
-  const hudEl = $("#staminaHud");
-  const fillEl = $("#sprintStaminaFill");
-  const sprintBtnEl = $("#sprintBtn");
+  // Referencias resolvidas uma vez, nao a cada quadro.
+  let E = _staminaCache.el;
+  if(!E){
+    E = _staminaCache.el = {
+      bar: $("#staminaBar"), text: $("#staminaText"), hud: $("#staminaHud"),
+      fill: $("#sprintStaminaFill"), sprintBtn: $("#sprintBtn")
+    };
+  }
 
   const pct = Math.max(0, Math.min(100, Math.round(curStamina)));
+  const inActiveMatch = (gameMode === "match" || gameMode === "training" || gameMode === "multiplayer") && (running || (mp && mp.running));
 
-  if(barEl){
-    barEl.style.width = `${pct}%`;
-    barEl.classList.toggle("mid", pct < 60 && pct >= 28);
-    barEl.classList.toggle("low", pct < 28);
-  }
+  const txt = isExh ? "CANSAÇO 😮‍💨" : (pct < 100 ? `${pct}% FÔLEGO` : "FÔLEGO ⚡");
+  const cor = isExh ? "#ef4444"
+            : (pct < 100 ? (pct < 28 ? "#ff4455" : (pct < 60 ? "#ffd700" : "#00f0ff")) : "#00f0ff");
+  const op  = (pct < 98 || isExh) ? "1" : "0.75";
 
-  if(textEl){
-    if(isExh){
-      textEl.textContent = "CANSAÇO 😮‍💨";
-      textEl.style.color = "#ef4444";
-    } else if(pct < 100){
-      textEl.textContent = `${pct}% FÔLEGO`;
-      textEl.style.color = pct < 28 ? "#ff4455" : (pct < 60 ? "#ffd700" : "#00f0ff");
-    } else {
-      textEl.textContent = "FÔLEGO ⚡";
-      textEl.style.color = "#00f0ff";
+  if(pct !== _staminaCache.pct){
+    if(E.bar){
+      E.bar.style.width = `${pct}%`;
+      E.bar.classList.toggle("mid", pct < 60 && pct >= 28);
+      E.bar.classList.toggle("low", pct < 28);
     }
+    if(E.fill) E.fill.style.height = `${pct}%`;
+    _staminaCache.pct = pct;
   }
 
-  if(hudEl){
-    hudEl.classList.toggle("exhausted", isExh);
-    const inActiveMatch = (gameMode === "match" || gameMode === "training" || gameMode === "multiplayer") && (running || (mp && mp.running));
-    hudEl.classList.toggle("show", inActiveMatch);
-    hudEl.style.opacity = (pct < 98 || isExh) ? "1" : "0.75";
-  }
+  if(txt !== _staminaCache.txt){ if(E.text) E.text.textContent = txt; _staminaCache.txt = txt; }
+  if(cor !== _staminaCache.cor){ if(E.text) E.text.style.color = cor; _staminaCache.cor = cor; }
 
-  if(fillEl){
-    fillEl.style.height = `${pct}%`;
+  if(isExh !== _staminaCache.exh){
+    if(E.hud) E.hud.classList.toggle("exhausted", isExh);
+    if(E.sprintBtn) E.sprintBtn.classList.toggle("exhausted", isExh);
+    _staminaCache.exh = isExh;
   }
-  if(sprintBtnEl){
-    sprintBtnEl.classList.toggle("exhausted", isExh);
+  if(inActiveMatch !== _staminaCache.show){
+    if(E.hud) E.hud.classList.toggle("show", inActiveMatch);
+    _staminaCache.show = inActiveMatch;
   }
+  if(op !== _staminaCache.op){ if(E.hud) E.hud.style.opacity = op; _staminaCache.op = op; }
 }
 
 /* ═══════════════ LÓGICA DO SUPER CHUTE & CÂMERA LENTA ═══════════════ */
@@ -11734,8 +12172,62 @@ function endMatch(){
   $("#start").style.display = "flex";
 }
 
+/* ═══════════════ MEDIDOR DE PERFORMANCE ═══════════════
+   Liga com 3 toques rápidos no canto superior esquerdo (ou
+   localStorage.cf_perf = "1"). Fica desligado para o jogador normal e
+   custa zero quando desligado: sem overlay, o loop nem lê os contadores. */
+const perfHUD = {
+  on: false, el: null, frames: 0, acc: 0, worst: 0,
+  init(){
+    try { this.on = localStorage.getItem("cf_perf") === "1"; } catch(e){}
+    const el = document.createElement("div");
+    el.style.cssText = "position:fixed;top:0;left:0;z-index:99999;font:11px/1.35 monospace;" +
+      "background:rgba(0,0,0,.72);color:#0f0;padding:5px 8px;pointer-events:none;white-space:pre;display:none";
+    document.body.appendChild(el);
+    this.el = el;
+    if(this.on) el.style.display = "block";
+
+    // Zona de toque só no canto, para não roubar toque do jogo.
+    let taps = 0, tmr = null;
+    const hit = (x, y) => x < 90 && y < 90;
+    addEventListener("pointerdown", (e) => {
+      if(!hit(e.clientX, e.clientY)) return;
+      taps++;
+      clearTimeout(tmr);
+      tmr = setTimeout(() => { taps = 0; }, 600);
+      if(taps >= 3){
+        taps = 0;
+        this.on = !this.on;
+        el.style.display = this.on ? "block" : "none";
+        try { localStorage.setItem("cf_perf", this.on ? "1" : "0"); } catch(e){}
+      }
+    }, true);
+  },
+  frame(dtMs){
+    if(!this.on) return;
+    this.frames++; this.acc += dtMs;
+    if(dtMs > this.worst) this.worst = dtMs;
+    if(this.acc < 500) return;
+    const fps = (this.frames * 1000 / this.acc);
+    const r = renderer.info.render, m = renderer.info.memory;
+    this.el.textContent =
+      `${fps.toFixed(0)} fps   ${(this.acc/this.frames).toFixed(1)}ms   pior ${this.worst.toFixed(0)}ms\n` +
+      `draws ${r.calls}   tris ${(r.triangles/1000).toFixed(0)}k\n` +
+      `geo ${m.geometries}  tex ${m.textures}  prog ${renderer.info.programs?.length ?? 0}\n` +
+      `PR ${PR}  ${renderer.domElement.width}x${renderer.domElement.height}`;
+    this.frames = 0; this.acc = 0; this.worst = 0;
+  }
+};
+perfHUD.init();
+
+// Gancho de diagnóstico: deixa medir draw calls / FPS de fora (DevTools remoto,
+// `chrome://inspect`). O jogo inteiro já é HTML legível, então isto não expõe
+// nada novo — só evita ter que reabrir o bundle para inspecionar a cena.
+window.__cf = { renderer, scene, camera, perfHUD, THREE, get PR(){ return PR; } };
+
 /* ═══════════════ LOOP PRINCIPAL ═══════════════ */
 let erroDeQuadroAvisado = false;
+let perfPrev = performance.now();
 function loop(now){
   requestAnimationFrame(loop);
   try {
@@ -11747,10 +12239,17 @@ function loop(now){
     }
   }
   renderer.render(scene, camera);
+  if(perfHUD.on){
+    const t = performance.now();
+    perfHUD.frame(t - perfPrev);
+    perfPrev = t;
+  } else {
+    perfPrev = performance.now();
+  }
 }
 
 function atualizarQuadro(now){
-  const realDt = Math.min(0.066, (now - last)/1000);
+  const realDt = Math.min(0.033, (now - last)/1000);
   last = now;
 
   // Câmera Lenta (Bullet Time): quando ativo, desacelera a física do mundo para 0.12x!
@@ -12106,6 +12605,31 @@ document.addEventListener("pointerlockchange", ()=>{
   }
 });
 
+/* ═══════════ SENSIBILIDADE DA CÂMERA ═══════════
+   Multiplicador único aplicado aos dois caminhos de olhar (mouse travado e
+   arrasto de dedo). As bases seguem diferentes entre si de propósito — o dedo
+   percorre menos pixels que o mouse, então precisa render mais por pixel — e o
+   ajuste do jogador escala as duas juntas, mantendo a proporção. */
+const CAM_SENS = { mouse: 0.0032, toque: 0.0055, min: 0.3, max: 2.5, padrao: 1.0 };
+let camSensMult = CAM_SENS.padrao;
+try {
+  const salvo = parseFloat(localStorage.getItem("cf_cam_sens"));
+  if(Number.isFinite(salvo) && salvo >= CAM_SENS.min && salvo <= CAM_SENS.max) camSensMult = salvo;
+} catch(e) {}
+
+function setCamSens(v){
+  camSensMult = Math.max(CAM_SENS.min, Math.min(CAM_SENS.max, Number(v) || CAM_SENS.padrao));
+  try { localStorage.setItem("cf_cam_sens", String(camSensMult)); } catch(e) {}
+  atualizarHudSensibilidade();
+}
+
+function atualizarHudSensibilidade(){
+  const sl = document.getElementById("camSensRange");
+  const lb = document.getElementById("camSensValue");
+  if(sl && Math.abs(parseFloat(sl.value) - camSensMult) > 1e-6) sl.value = String(camSensMult);
+  if(lb) lb.textContent = `${camSensMult.toFixed(2)}x`;
+}
+
 window.addEventListener("mousemove", e=>{
   const isLocked = (document.pointerLockElement === renderer.domElement || document.pointerLockElement === document.body);
   let dx = e.movementX, dy = e.movementY;
@@ -12120,7 +12644,7 @@ window.addEventListener("mousemove", e=>{
   }
 
   if((isLocked || isMouseLooking || isRightMouseDown) && dx !== undefined && dy !== undefined && running){
-    const sensitivity = 0.0032;
+    const sensitivity = CAM_SENS.mouse * camSensMult;
     camYaw -= dx * sensitivity;
     camPitch = clamp(camPitch - dy * sensitivity, -0.45, 1.35);
   }
@@ -12162,7 +12686,7 @@ window.addEventListener("touchmove", e=>{
       } else if(running){
         const dy = t.clientY - (touchPrevY || t.clientY);
         touchPrevY = t.clientY;
-        const sensitivity = 0.0055;
+        const sensitivity = CAM_SENS.toque * camSensMult;
         camYaw -= dx * sensitivity;
         camPitch = clamp(camPitch - dy * sensitivity, -0.45, 1.35);
       }
@@ -12187,7 +12711,6 @@ window.addEventListener("touchcancel", endTouchCam, {passive:true});
 const joy = $("#joy"), knob = $("#knob");
 let joyId = null;
 
-function joyMove(e){
 let isManualSprintHeld = false;
 
 function joyMove(e){
@@ -12739,6 +13262,20 @@ if(btnCloseSystem && systemModal){
 }
 
 /* ═══════════ LÓGICA DE KEYBINDS (CONTROLES) ═══════════ */
+// Sensibilidade da câmera: slider + atalhos. `input` atualiza ao arrastar, para
+// o jogador sentir a mudança na hora em vez de só ao soltar.
+{
+  const sl = document.getElementById("camSensRange");
+  if(sl){
+    sl.value = String(camSensMult);
+    sl.addEventListener("input", (e) => setCamSens(e.target.value));
+  }
+  document.querySelectorAll(".camSensPreset").forEach((b) => {
+    b.addEventListener("click", () => setCamSens(b.dataset.sens));
+  });
+  atualizarHudSensibilidade();
+}
+
 const keybindGrid = $("#keybindGrid");
 const btnResetKeybinds = $("#btnResetKeybinds");
 const btnSaveKeybinds = $("#btnSaveKeybinds");
@@ -14556,198 +15093,250 @@ for(let i=0; i<40; i++) updateCamera(0.05);
 last = performance.now();
 requestAnimationFrame(loop);
 
-// --- EDITOR DE HUD MOBILE ---
-(function() {
-  const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-  if(!isTouch) return;
+// ═══════════════════ EDITOR DE HUD — CONTROLE POR PEÇA ═══════════════════
+// O editor antigo tratava o direcional e a grade de botoes como dois blocos:
+// dava para mover a grade inteira, nunca um botao sozinho. Aqui cada peca do
+// HUD e independente — arrasta para onde quiser, com tamanho e transparencia
+// proprios.
+//
+// A escala vai numa variavel CSS (`--hudEscala`) em vez de escrever `transform`
+// direto no elemento. Motivo: `.btn:active` ja usa `transform:scale(.90)` para
+// o feedback de aperto, e as duas regras brigariam — o botao redimensionado
+// pulava para 90% do tamanho ORIGINAL ao ser tocado. Com a variavel, o aperto
+// vira `escala * 0.90` e as duas coisas convivem.
+(function () {
+  const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0)
+                  || (window.Capacitor !== undefined);
+  if (!isTouch) return;
 
-  const sysModal = document.getElementById("systemModal");
-  if(sysModal) {
-    const card = sysModal.querySelector(".systemCard");
-    const editBtn = document.createElement("button");
-    editBtn.textContent = "EDITAR HUD (MOBILE)";
-    editBtn.style.cssText = "margin-top:20px; width:100%; padding:14px; background:linear-gradient(135deg,#ffd700,#ff8800); border:none; border-radius:12px; font-family:'Teko',sans-serif; font-size:24px; font-weight:700; color:#000; cursor:pointer;";
-    editBtn.onclick = startHudEditor;
-    card.appendChild(editBtn);
+  // Cada peca ajustavel do HUD. A ordem e a que aparece no seletor do editor.
+  const PECAS = [
+    { id: "joy",            nome: "DIRECIONAL",  origem: "bottom left"  },
+    { id: "mainActionBtn",  nome: "CHUTE",       origem: "bottom right" },
+    { id: "passTackleBtn",  nome: "PASSE",       origem: "bottom right" },
+    { id: "skillBtn",       nome: "DRIBLE",      origem: "bottom right" },
+    { id: "superShotBtn",   nome: "SUPER",       origem: "bottom right" },
+    { id: "callPassBtn",    nome: "PEDIR BOLA",  origem: "bottom right" },
+    { id: "miniWrap",       nome: "MINIMAPA",    origem: "top left"     },
+    { id: "staminaHud",     nome: "FÔLEGO",      origem: "bottom center"},
+    { id: "voiceBtn",       nome: "MICROFONE",   origem: "bottom right" }
+  ];
+
+  const CHAVE = "cf_hud_pecas";
+  const PADRAO = { x: null, y: null, escala: 1, opacidade: 1 };
+
+  let cfg = {};
+  try {
+    const salvo = JSON.parse(localStorage.getItem(CHAVE) || "{}");
+    if (salvo && typeof salvo === "object") cfg = salvo;
+  } catch (e) { cfg = {}; }
+
+  const conf = (id) => (cfg[id] = Object.assign({}, PADRAO, cfg[id] || {}));
+  const el = (id) => document.getElementById(id);
+
+  // ── aplicar ──────────────────────────────────────────────────────────────
+  function aplicarPeca(id) {
+    const e = el(id), c = conf(id);
+    if (!e) return;
+    e.style.setProperty("--hudEscala", c.escala);
+    e.style.opacity = c.opacidade;
+    if (c.x !== null && c.y !== null) {
+      // Sai do fluxo (a grade dos botoes e um grid): posicao absoluta na tela.
+      e.style.position = "fixed";
+      e.style.left = c.x + "px";
+      e.style.top = c.y + "px";
+      e.style.right = "auto";
+      e.style.bottom = "auto";
+      e.style.margin = "0";
+      e.style.transformOrigin = "top left";
+    }
+  }
+  function aplicarTudo() { PECAS.forEach((p) => aplicarPeca(p.id)); }
+
+  function salvar() {
+    try { localStorage.setItem(CHAVE, JSON.stringify(cfg)); } catch (e) {}
   }
 
-  const editorOverlay = document.createElement("div");
-  editorOverlay.id = "hudEditorOverlay";
-  editorOverlay.style.cssText = "position:fixed; inset:0; z-index:9999; display:none; flex-direction:column; align-items:center; justify-content:center; background:rgba(0,0,0,0.5); pointer-events:none;";
-  
-  editorOverlay.innerHTML = `
-    <div style="pointer-events:auto; background:rgba(15,10,22,0.95); border:1.5px solid #ffd700; border-radius:20px; padding:20px; width:340px; text-align:center; box-shadow:0 10px 40px rgba(0,0,0,0.8); display:flex; flex-direction:column; gap:14px;">
-      <h3 style="margin:0; font-family:'Teko',sans-serif; font-size:32px; color:#ffd700; line-height:1;">EDITOR DE HUD</h3>
-      <p style="margin:0; font-size:13px; color:#ccc; line-height:1.2;">Toque e arraste os botões amarelos pela tela. Clique em um deles para ajustar Tamanho e Transparência.</p>
-      
-      <div style="text-align:left; font-size:14px; font-weight:900; color:#ffaa44; margin-top:8px;">TAMANHO</div>
-      <input type="range" id="hudScaleRange" min="0.5" max="2.0" step="0.05" value="1.0" style="width:100%">
-      
-      <div style="text-align:left; font-size:14px; font-weight:900; color:#ffaa44;">TRANSPARÊNCIA</div>
-      <input type="range" id="hudOpacityRange" min="0.1" max="1.0" step="0.05" value="1.0" style="width:100%">
-      
-      <div style="display:flex; gap:10px; margin-top:14px;">
-        <button id="btnResetHud" style="flex:1; padding:12px; background:rgba(255,50,50,0.2); border:1px solid #ff4444; color:#ff4444; border-radius:12px; font-weight:900;">RESETAR</button>
-        <button id="btnSaveHud" style="flex:1; padding:12px; background:linear-gradient(135deg,#ffd700,#ff8800); border:none; color:#000; border-radius:12px; font-weight:900;">SALVAR</button>
+  function resetarPeca(id) {
+    delete cfg[id];
+    const e = el(id);
+    if (e) {
+      e.style.position = ""; e.style.left = ""; e.style.top = "";
+      e.style.right = ""; e.style.bottom = ""; e.style.margin = "";
+      e.style.transformOrigin = ""; e.style.opacity = "";
+      e.style.removeProperty("--hudEscala");
+    }
+    conf(id);
+  }
+
+  // ── painel do editor ─────────────────────────────────────────────────────
+  const painel = document.createElement("div");
+  painel.id = "hudEditorPainel";
+  painel.innerHTML = `
+    <div class="hudEdBarra">
+      <div class="hudEdTitulo">EDITOR DE HUD</div>
+      <div class="hudEdDica">Arraste a peça na tela. Toque nela para selecionar.</div>
+      <div class="hudEdSel" id="hudEdSel">DIRECIONAL</div>
+      <label class="hudEdLinha">
+        <span>TAMANHO</span>
+        <input type="range" id="hudEdEscala" min="0.5" max="2" step="0.05" value="1">
+        <b id="hudEdEscalaVal">1.00x</b>
+      </label>
+      <label class="hudEdLinha">
+        <span>OPACIDADE</span>
+        <input type="range" id="hudEdOpac" min="0.2" max="1" step="0.05" value="1">
+        <b id="hudEdOpacVal">100%</b>
+      </label>
+      <div class="hudEdBotoes">
+        <button id="hudEdResetUm" type="button">RESETAR ESTA</button>
+        <button id="hudEdResetTudo" type="button">RESETAR TUDO</button>
+        <button id="hudEdOk" type="button" class="hudEdOk">CONCLUIR</button>
       </div>
-    </div>
+    </div>`;
+  document.body.appendChild(painel);
+
+  const estilo = document.createElement("style");
+  estilo.textContent = `
+    #hudEditorPainel{position:fixed;inset:0;z-index:9998;display:none;pointer-events:none}
+    #hudEditorPainel.aberto{display:block}
+    .hudEdBarra{position:absolute;top:8px;left:50%;transform:translateX(-50%);
+      width:min(94vw,470px);pointer-events:auto;
+      background:rgba(14,9,20,0.96);border:1.5px solid rgba(255,215,0,0.5);
+      border-radius:14px;padding:8px 12px;display:flex;flex-direction:column;gap:5px;
+      box-shadow:0 10px 34px rgba(0,0,0,0.85);font-family:'Outfit',sans-serif;color:#fff}
+    .hudEdTitulo{font-family:'Teko',sans-serif;font-size:21px;color:#ffd700;line-height:1;letter-spacing:1px}
+    .hudEdDica{font-size:10px;color:rgba(255,255,255,0.65);line-height:1.2}
+    .hudEdSel{font-size:12px;font-weight:900;color:#00f0ff;letter-spacing:1px}
+    .hudEdLinha{display:flex;align-items:center;gap:8px;font-size:10px;font-weight:800;
+      letter-spacing:.5px;color:rgba(255,255,255,0.8)}
+    .hudEdLinha span{min-width:66px}
+    .hudEdLinha input{flex:1;accent-color:#ffd700;height:20px}
+    .hudEdLinha b{min-width:44px;text-align:right;color:#ffd700;font-size:11px}
+    .hudEdBotoes{display:flex;gap:6px;margin-top:2px}
+    .hudEdBotoes button{flex:1;padding:8px 4px;border-radius:9px;border:1px solid rgba(255,255,255,0.2);
+      background:rgba(255,255,255,0.08);color:#fff;font-weight:900;font-size:10px;letter-spacing:.5px}
+    .hudEdBotoes .hudEdOk{background:linear-gradient(135deg,#00d2a5,#00785f);border:0;color:#04140f}
+    .hudEdAlvo{outline:2px dashed rgba(255,215,0,0.85) !important;outline-offset:2px}
+    .hudEdAlvo.hudEdAtivo{outline-color:#00f0ff !important}
+    /* A escala das pecas vive numa variavel para nao brigar com o :active dos botoes */
+    #joy,#miniWrap,#staminaHud,#voiceBtn{transform:scale(var(--hudEscala,1))}
   `;
-  document.body.appendChild(editorOverlay);
+  document.head.appendChild(estilo);
 
-  const joy = document.getElementById("joy");
-  const btnGrid = document.getElementById("btnGrid");
-  
-  let activeElement = null; 
-  let config = {
-    joy: { x: null, y: null, scale: 0.75, opacity: 0.8 },
-    btnGrid: { x: null, y: null, scale: 0.75, opacity: 0.8 }
-  };
+  const selNome = el("hudEdSel");
+  const inEscala = el("hudEdEscala"), lbEscala = el("hudEdEscalaVal");
+  const inOpac = el("hudEdOpac"), lbOpac = el("hudEdOpacVal");
 
-  function loadHudConfig() {
-    try {
-      const saved = localStorage.getItem("cf_hud_config");
-      if(saved) config = JSON.parse(saved);
-      applyHudToElement(joy, config.joy, 'joy');
-      applyHudToElement(btnGrid, config.btnGrid, 'btnGrid');
-    } catch(e) {}
+  let editando = false;
+  let atual = PECAS[0].id;
+  const estadoAnterior = new Map();
+
+  function selecionar(id) {
+    atual = id;
+    const c = conf(id);
+    const p = PECAS.find((x) => x.id === id);
+    selNome.textContent = p ? p.nome : id;
+    inEscala.value = c.escala;
+    lbEscala.textContent = Number(c.escala).toFixed(2) + "x";
+    inOpac.value = c.opacidade;
+    lbOpac.textContent = Math.round(c.opacidade * 100) + "%";
+    PECAS.forEach((q) => { const e = el(q.id); if (e) e.classList.toggle("hudEdAtivo", q.id === id); });
   }
 
-  function applyHudToElement(el, cfg, key) {
-    if(!el) return;
-    if(cfg.x !== null) el.style.left = cfg.x + "px";
-    if(cfg.y !== null) el.style.top = cfg.y + "px";
-    if(cfg.x !== null || cfg.y !== null) {
-      el.style.bottom = "auto"; el.style.right = "auto";
-      el.style.transformOrigin = "top left";
-    } else {
-      // Se não foi movido ainda, a origem do CSS padrão importa para o touch funcionar
-      el.style.transformOrigin = key === 'joy' ? "bottom left" : "bottom right";
-    }
-    el.style.transform = `scale(${cfg.scale})`;
-    el.style.opacity = cfg.opacity;
+  // ── arrastar ─────────────────────────────────────────────────────────────
+  let arr = null;
+  function iniciarArraste(e, id) {
+    if (!editando) return;
+    e.preventDefault(); e.stopPropagation();
+    selecionar(id);
+    const alvo = el(id), r = alvo.getBoundingClientRect();
+    arr = { id, dx: e.clientX - r.left, dy: e.clientY - r.top, w: r.width, h: r.height };
+    try { alvo.setPointerCapture(e.pointerId); } catch (err) {}
   }
-
-  let isEditing = false;
-  let dragData = { active: false, startX: 0, startY: 0, initialLeft: 0, initialTop: 0 };
-
-  function startHudEditor() {
-    isEditing = true;
-    document.getElementById("start").style.display = "none";
-    document.getElementById("systemModal").style.display = "none";
-    
-    editorOverlay.style.display = "flex";
-    if(joy) { joy.style.display = "block"; joy.style.border = "2px dashed #ffd700"; joy.style.backgroundColor = "rgba(255,215,0,0.1)"; }
-    if(btnGrid) { 
-      btnGrid.style.display = "grid"; 
-      btnGrid.style.border = "2px dashed #ffd700"; 
-      btnGrid.style.backgroundColor = "rgba(255,215,0,0.1)";
-      // Desabilita botões internos para não atrapalhar o drag
-      btnGrid.querySelectorAll("button").forEach(b => b.style.pointerEvents = "none");
-    }
-    
-    selectElement(joy, 'joy');
+  function moverArraste(e) {
+    if (!arr) return;
+    e.preventDefault();
+    const c = conf(arr.id);
+    // Prende na tela: uma peca arrastada para fora nao teria como voltar.
+    c.x = Math.max(0, Math.min(innerWidth - arr.w, e.clientX - arr.dx));
+    c.y = Math.max(0, Math.min(innerHeight - arr.h, e.clientY - arr.dy));
+    aplicarPeca(arr.id);
   }
+  function fimArraste() { if (arr) { salvar(); arr = null; } }
 
-  function endHudEditor() {
-    isEditing = false;
-    editorOverlay.style.display = "none";
-    document.getElementById("start").style.display = "flex";
-    if(joy) { joy.style.display = "none"; joy.style.border = "none"; joy.style.backgroundColor = ""; }
-    if(btnGrid) { 
-      btnGrid.style.display = "none"; 
-      btnGrid.style.border = "none"; 
-      btnGrid.style.backgroundColor = "";
-      btnGrid.querySelectorAll("button").forEach(b => b.style.pointerEvents = "auto");
-    }
-  }
+  addEventListener("pointermove", moverArraste, { passive: false });
+  addEventListener("pointerup", fimArraste);
+  addEventListener("pointercancel", fimArraste);
 
-  function selectElement(el, key) {
-    activeElement = { el, key };
-    if(joy) joy.style.borderColor = (key==='joy') ? '#00f0ff' : '#ffd700';
-    if(btnGrid) btnGrid.style.borderColor = (key==='btnGrid') ? '#00f0ff' : '#ffd700';
-    
-    document.getElementById("hudScaleRange").value = config[key].scale;
-    document.getElementById("hudOpacityRange").value = config[key].opacity;
-  }
-
-  function makeDraggable(el, key) {
-    if(!el) return;
-    
-    el.addEventListener("touchstart", e => {
-      if(!isEditing) return;
-      e.stopPropagation();
-      selectElement(el, key);
-      
-      const touch = e.touches[0];
-      dragData.active = true;
-      dragData.startX = touch.clientX;
-      dragData.startY = touch.clientY;
-      
-      const rect = el.getBoundingClientRect();
-      dragData.initialLeft = rect.left;
-      dragData.initialTop = rect.top;
-    }, {passive:false});
-
-    el.addEventListener("touchmove", e => {
-      if(!isEditing || !dragData.active) return;
-      e.stopPropagation(); e.preventDefault(); // Impede rolagem da página
-      
-      const touch = e.touches[0];
-      const dx = touch.clientX - dragData.startX;
-      const dy = touch.clientY - dragData.startY;
-      
-      config[key].x = dragData.initialLeft + dx;
-      config[key].y = dragData.initialTop + dy;
-      
-      applyHudToElement(el, config[key]);
-    }, {passive:false});
-
-    el.addEventListener("touchend", e => {
-      if(!isEditing) return;
-      dragData.active = false;
-    }, {passive:true});
-  }
-
-  if(joy) makeDraggable(joy, 'joy');
-  if(btnGrid) makeDraggable(btnGrid, 'btnGrid');
-
-  document.getElementById("hudScaleRange").addEventListener("input", e => {
-    if(!activeElement) return;
-    config[activeElement.key].scale = parseFloat(e.target.value);
-    applyHudToElement(activeElement.el, config[activeElement.key], activeElement.key);
-  });
-  
-  document.getElementById("hudOpacityRange").addEventListener("input", e => {
-    if(!activeElement) return;
-    config[activeElement.key].opacity = parseFloat(e.target.value);
-    applyHudToElement(activeElement.el, config[activeElement.key], activeElement.key);
+  PECAS.forEach((p) => {
+    const e = el(p.id);
+    if (e) e.addEventListener("pointerdown", (ev) => iniciarArraste(ev, p.id), true);
   });
 
-  document.getElementById("btnSaveHud").addEventListener("click", () => {
-    localStorage.setItem("cf_hud_config", JSON.stringify(config));
-    endHudEditor();
+  inEscala.addEventListener("input", () => {
+    const c = conf(atual);
+    c.escala = parseFloat(inEscala.value);
+    lbEscala.textContent = c.escala.toFixed(2) + "x";
+    aplicarPeca(atual); salvar();
   });
-  
-  document.getElementById("btnResetHud").addEventListener("click", () => {
-    localStorage.removeItem("cf_hud_config");
-    config = {
-      joy: { x: null, y: null, scale: 0.75, opacity: 0.8 },
-      btnGrid: { x: null, y: null, scale: 0.75, opacity: 0.8 }
-    };
-    if(joy){ joy.style = ""; joy.style.display="block"; joy.style.border="2px dashed #00f0ff"; joy.style.backgroundColor="rgba(255,215,0,0.1)"; }
-    if(btnGrid){ btnGrid.style = ""; btnGrid.style.display="grid"; btnGrid.style.border="2px dashed #ffd700"; btnGrid.style.backgroundColor="rgba(255,215,0,0.1)"; }
-    applyHudToElement(joy, config.joy, 'joy');
-    applyHudToElement(btnGrid, config.btnGrid, 'btnGrid');
-    selectElement(joy, 'joy');
+  inOpac.addEventListener("input", () => {
+    const c = conf(atual);
+    c.opacidade = parseFloat(inOpac.value);
+    lbOpac.textContent = Math.round(c.opacidade * 100) + "%";
+    aplicarPeca(atual); salvar();
   });
+  el("hudEdResetUm").addEventListener("click", () => { resetarPeca(atual); aplicarPeca(atual); salvar(); selecionar(atual); });
+  el("hudEdResetTudo").addEventListener("click", () => { PECAS.forEach((p) => resetarPeca(p.id)); salvar(); selecionar(atual); });
+  el("hudEdOk").addEventListener("click", fecharEditor);
 
-  // Carrega ao iniciar
-  window.addEventListener('DOMContentLoaded', () => {
-    setTimeout(loadHudConfig, 500);
-  });
-  // Fallback caso DOM já tenha carregado
-  setTimeout(loadHudConfig, 1000);
+  // ── abrir / fechar ───────────────────────────────────────────────────────
+  function abrirEditor() {
+    editando = true;
+    const sys = el("systemModal"); if (sys) sys.style.display = "none";
+    const st = el("start"); if (st) { estadoAnterior.set("start", st.style.display); st.style.display = "none"; }
+    PECAS.forEach((p) => {
+      const e = el(p.id);
+      if (!e) return;
+      estadoAnterior.set(p.id, e.style.display);
+      // Mostra tudo, inclusive o que so aparece em partida: nao da para ajustar
+      // um botao que voce nao esta vendo.
+      if (getComputedStyle(e).display === "none") e.style.display = (p.id === "joy" ? "block" : "flex");
+      e.classList.add("hudEdAlvo");
+      e.style.pointerEvents = "auto";
+    });
+    painel.classList.add("aberto");
+    selecionar(atual);
+  }
+  function fecharEditor() {
+    editando = false;
+    painel.classList.remove("aberto");
+    PECAS.forEach((p) => {
+      const e = el(p.id);
+      if (!e) return;
+      e.classList.remove("hudEdAlvo", "hudEdAtivo");
+      if (estadoAnterior.has(p.id)) e.style.display = estadoAnterior.get(p.id);
+    });
+    const st = el("start");
+    if (st && estadoAnterior.has("start")) st.style.display = estadoAnterior.get("start");
+    salvar();
+  }
 
+  // Botao de entrada dentro de SISTEMA & CONTROLES
+  const sysCard = document.querySelector("#systemModal .systemCard");
+  if (sysCard) {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.textContent = "🎮 EDITAR HUD (POSIÇÃO E TAMANHO)";
+    b.style.cssText = "margin-top:16px;width:100%;padding:12px;border:0;border-radius:12px;" +
+      "background:linear-gradient(135deg,#ffd700,#ff8800);font-family:'Teko',sans-serif;" +
+      "font-size:22px;font-weight:700;color:#000;letter-spacing:1px";
+    b.addEventListener("click", abrirEditor);
+    sysCard.appendChild(b);
+  }
+
+  aplicarTudo();
+  addEventListener("DOMContentLoaded", aplicarTudo);
+  window.cfAplicarHud = aplicarTudo;
 })();
 </script>
 </body>

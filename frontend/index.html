@@ -1842,6 +1842,125 @@ canvas{display:block;width:100%;height:100%}
     transform-origin: bottom right;
   }
 }
+/* ═══════════════════════════════════════════════════════════════════════════
+   LOBBY — REORGANIZACAO EM 3 FAIXAS (leitura tipo Free Fire)
+
+   Antes: uma coluna unica a esquerda com 6 botoes empilhados + as abas do topo
+   fazendo exatamente a mesma navegacao (as abas nao trocam de tela, so marcam
+   `active` e abrem os mesmos modais). Isso dava 469px de altura numa janela de
+   384 e ainda escondia o atleta atras da lista.
+
+   Agora: rail de icones a esquerda (destinos secundarios), centro VAZIO de
+   proposito — e por ele que o atleta 3D aparece — e painel de jogo a direita
+   com a acao principal. Nada de HTML ou JS mudou: os mesmos botoes, com os
+   mesmos ids, so foram realocados por grid.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* As abas de cima viraram redundancia depois do rail. Somem da vista, mas
+   continuam no DOM porque os atalhos A/E chamam setActiveNavTab() nelas. */
+.lobbyNavTabs{ display:none !important; }
+.lobbySectionTitle{ display:none; }
+
+.lobbyMainContent{
+  flex:1 1 auto; min-height:0; width:100%;
+  display:flex; align-items:stretch; justify-content:stretch;
+}
+
+.lobbyLeftCol{
+  width:100%; max-width:none;
+  display:grid;
+  grid-template-columns: 104px 1fr minmax(210px, 300px);
+  grid-template-rows: auto auto auto auto;
+  align-content:center;
+  gap:8px 16px;
+  padding:0 max(14px, env(safe-area-inset-right)) 0 max(14px, env(safe-area-inset-left));
+  box-sizing:border-box;
+}
+
+/* ── coluna 1: rail de destinos secundarios ───────────────────────────────── */
+#btnOpenCustomizer{ grid-column:1; grid-row:1; }
+#btnPlayTraining  { grid-column:1; grid-row:2; }
+#btnOpenControls  { grid-column:1; grid-row:3; }
+#btnOpenDonate    { grid-column:1; grid-row:4; }
+
+#btnOpenCustomizer, #btnPlayTraining, #btnOpenControls, #btnOpenDonate{
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:2px; width:100%; padding:7px 4px;
+  border-radius:12px; text-align:center;
+  /* Altura fixa, e nao min-height: "PERSONALIZACAO" quebra em duas linhas e
+     "TREINO" em uma, entao o conteudo deixava o rail com degraus de ate 19px.
+     Um rail de icones so le bem se todos os alvos forem do mesmo tamanho. */
+  height:56px;
+}
+#btnOpenCustomizer .itemIcon, #btnPlayTraining .itemIcon,
+#btnOpenControls .itemIcon, #btnOpenDonate .itemIcon{ font-size:19px; margin:0; }
+#btnOpenCustomizer .itemText, #btnPlayTraining .itemText,
+#btnOpenControls .itemText, #btnOpenDonate .itemText{
+  font-size:9.5px; letter-spacing:.4px; line-height:1.05; font-weight:900;
+}
+/* O selo ("VESTIARIO", "MODO TREINO") e informacao de lista, nao de icone. */
+#btnOpenCustomizer .itemBadge, #btnPlayTraining .itemBadge,
+#btnOpenControls .itemBadge, #btnOpenDonate .itemBadge{ display:none; }
+
+/* ── coluna 3: painel de jogo ─────────────────────────────────────────────── */
+#matchResultBanner{ grid-column:3; grid-row:1; margin:0; }
+.lobbyRolePick    { grid-column:3; grid-row:2; margin:0; }
+#btnPlayMatch     { grid-column:3; grid-row:3; }
+#btnPlayRanked    { grid-column:3; grid-row:4; }
+
+#btnPlayMatch, #btnPlayRanked{
+  display:grid; grid-template-columns:auto 1fr; grid-template-rows:auto auto;
+  align-items:center; gap:0 10px; width:100%; padding:10px 14px; border-radius:14px;
+}
+#btnPlayMatch .itemIcon, #btnPlayRanked .itemIcon{ grid-row:1 / span 2; font-size:24px; }
+#btnPlayMatch .itemText, #btnPlayRanked .itemText{ font-size:15px; text-align:left; letter-spacing:.6px; }
+#btnPlayMatch .itemBadge, #btnPlayRanked .itemBadge{
+  grid-column:2; font-size:9.5px; text-align:left; opacity:.85; letter-spacing:.5px;
+}
+/* Acao principal: e a unica coisa da tela que precisa gritar. */
+#btnPlayMatch{
+  min-height:60px;
+  background:linear-gradient(135deg, rgba(0,214,168,0.96), rgba(0,120,95,0.98));
+  border:1.5px solid rgba(0,255,200,0.55);
+  box-shadow:0 8px 26px rgba(0,180,140,0.34);
+}
+#btnPlayMatch .itemText{ font-size:17px; }
+
+.lobbyRolePick{ display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.lobbyRolePick .lobbyRoleTitle{ font-size:9.5px; letter-spacing:.6px; opacity:.7; width:100%; }
+.lobbyRoleBtn{ flex:1; padding:6px 8px; font-size:10.5px; }
+
+/* ── paisagem curta: mesma leitura, tudo mais justo ───────────────────────── */
+@media (max-height: 500px){
+  .lobbyLeftCol{
+    grid-template-columns: 92px 1fr minmax(200px, 268px);
+    gap:6px 12px;
+  }
+  #btnOpenCustomizer, #btnPlayTraining, #btnOpenControls, #btnOpenDonate{
+    height:48px; padding:5px 3px;
+  }
+  #btnOpenCustomizer .itemIcon, #btnPlayTraining .itemIcon,
+  #btnOpenControls .itemIcon, #btnOpenDonate .itemIcon{ font-size:16px; }
+  #btnPlayMatch{ min-height:52px; }
+  #btnPlayMatch .itemText{ font-size:15px; }
+  #btnPlayRanked{ padding:8px 12px; }
+}
+
+/* ── telas estreitas / retrato: o rail deita e vira faixa embaixo ─────────── */
+@media (max-width: 620px) and (min-height: 501px){
+  .lobbyLeftCol{
+    grid-template-columns: repeat(4, 1fr);
+    align-content:end; gap:8px;
+  }
+  #matchResultBanner{ grid-column:1 / -1; grid-row:1; }
+  .lobbyRolePick    { grid-column:1 / -1; grid-row:2; }
+  #btnPlayMatch     { grid-column:1 / -1; grid-row:3; }
+  #btnPlayRanked    { grid-column:1 / -1; grid-row:4; }
+  #btnOpenCustomizer{ grid-column:1; grid-row:5; }
+  #btnPlayTraining  { grid-column:2; grid-row:5; }
+  #btnOpenControls  { grid-column:3; grid-row:5; }
+  #btnOpenDonate    { grid-column:4; grid-row:5; }
+}
 </style>
 </head>
 <body>
@@ -5410,6 +5529,16 @@ function makePixelTattooTexture(pixelMatrix){
 
 function createHumanoidCria(team, role, skinIdx=0, foot=1, customConfig=null){
   const root = new THREE.Group();
+  // Ordem YXZ, e nao a padrao XYZ. Com XYZ o Three aplica o X POR ULTIMO, ou
+  // seja, em torno do eixo X do MUNDO — e como `root.rotation.y` guarda a
+  // direcao que o atleta encara, o mesmo `root.rotation.x` inclinava o corpo
+  // para tras encarando +Z e para FRENTE encarando -Z. Era isso que deixava o
+  // carrinho invertido: jogador de linha nasce com yaw = PI, entao numa das
+  // direcoes de ataque o corpo pitchava ao contrario e a perna esticada ia
+  // para tras. Com YXZ o yaw entra depois, e o pitch/roll passa a ser no
+  // referencial do proprio corpo — como as animacoes sempre assumiram.
+  // Vale tambem para o tombo (fall) e a falta (foul), que usam o mesmo eixo.
+  root.rotation.order = "YXZ";
   const cfg = (team === 0 && role === "player") ? (customConfig || playerCustomConfig) : customConfig;
   
   // ════════════ MATERIAIS CONFIGURÁVEIS ════════════
@@ -7054,14 +7183,22 @@ function animateHumanoid(char, dt, isMoving){
       char.torsoGroup.rotation.y = footSign * 0.20 * ease;
       char.headGroup.rotation.x = -0.25 * ease;
 
+      // Quadril NEGATIVO estica a perna para FRENTE. Medido no proprio rig: com
+      // a coxa pendurada em -Y, girar +X leva o pe para -Z (para tras) — e o
+      // modelo encara +Z (olhos e biqueira em z positivo). O carrinho usava
+      // +1.35, entao a perna ficava cravada ATRAS o deslize inteiro enquanto o
+      // corpo viajava para frente: era o "carrinho ao contrario".
+      //   hip  0     -> pe a  +0.23 do corpo
+      //   hip -0.85  -> pe a  +0.87  (frente)
+      //   hip +1.35  -> pe a  -1.03  (atras)  <- o que estava aqui
       // Perna atacante (de carrinho) se estica totalmente para frente como uma lâmina
-      legKick.hipJoint.rotation.x  = THREE.MathUtils.lerp(0.3, 1.35, bendEase);
+      legKick.hipJoint.rotation.x  = THREE.MathUtils.lerp(-0.3, -1.35, bendEase);
       legKick.hipJoint.rotation.z  = footSign * -0.06 * bendEase;
       legKick.kneeJoint.rotation.x = THREE.MathUtils.lerp(0.2, 0.04, bendEase);
       legKick.footGroup.rotation.x = -0.15 * bendEase;
 
       // Perna de apoio vem trazida para frente plana junto ao corpo, sem dobrar o joelho pra baixo
-      legPlant.hipJoint.rotation.x = THREE.MathUtils.lerp(0.0, 0.55, bendEase);
+      legPlant.hipJoint.rotation.x = THREE.MathUtils.lerp(0.0, -0.55, bendEase);
       legPlant.hipJoint.rotation.z = -roll * THREE.MathUtils.lerp(0.0, 0.45, bendEase);
       legPlant.kneeJoint.rotation.x = THREE.MathUtils.lerp(0.1, 0.65, bendEase);
       legPlant.footGroup.rotation.x = 0;
@@ -7088,13 +7225,13 @@ function animateHumanoid(char, dt, isMoving){
       char.headGroup.rotation.x = -0.25;
 
       // Perna atacante esticada para frente desarmando a bola
-      legKick.hipJoint.rotation.x  = 1.35 + g * 0.08;
+      legKick.hipJoint.rotation.x  = -1.35 - g * 0.08;
       legKick.hipJoint.rotation.z  = footSign * -0.06;
       legKick.kneeJoint.rotation.x = 0.04;
       legKick.footGroup.rotation.x = -0.15;
 
       // Perna de apoio recolhida suavemente deitada paralela ao chão (zero contato vertical de joelho)
-      legPlant.hipJoint.rotation.x = 0.55;
+      legPlant.hipJoint.rotation.x = -0.55;
       legPlant.hipJoint.rotation.z = -roll * 0.45;
       legPlant.kneeJoint.rotation.x = 0.65;
       legPlant.footGroup.rotation.x = 0;
@@ -7124,12 +7261,12 @@ function animateHumanoid(char, dt, isMoving){
       char.torsoGroup.rotation.y = (1 - riseEase) * footSign * 0.15;
       char.headGroup.rotation.x = THREE.MathUtils.damp(char.headGroup.rotation.x, 0, 16, dt);
 
-      legKick.hipJoint.rotation.x  = THREE.MathUtils.lerp(1.43, 0.10, unfoldEase);
+      legKick.hipJoint.rotation.x  = THREE.MathUtils.lerp(-1.43, 0.10, unfoldEase);
       legKick.hipJoint.rotation.z  = 0;
       legKick.kneeJoint.rotation.x = THREE.MathUtils.lerp(0.04, 0.08, unfoldEase);
       legKick.footGroup.rotation.x = (1 - unfoldEase) * -0.15;
 
-      legPlant.hipJoint.rotation.x = THREE.MathUtils.lerp(0.55, 0.05, unfoldEase);
+      legPlant.hipJoint.rotation.x = THREE.MathUtils.lerp(-0.55, 0.05, unfoldEase);
       legPlant.hipJoint.rotation.z = THREE.MathUtils.lerp(-roll * 0.45, 0, unfoldEase);
       legPlant.kneeJoint.rotation.x = THREE.MathUtils.lerp(0.65, 0.08, unfoldEase);
       legPlant.footGroup.rotation.x = 0;

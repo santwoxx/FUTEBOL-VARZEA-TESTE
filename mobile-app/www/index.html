@@ -2138,6 +2138,79 @@ canvas{display:block;width:100%;height:100%}
   .matchSetupTeamsListTitle{ display:none; }
   .matchSetupGrid{ min-height:40px; }
 }
+/* ═══════════════════════════════════════════════════════════════════════════
+   PLACAR EM PARTIDA — BARRA COMPACTA (leitura tipo FIFA)
+
+   Medido antes: 428 x 87 px numa janela de 853 x 384, ou seja 22,6% da ALTURA
+   e 50,2% da LARGURA da tela. Um placar e informacao de canto de olho: ele
+   precisa ser lido sem tirar a atencao da bola, e nesse tamanho ele competia
+   com o campo — ainda por cima bem em cima do gol adversario.
+
+   O que encolhe (e por que):
+     · o brilho e a sombra grande eram o que fazia a barra "pesar" na tela;
+     · `backdrop-filter:blur(12px)` re-borrava o canvas 3D a cada quadro,
+       exatamente como os botoes que ja foram limpos — sai por custo e por
+       estilo (FIFA usa placa chapada, nao vidro fosco);
+     · o placar de 36px e o nome de 22px viram 17px e 12px: a sigla ja e curta
+       (o JS usa team.short — PSG, BAYERN), entao nao ha o que espremer no texto;
+     · o relogio deixa de ser pilula com borda e vira um segmento separado por
+       uma divisoria, que e como o FIFA agrupa tempo e placar.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (max-height: 500px){
+  #topWrap{
+    top:max(4px, env(safe-area-inset-top));
+    gap:3px;
+  }
+
+  #top{
+    gap:9px;
+    padding:3px 4px 3px 10px;
+    border-radius:9px;
+    border:1px solid rgba(255,255,255,0.13);
+    background:linear-gradient(180deg, rgba(14,11,20,0.93), rgba(8,6,12,0.95));
+    box-shadow:0 3px 12px rgba(0,0,0,0.5);
+    backdrop-filter:none; -webkit-backdrop-filter:none;
+  }
+
+  .teamBadge{ gap:5px; font-size:11px; letter-spacing:.6px; }
+  .hudTeamName{ font-size:13px; letter-spacing:.7px; }
+  /* O SVG do escudo vem com width/height 24 embutidos no atributo; sem isto ele
+     ignora a caixa e continua mandando na altura da barra. */
+  .hudBadgeIcon{ width:15px; height:15px; }
+  .hudBadgeIcon svg{ width:100%; height:100%; display:block; }
+  .teamDot{ width:5px; height:5px; }
+
+  #score{
+    font-size:17px; min-width:38px; letter-spacing:.5px;
+    text-shadow:none; color:#fff;
+  }
+
+  /* Relogio como segmento, separado por divisoria em vez de pilula propria. */
+  #clock{
+    font-size:10.5px; font-weight:800;
+    padding:3px 8px; margin-left:1px;
+    border:0; border-left:1px solid rgba(255,255,255,0.14);
+    border-radius:0 7px 7px 0;
+    background:rgba(255,255,255,0.05);
+    color:#ffd27a;
+  }
+
+  #mpPingBadge{
+    font-size:8.5px !important; padding:1px 4px !important;
+    border-radius:4px !important; letter-spacing:0 !important;
+  }
+
+  /* Voz fica logo abaixo, na mesma escala reduzida. */
+  #voiceHud{ font-size:9px; padding:2px 9px; border-radius:9px; }
+}
+
+@media (max-height: 380px){
+  #top{ gap:7px; padding:2px 3px 2px 8px; }
+  .hudTeamName{ font-size:12px; }
+  #score{ font-size:15px; min-width:34px; }
+  #clock{ font-size:9.5px; padding:2px 6px; }
+  .hudBadgeIcon{ width:13px; height:13px; }
+}
 </style>
 </head>
 <body>

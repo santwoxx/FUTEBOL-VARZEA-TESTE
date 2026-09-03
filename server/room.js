@@ -27,6 +27,7 @@ export class Room {
     this.accum = 0;
     this.lastTime = 0;
     this.snapCounter = 0;
+    this.snapPendente = false;
     this.capacity = this.teamSize * 2;
   }
 
@@ -189,6 +190,8 @@ export class Room {
       passos++;
       if (this.tick(dt) === false) return;   // partida acabou: para o relogio
     }
+    // Fora do laco: no maximo um envio por disparo, ja com o estado final.
+    this.enviarSnapshot();
     // Sobrou muito no acumulador depois do teto: o servidor nao esta dando
     // conta. Zerar mantem o jogo no presente (e melhor pular do que ficar
     // devendo tempo para sempre).
@@ -231,20 +234,42 @@ export class Room {
       return false;    // avisa o acumulador para nao dar mais passos neste ciclo
     }
 
-    // Snapshots a SNAP_HZ. Com SNAP_HZ == TICK_HZ sai um por tick; o contador
-    // continua aqui para que baixar SNAP_HZ volte a funcionar sem mexer no resto.
+    // Aqui o tick apenas MARCA que ha snapshot devido. Quem envia e avancar(),
+    // uma vez so por disparo do timer — ver enviarSnapshot().
     this.snapCounter += CFG.SNAP_HZ;
     if (this.snapCounter >= CFG.TICK_HZ) {
       this.snapCounter -= CFG.TICK_HZ;
-      // O estado e o mesmo para todo mundo; so o ack (ultimo input processado)
-      // muda por cliente. Serializar uma vez e concatenar o ack evita repetir
-      // o JSON.stringify do mundo inteiro por jogador — num 4v4 eram 8
-      // serializacoes identicas a cada snapshot.
-      const body = JSON.stringify(serialize(this.world));
-      const head = SNAP_HEAD + body.slice(0, -1) + SNAP_ACK;
-      for (const c of this.clients.values()) {
-        c.sendRaw(head + (c.lastSeq || 0) + "}}");
-      }
+      this.snapPendente = true;
+    }
+  }
+
+  // Envia UM snapshot com o estado mais recente.
+  //
+  // Antes isto vivia dentro do tick, ou seja, dentro do laco do acumulador.
+  // Quando o timer atrasava (plano free do Render, GC, varias salas), o laco
+  // dava 2 ou 3 passos de recuperacao de uma vez e disparava 2 ou 3 snapshots
+  // NO MESMO MILISSEGUNDO, seguidos de um buraco do tamanho do atraso.
+  //
+  // Para o cliente isso e pior do que o atraso em si: ele dimensiona o buffer
+  // de interpolacao pelo PIOR espacamento recente, entao uma rajada seguida de
+  // um vao de 100ms fazia o buffer saltar de 75ms para ~220ms — e o adversario
+  // aparecia travando e corrigindo. Os snapshots do meio da rajada nem serviam
+  // para nada: estao todos a menos de um quadro de distancia um do outro.
+  //
+  // Enviando uma vez por disparo, o cliente recebe um fluxo honesto (um pacote,
+  // sempre o estado mais fresco) e o pico de banda da recuperacao some junto.
+  enviarSnapshot() {
+    if (!this.snapPendente) return;
+    this.snapPendente = false;
+    if (this.clients.size === 0) return;
+    // O estado e o mesmo para todo mundo; so o ack (ultimo input processado)
+    // muda por cliente. Serializar uma vez e concatenar o ack evita repetir
+    // o JSON.stringify do mundo inteiro por jogador — num 4v4 eram 8
+    // serializacoes identicas a cada snapshot.
+    const body = JSON.stringify(serialize(this.world));
+    const head = SNAP_HEAD + body.slice(0, -1) + SNAP_ACK;
+    for (const c of this.clients.values()) {
+      c.sendRaw(head + (c.lastSeq || 0) + "}}");
     }
   }
 

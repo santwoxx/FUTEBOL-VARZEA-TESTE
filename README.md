@@ -26,7 +26,8 @@ Por que separado:
 
 O que a separação **não** resolve: o ping do jogo, que continua sendo do
 browser até o Render. Para isso o que importa é a região (`region:` no
-`render.yaml` — Virginia/Ohio fica ~120ms do Brasil contra ~180ms de Oregon) e
+`render.yaml` — medido: Virginia 113ms e Ohio 125ms do Brasil, contra 167ms de
+Oregon) e
 sair do plano free.
 
 | Pasta | Papel |
@@ -270,8 +271,12 @@ a partida continua.
 
 Medidos nos testes locais:
 
-- **Banda:** ~3,4 KB/s por jogador no 1v1, ~9,3 KB/s no 4v4 (snapshot de 463 B
-  a 20/s). Com voz, some ~24 kbps por pessoa falando.
+- **Banda:** ~5 KB/s por jogador no 1v1, ~14 KB/s no 4v4 (snapshot de 463 B a
+  30/s — um por tick). Com voz, some ~24 kbps por pessoa falando.
+- **Latência medida do Brasil (RTT ICMP):** Virginia 113 ms, Ohio 125 ms,
+  Oregon 167 ms. São Paulo deu 224 ms: a rota do provedor para dentro do país
+  é pior que a dos EUA, então meça antes de assumir que a região mais próxima
+  ganha.
 - **CPU do envio de snapshot:** 0,019% de um núcleo por sala 4v4 (era 0,14%).
 - **Conversão de chutes:** ~23% viram gol (cantos ~39%, meio ~15%).
 

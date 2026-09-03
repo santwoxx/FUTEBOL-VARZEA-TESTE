@@ -8,7 +8,11 @@ services:
     name: futebol-varzea-teste     # mantem a URL atual: futebol-varzea-teste.onrender.com
     runtime: node
     plan: free
-    region: oregon                 # veja a nota sobre latencia no README
+    # Medido do Brasil (RTT ICMP): Oregon 167ms, Virginia 113ms, Ohio 125ms.
+    # Sao Paulo deu 224ms — a rota do provedor para dentro do Brasil e pior que
+    # a dos EUA, entao vale MEDIR em vez de assumir que a regiao mais proxima
+    # geograficamente ganha. Virginia corta ~54ms do RTT de cada jogador.
+    region: virginia
     # SEM rootDir de proposito.
     #
     # Com `rootDir: server`, o Render nao entrega a instancia nada que esteja

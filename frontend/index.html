@@ -13927,7 +13927,8 @@ function mpEndMatch(){
 function mpOnSnapshot(d){
   const now = performance.now() / 1000;
 
-  // Espaçamento entre pacotes: o servidor manda a 20 Hz (50ms), mas o que chega
+  // Espaçamento entre pacotes: o servidor manda um snapshot por tick (33ms,
+  // SNAP_HZ == TICK_HZ) e nunca mais de um por disparo do timer, mas o que chega
   // varia com o jitter. Guardamos o pior espaçamento recente e mantemos ~2,2
   // pacotes de folga — sobe rápido quando a rede piora, desce devagar quando
   // melhora, para o atraso não ficar oscilando na cara do jogador.

@@ -2078,6 +2078,66 @@ canvas{display:block;width:100%;height:100%}
   #btnOpenControls  { grid-column:3; grid-row:5; }
   #btnOpenDonate    { grid-column:4; grid-row:5; }
 }
+/* ═══════════════════════════════════════════════════════════════════════════
+   CONFRONTO DA PARTIDA — TELA BAIXA
+
+   O card tem `max-height:94vh` junto com `overflow:hidden` (o hidden existe por
+   causa da barrinha colorida do ::before e dos cantos arredondados). Numa janela
+   de 384px isso da 361px de caixa para um conteudo que soma ~520px:
+
+     padding 44 + gaps 56 + cabecalho 40 + vitrine 130 + titulo 16
+     + grade 190 + rodape 45  =  ~521px
+
+   Como nao havia rolagem, os ~160px que sobravam eram simplesmente CORTADOS —
+   e o pedaco cortado era justo o rodape, com o "ENTRAR EM CAMPO". Dava para
+   escolher os times e nao dava para comecar a partida.
+
+   A saida nao e encolher tudo ate caber (a lista de times cresce), e sim eleger
+   UMA regiao elastica: a grade de times passa a ser `flex:1` com rolagem
+   propria, e cabecalho, vitrine e rodape ficam fixos. Assim o botao de entrar
+   em campo esta sempre visivel, com qualquer quantidade de times.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (max-height: 500px){
+  .matchSetupCard{
+    max-height:96dvh; padding:12px 14px; gap:7px; border-radius:18px;
+  }
+  .matchSetupHeader{ flex:0 0 auto; }
+  .matchSetupHeader h2{ font-size:21px !important; letter-spacing:1px !important; }
+  /* A linha "Escolha os times para o classico 4v4" e explicacao do titulo:
+     custa uma linha inteira numa tela que nao tem linhas sobrando. */
+  .matchSetupHeader h2 + div{ display:none !important; }
+
+  .matchSetupShowcase{ flex:0 0 auto; padding:7px 10px; gap:8px; border-radius:14px; }
+  .setupTeamBadgeWrap{ transform:scale(0.72); transform-origin:center; margin:-6px 0; }
+  .setupTeamRole{ font-size:8px !important; }
+  .setupTeamName{ font-size:16px !important; line-height:1 !important; }
+  .setupTeamColors{ transform:scale(0.85); }
+  .setupChangeBtn{ padding:4px 8px !important; font-size:8.5px !important; }
+  .matchSetupVsBadge{ font-size:18px !important; }
+  .btnRandomDerbyBig{ padding:6px 10px !important; font-size:9.5px !important; }
+
+  .matchSetupTeamsListTitle{ flex:0 0 auto; font-size:9px !important; margin:0 !important; }
+
+  /* A regiao elastica: fica com o que sobrar e rola por dentro. */
+  .matchSetupGrid{
+    flex:1 1 auto; min-height:46px; max-height:none;
+    gap:6px; overscroll-behavior:contain;
+  }
+  .matchSetupItem{ padding:5px 4px; gap:2px; border-radius:9px; font-size:9.5px; }
+  .matchSetupItem img, .matchSetupItem svg{ width:22px; height:22px; }
+
+  /* O rodape nunca encolhe: e o unico jeito de sair desta tela para o jogo. */
+  .matchSetupActions{ flex:0 0 auto; margin-top:0; gap:8px; }
+  .btnMatchSetupBack{ padding:8px 14px; font-size:11px; }
+  .btnMatchSetupStart{ padding:9px 16px !important; font-size:13px !important; }
+}
+
+@media (max-height: 380px){
+  .matchSetupShowcase{ padding:5px 8px; }
+  .setupTeamName{ font-size:14px !important; }
+  .matchSetupTeamsListTitle{ display:none; }
+  .matchSetupGrid{ min-height:40px; }
+}
 </style>
 </head>
 <body>

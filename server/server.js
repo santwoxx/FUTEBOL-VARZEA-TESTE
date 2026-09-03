@@ -4,7 +4,7 @@
 // (pasta ../frontend). Aqui ficam apenas:
 //   GET /health  → keep-alive / wake-up do plano free do Render
 //   GET /rooms   → lista de salas abertas (fallback do lobby)
-//   WebSocket    → salas autoritativas (30 ticks/s, 20 snapshots/s)
+//   WebSocket    → salas autoritativas (30 ticks/s, 30 snapshots/s)
 
 import http from "node:http";
 import { WebSocketServer } from "ws";
@@ -88,8 +88,12 @@ const server = http.createServer((req, res) => {
       rooms: rooms.size,
       players: clients.size,
       voice: voiceConfig().enabled,
-      betaClosed: accessConfig().enforced,   // multiplayer so para e-mails liberados
+      betaClosed: accessConfig().enforced,    // multiplayer so para e-mails liberados
       betaList: accessConfig().source,        // de onde a lista foi lida (sem expor os e-mails)
+      betaAllowed: accessConfig().allowed,    // QUANTOS e-mails o servidor aceita agora
+      // ^ sem isto nao havia como saber, de fora, se a instancia no ar ja tinha
+      //   visto o e-mail que acabou de ser acrescentado as regras. O numero nao
+      //   revela quem esta na lista, mas responde "o convite chegou?".
       snapshotsDropped,
       uptime: Math.round(process.uptime())
     }));

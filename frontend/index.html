@@ -35,6 +35,12 @@ canvas{display:block;width:100%;height:100%}
 #hud{position:fixed;inset:0;pointer-events:none;z-index:2}
 
 /* ═══════════ PLACAR & TOPO ═══════════ */
+/* Sem backdrop-filter nos elementos do HUD EM JOGO (placar, minimapa, fôlego,
+   botões, voz, tela cheia). Cada blur desses obriga o compositor do navegador a
+   reler e desfocar o pedaço do canvas 3D atrás dele A CADA QUADRO — e como
+   todos eles já têm fundo 88-96% opaco, o efeito não chega a aparecer. Era
+   custo puro. Menus e modais mantêm o blur: lá a cena está parada e o vidro
+   fosco é justamente o visual. */
 #topWrap{position:absolute;top:max(10px,env(safe-area-inset-top));left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:4px;z-index:3}
 #top{
   display:flex;align-items:center;gap:14px;
@@ -42,7 +48,7 @@ canvas{display:block;width:100%;height:100%}
   border:1.5px solid rgba(255,215,0,0.4);
   border-radius:26px;padding:6px 22px;
   box-shadow:0 10px 35px rgba(0,0,0,0.7),0 0 25px rgba(255,140,0,0.25);
-  backdrop-filter:blur(12px);
+
 }
 .teamBadge{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:900;letter-spacing:1px;text-transform:uppercase;user-select:none}
 .hudBadgeIcon{display:flex;align-items:center;justify-content:center;width:24px;height:24px;flex:none;filter:drop-shadow(0 2px 5px rgba(0,0,0,0.7))}
@@ -213,7 +219,7 @@ canvas{display:block;width:100%;height:100%}
 #score{font-family:'Teko',sans-serif;font-weight:700;font-size:36px;line-height:1;letter-spacing:2px;color:#ffd700;text-shadow:0 2px 12px rgba(255,215,0,0.6);min-width:76px;text-align:center}
 #clock{font-weight:800;font-size:13px;color:#ffaa44;background:rgba(255,140,0,0.18);padding:4px 10px;border-radius:14px;border:1px solid rgba(255,140,0,0.35);font-variant-numeric:tabular-nums}
 /* Voz do time (LiveKit). Fica abaixo do placar, no mesmo idioma visual do HUD. */
-#voiceHud{display:none;align-items:center;gap:8px;background:linear-gradient(135deg,rgba(22,12,30,0.94),rgba(10,8,16,0.96));border:1.5px solid rgba(255,140,0,0.35);border-radius:20px;padding:4px 14px;box-shadow:0 8px 26px rgba(0,0,0,0.6);backdrop-filter:blur(12px);font-size:11px;font-weight:800;letter-spacing:1px;color:#ffaa44;text-transform:uppercase;white-space:nowrap;max-width:92vw;overflow:hidden}
+#voiceHud{display:none;align-items:center;gap:8px;background:linear-gradient(135deg,rgba(22,12,30,0.94),rgba(10,8,16,0.96));border:1.5px solid rgba(255,140,0,0.35);border-radius:20px;padding:4px 14px;box-shadow:0 8px 26px rgba(0,0,0,0.6);font-size:11px;font-weight:800;letter-spacing:1px;color:#ffaa44;text-transform:uppercase;white-space:nowrap;max-width:92vw;overflow:hidden}
 #voiceHud.live{border-color:rgba(92,255,143,0.7);color:#7dff9e;box-shadow:0 8px 26px rgba(0,0,0,0.6),0 0 18px rgba(92,255,143,0.3)}
 #voiceHud.warn{border-color:rgba(255,90,90,0.6);color:#ff9b9b}
 #voiceDot{width:8px;height:8px;border-radius:50%;background:#7a5a3a;flex:none}
@@ -229,7 +235,7 @@ canvas{display:block;width:100%;height:100%}
   display:none;flex-direction:column;align-items:center;justify-content:center;gap:2px;
   width:76px;height:76px;border-radius:24px;border:1.5px solid rgba(255,140,0,0.45);
   background:linear-gradient(135deg,rgba(30,16,40,0.94),rgba(12,9,18,0.96));
-  box-shadow:0 8px 25px rgba(0,0,0,0.65);backdrop-filter:blur(10px);
+  box-shadow:0 8px 25px rgba(0,0,0,0.65);
   color:#ffaa44;font-family:"Outfit",sans-serif;cursor:pointer;pointer-events:auto;
   user-select:none;-webkit-user-select:none;touch-action:manipulation;z-index:6;
   transition:transform .1s,border-color .2s,box-shadow .2s,color .2s;
@@ -244,8 +250,20 @@ canvas{display:block;width:100%;height:100%}
 
 /* ═══════════ MINIMAPA ═══════════ */
 #miniWrap{position:absolute;left:max(14px,env(safe-area-inset-left));top:calc(max(10px,env(safe-area-inset-top)) + 4px);display:none;flex-direction:column;align-items:center;gap:4px}
-#mini{width:80px;height:128px;border-radius:14px;border:1.5px solid rgba(255,215,0,0.4);background:rgba(14,9,20,0.9);box-shadow:0 8px 25px rgba(0,0,0,0.6);backdrop-filter:blur(10px)}
+#mini{width:80px;height:128px;border-radius:14px;border:1.5px solid rgba(255,215,0,0.4);background:rgba(14,9,20,0.9);box-shadow:0 8px 25px rgba(0,0,0,0.6)}
 #miniTag{font-size:8px;font-weight:800;letter-spacing:1.5px;color:#ffaa44;text-transform:uppercase;opacity:0.85}
+
+/* ═══════════ PAINEL DE DESEMPENHO (F3) ═══════════ */
+#perfHud{
+  position:absolute;right:max(12px,env(safe-area-inset-right));bottom:max(12px,env(safe-area-inset-bottom));
+  display:none;pointer-events:none;z-index:60;
+  font:700 11px/1.55 ui-monospace,"Cascadia Mono",Consolas,monospace;
+  color:#c8ffe8;white-space:pre;text-align:right;
+  padding:8px 11px;border-radius:10px;
+  background:rgba(10,7,16,0.72);border:1px solid rgba(0,240,184,0.22);
+  text-shadow:0 1px 2px rgba(0,0,0,0.9)
+}
+#perfHud.show{display:block}
 
 /* ═══════════ FEEDBACK VISUAL LIMPO (SEM TEXTOS NA TELA) ═══════════ */
 #msg{display:none !important;pointer-events:none}
@@ -311,7 +329,7 @@ canvas{display:block;width:100%;height:100%}
   border-radius:22px;box-shadow:0 8px 25px rgba(0,0,0,0.65);
   pointer-events:auto;display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:2px;cursor:pointer;transition:transform .1s,box-shadow .15s,background .25s,border-color .25s;
-  backdrop-filter:blur(10px);user-select:none;-webkit-user-select:none;touch-action:none;
+  user-select:none;-webkit-user-select:none;touch-action:none;
 }
 .btn:active,.btn.activeKey{transform:scale(0.90);box-shadow:0 2px 10px rgba(0,0,0,0.9)}
 
@@ -393,7 +411,7 @@ canvas{display:block;width:100%;height:100%}
   background:linear-gradient(135deg,rgba(22,12,30,0.92),rgba(10,8,16,0.96));
   border:1.2px solid rgba(0,240,255,0.4);border-radius:20px;
   padding:4px 14px;box-shadow:0 8px 24px rgba(0,0,0,0.6),0 0 15px rgba(0,240,255,0.2);
-  backdrop-filter:blur(10px);z-index:4;pointer-events:none;
+  z-index:4;pointer-events:none;
   transition:opacity .2s ease,border-color .2s ease,box-shadow .2s ease;
 }
 #staminaHud.show{display:flex}
@@ -621,7 +639,7 @@ canvas{display:block;width:100%;height:100%}
   position:absolute;top:max(10px,env(safe-area-inset-top));right:max(16px,env(safe-area-inset-right));
   background:rgba(14,9,20,0.85);border:1.5px solid rgba(255,215,0,0.4);color:#ffd700;
   border-radius:12px;padding:8px 12px;cursor:pointer;z-index:6;
-  transition:all .18s;backdrop-filter:blur(10px);box-shadow:0 6px 20px rgba(0,0,0,0.5);
+  transition:all .18s;box-shadow:0 6px 20px rgba(0,0,0,0.5);
   display:none;align-items:center;gap:6px;font-family:'Outfit',sans-serif;font-weight:800;font-size:12px;
 }
 .hudFsBtn:hover{background:rgba(255,215,0,0.22);border-color:#ffd700;transform:scale(1.04)}
@@ -2568,6 +2586,9 @@ canvas{display:block;width:100%;height:100%}
     <div id="miniTag">SEU GOL ABAIXO</div>
   </div>
 
+  <!-- Painel de desempenho (F3). Fica escondido até o jogador pedir. -->
+  <div id="perfHud"></div>
+
   <div id="crosshairWrap">
     <div id="crosshairRing"></div>
     <div id="crosshairDot"></div>
@@ -3733,29 +3754,207 @@ const smooth = (l,dt)=>1-Math.exp(-l*dt);
 const angleLerp=(a,b,t)=>{let d=((b-a+Math.PI*3)%(Math.PI*2))-Math.PI;return a+d*t};
 const flat=(a,b)=>Math.hypot(a.x-b.x,a.z-b.z);
 
-/* ═══════════════ CENA & RENDERER ═══════════════ */
+/* ═══════════════ PERFIL GRÁFICO & ESCALA DINÂMICA DE RESOLUÇÃO ═══════════════
+   O jogo desenha a favela inteira (céu, morros, ~560 casas, alambrado) em cima
+   de 10 bonecos animados. Num PC fraco isso não cabe em 16ms, e o resultado é
+   micro-travada bem na hora do chute. Em vez de cortar cenário para todo mundo,
+   cada preset escolhe QUANTO custa cada pixel, e o governador de quadro ajusta
+   a resolução interna sozinho para segurar a taxa alvo.
+
+   `aa` e o tamanho do mapa de sombra só valem na criação do renderer — trocar
+   de preset em jogo aplica o que dá na hora e o resto no próximo carregamento. */
+const GFX_PRESETS = {
+  ultra: { aa:true,  maxPR:2.00, shadow:2048, soft:true,  aniso:16, floods:4, cristo:true,  vfx:1.00, minScale:0.85 },
+  alto:  { aa:true,  maxPR:1.50, shadow:1536, soft:false, aniso:8,  floods:4, cristo:false, vfx:0.80, minScale:0.68 },
+  medio: { aa:false, maxPR:1.25, shadow:1024, soft:false, aniso:4,  floods:2, cristo:false, vfx:0.50, minScale:0.58 },
+  baixo: { aa:false, maxPR:1.00, shadow:0,    soft:false, aniso:2,  floods:0, cristo:false, vfx:0.25, minScale:0.50 }
+};
+let GFX_NOME = "alto";
+try {
+  const salvo = localStorage.getItem("fut_cria_gfx");
+  if(salvo && GFX_PRESETS[salvo]) GFX_NOME = salvo;
+} catch(e){}
+let GFX = GFX_PRESETS[GFX_NOME];
+
+// Taxa alvo. Numa tela de 144Hz não faz sentido travar em 60: o governador
+// persegue o refresh do monitor até 144 e só desce a resolução se não alcançar.
+let GFX_FPS_ALVO = 0;   // 0 = detecta no primeiro segundo de jogo
+
 const scene = new THREE.Scene();
 scene.background = null;
 scene.fog = new THREE.FogExp2(0x3e152e, 0.0035);
 
 const camera = new THREE.PerspectiveCamera(54, innerWidth/innerHeight, .1, 450);
-const renderer = new THREE.WebGLRenderer({antialias:true, powerPreference:"high-performance"});
-let PR = Math.min(devicePixelRatio, 1.5);
-renderer.setPixelRatio(PR);
+const renderer = new THREE.WebGLRenderer({
+  antialias: GFX.aa,
+  powerPreference: "high-performance",
+  stencil: false,               // nada no jogo usa stencil: economiza banda de framebuffer
+  depth: true
+});
+// Teto de pixels do preset, limitado pela tela. `PR_BASE` é o 100%; o
+// governador multiplica por `gfxScale` (0.5..1) conforme o quadro aperta.
+let PR_BASE = Math.min(devicePixelRatio || 1, GFX.maxPR);
+let gfxScale = 1;
+renderer.setPixelRatio(PR_BASE);
 renderer.setSize(innerWidth, innerHeight);
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.enabled = GFX.shadow > 0;
+renderer.shadowMap.type = GFX.soft ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.25;
 document.querySelector("#game").appendChild(renderer.domElement);
+
+const MAX_ANISO = renderer.capabilities.getMaxAnisotropy();
+const gfxAniso = () => Math.min(GFX.aniso, MAX_ANISO);
+
+// Aplica um fator de resolução sem recriar o contexto. `setPixelRatio` já
+// redimensiona o drawing buffer; o CSS do canvas continua em 100% da janela.
+function gfxAplicarEscala(s){
+  const novo = clamp(s, GFX.minScale, 1);
+  if(Math.abs(novo - gfxScale) < 0.02) return;
+  gfxScale = novo;
+  renderer.setPixelRatio(PR_BASE * gfxScale);
+  renderer.setSize(innerWidth, innerHeight);
+}
+
+/* ═══════════════ AGRUPADOR DE GEOMETRIA ESTÁTICA (STATIC BATCHING) ═══════════════
+   A favela é feita de ~560 casas de ~12 peças cada. Cada peça era um objeto na
+   cena: ~7.000 draw calls e ~7.000 matrizes recalculadas TODO quadro, só para
+   desenhar um cenário que nunca se mexe. Nenhuma GPU de PC comum entrega 60fps
+   assim — e o custo aparece como engasgo, não como "jogo bonito".
+
+   Aqui as peças são coletadas, transformadas para o espaço do mundo e fundidas
+   numa geometria por material. O resultado é o MESMO pixel na tela com ~15
+   draw calls, e a cena para de percorrer milhares de nós por quadro. */
+const staticBatch = {
+  pendentes: [],
+  add(obj){ this.pendentes.push(obj); return obj; }
+};
+
+// Funde geometrias indexadas que compartilham o mesmo conjunto de atributos.
+// Só usamos position/normal/uv no cenário, então a checagem é direta.
+function fundirGeometrias(pecas){
+  let totalVerts = 0, totalIdx = 0;
+  for(const p of pecas){
+    const g = p.geometry;
+    totalVerts += g.attributes.position.count;
+    totalIdx += g.index ? g.index.count : g.attributes.position.count;
+  }
+  const pos = new Float32Array(totalVerts * 3);
+  const nor = new Float32Array(totalVerts * 3);
+  const uv  = new Float32Array(totalVerts * 2);
+  const idx = totalVerts > 65535 ? new Uint32Array(totalIdx) : new Uint16Array(totalIdx);
+
+  const normalMat = new THREE.Matrix3();
+  const v = new THREE.Vector3();
+  let vOff = 0, iOff = 0;
+
+  for(const p of pecas){
+    const g = p.geometry;
+    const m = p.matrixWorld;
+    normalMat.getNormalMatrix(m);
+    const gp = g.attributes.position, gn = g.attributes.normal, gu = g.attributes.uv;
+    const n = gp.count;
+
+    for(let i = 0; i < n; i++){
+      v.set(gp.getX(i), gp.getY(i), gp.getZ(i)).applyMatrix4(m);
+      pos[(vOff + i) * 3]     = v.x;
+      pos[(vOff + i) * 3 + 1] = v.y;
+      pos[(vOff + i) * 3 + 2] = v.z;
+      if(gn){
+        v.set(gn.getX(i), gn.getY(i), gn.getZ(i)).applyMatrix3(normalMat).normalize();
+        nor[(vOff + i) * 3]     = v.x;
+        nor[(vOff + i) * 3 + 1] = v.y;
+        nor[(vOff + i) * 3 + 2] = v.z;
+      }
+      if(gu){
+        uv[(vOff + i) * 2]     = gu.getX(i);
+        uv[(vOff + i) * 2 + 1] = gu.getY(i);
+      }
+    }
+
+    if(g.index){
+      const gi = g.index;
+      for(let i = 0; i < gi.count; i++) idx[iOff + i] = gi.getX(i) + vOff;
+      iOff += gi.count;
+    } else {
+      for(let i = 0; i < n; i++) idx[iOff + i] = i + vOff;
+      iOff += n;
+    }
+    vOff += n;
+  }
+
+  const out = new THREE.BufferGeometry();
+  out.setAttribute("position", new THREE.BufferAttribute(pos, 3));
+  out.setAttribute("normal", new THREE.BufferAttribute(nor, 3));
+  out.setAttribute("uv", new THREE.BufferAttribute(uv, 2));
+  out.setIndex(new THREE.BufferAttribute(idx, 1));
+  out.computeBoundingSphere();
+  return out;
+}
+
+// Junta tudo o que foi coletado e devolve à cena um punhado de meshes fundidos.
+// Chamado uma vez, no fim da construção do mapa.
+// Lado da célula espacial do lote. Fundir a favela inteira num objeto só daria
+// 15 draw calls, mas mataria o descarte por frustum: o morro que está atrás da
+// câmera seria desenhado do mesmo jeito, inclusive no mapa de sombra. Fatiando
+// em quadras de 64m, o que está fora de vista volta a ser descartado de graça.
+const BATCH_CELULA = 64;
+
+function staticBatchFlush(){
+  const grupos = new Map();   // chave (material+célula) -> { mat, pecas, castShadow, receiveShadow }
+  const pos = new THREE.Vector3();
+
+  for(const raiz of staticBatch.pendentes){
+    raiz.updateMatrixWorld(true);
+    raiz.traverse((o) => {
+      if(!o.isMesh || !o.geometry || !o.geometry.attributes.position) return;
+      if(Array.isArray(o.material)) return;         // multi-material: fora do lote
+      pos.setFromMatrixPosition(o.matrixWorld);
+      const cx = Math.floor(pos.x / BATCH_CELULA), cz = Math.floor(pos.z / BATCH_CELULA);
+      const chave = `${o.material.uuid}|${cx},${cz}`;
+      let g = grupos.get(chave);
+      if(!g){ g = { mat: o.material, pecas: [], castShadow: false, receiveShadow: false }; grupos.set(chave, g); }
+      g.pecas.push(o);
+      g.castShadow = g.castShadow || o.castShadow;
+      g.receiveShadow = g.receiveShadow || o.receiveShadow;
+    });
+  }
+
+  let antes = 0;
+  const jaSoltas = new Set();
+  for(const g of grupos.values()){
+    const mat = g.mat;
+    antes += g.pecas.length;
+    const geo = fundirGeometrias(g.pecas);
+    const mesh = new THREE.Mesh(geo, mat);
+    mesh.castShadow = g.castShadow;
+    mesh.receiveShadow = g.receiveShadow;
+    // O cenário não anda: tirar a matriz do ciclo automático poupa uma
+    // multiplicação de matriz por quadro em cada lote.
+    mesh.matrixAutoUpdate = false;
+    mesh.updateMatrix();
+    scene.add(mesh);
+    // As geometrias originais já viraram vértices no lote: soltar os buffers
+    // devolve dezenas de MB de RAM/VRAM. Várias peças compartilham a mesma
+    // geometria (os 60 mourões, por exemplo), então cada uma é solta uma vez.
+    for(const p of g.pecas){
+      if(jaSoltas.has(p.geometry)) continue;
+      jaSoltas.add(p.geometry);
+      p.geometry.dispose();
+    }
+  }
+
+  console.log(`[gfx] cenário fundido: ${antes} objetos → ${grupos.size} draw calls`);
+  staticBatch.pendentes.length = 0;
+}
 
 const hemiLight = new THREE.HemisphereLight(0xffdfba, 0x221328, 1.35);
 scene.add(hemiLight);
 
 const sun = new THREE.DirectionalLight(0xffaa55, 2.6);
 sun.position.set(-40, 58, 32);
-sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048);
+sun.castShadow = GFX.shadow > 0;
+sun.shadow.mapSize.set(GFX.shadow || 1024, GFX.shadow || 1024);
 sun.shadow.bias = -0.0005;
 {
   const s = sun.shadow.camera;
@@ -3874,7 +4073,7 @@ function makeCourtTexture(){
 
   const t = new THREE.CanvasTexture(c);
   t.colorSpace = THREE.SRGBColorSpace;
-  t.anisotropy = 16;
+  t.anisotropy = gfxAniso();
   return t;
 }
 
@@ -4387,7 +4586,7 @@ function createUpgradableTexture(externalUrl, fallbackTex, repeatX=1, repeatY=1)
   fallbackTex.wrapT = THREE.RepeatWrapping;
   fallbackTex.repeat.set(repeatX, repeatY);
   fallbackTex.colorSpace = THREE.SRGBColorSpace;
-  fallbackTex.anisotropy = 16;
+  fallbackTex.anisotropy = gfxAniso();
 
   if(externalUrl){
     texLoader.load(
@@ -4397,7 +4596,7 @@ function createUpgradableTexture(externalUrl, fallbackTex, repeatX=1, repeatY=1)
         tex.wrapT = THREE.RepeatWrapping;
         tex.repeat.set(repeatX, repeatY);
         tex.colorSpace = THREE.SRGBColorSpace;
-        tex.anisotropy = 16;
+        tex.anisotropy = gfxAniso();
         if(fallbackTex.source && tex.source){
           fallbackTex.source = tex.source;
         } else if(fallbackTex.image && tex.image){
@@ -4629,17 +4828,25 @@ function buildCristoRedentor(x, y, z, scale = 1.35){
   halo.position.set(0, 33.6, 0.2); halo.rotation.x = Math.PI / 2; cristo.add(halo);
 
   // 7. Holofotes de iluminação monumental apontando para o Cristo
-  const cristoLight1 = new THREE.SpotLight(0xfffae6, 350, 45, Math.PI/4, 0.4);
-  cristoLight1.position.set(x - 6, y + 8, z + 6);
-  cristoLight1.target.position.set(x, y + 25, z);
-  scene.add(cristoLight1, cristoLight1.target);
+  //
+  // O Cristo fica a ~180m da quadra e ocupa poucos pixels em jogo, mas as duas
+  // spotlights dele encareciam CADA pixel da cena inteira — o shader de todo
+  // material padrão passa a iterar por mais duas luzes. Só o preset "ultra"
+  // paga essa conta; nos outros a estátua vive da luz do sol e da hemisférica,
+  // e a diferença na tela é imperceptível.
+  if(GFX.cristo){
+    const cristoLight1 = new THREE.SpotLight(0xfffae6, 350, 45, Math.PI/4, 0.4);
+    cristoLight1.position.set(x - 6, y + 8, z + 6);
+    cristoLight1.target.position.set(x, y + 25, z);
+    scene.add(cristoLight1, cristoLight1.target);
 
-  const cristoLight2 = new THREE.SpotLight(0xffeedd, 350, 45, Math.PI/4, 0.4);
-  cristoLight2.position.set(x + 6, y + 8, z + 6);
-  cristoLight2.target.position.set(x, y + 25, z);
-  scene.add(cristoLight2, cristoLight2.target);
+    const cristoLight2 = new THREE.SpotLight(0xffeedd, 350, 45, Math.PI/4, 0.4);
+    cristoLight2.position.set(x + 6, y + 8, z + 6);
+    cristoLight2.target.position.set(x, y + 25, z);
+    scene.add(cristoLight2, cristoLight2.target);
+  }
 
-  scene.add(cristo);
+  staticBatch.add(cristo);
   return cristo;
 }
 
@@ -4776,16 +4983,24 @@ const metalMat = new THREE.MeshStandardMaterial({color:0x44444d, roughness:0.5, 
 const goldMat = new THREE.MeshStandardMaterial({color:0xffd700, roughness:0.25, metalness:0.95});
 const windowMat = new THREE.MeshStandardMaterial({color:0x14121a, roughness:0.3, emissive:0xffaa33, emissiveIntensity:0.5});
 const doorMat = new THREE.MeshStandardMaterial({color:0x3a2418, roughness:0.8});
+// Roupa no varal: duas cores fixas em vez de um material novo por casa.
+const varalVermelhoMat = new THREE.MeshBasicMaterial({color:0xff4444});
+const varalAmareloMat  = new THREE.MeshBasicMaterial({color:0xffee33});
 
 // 4. Palmeiras e Coqueiros Tropicais nos Morros
+// Os materiais do coqueiro vivem FORA da função de propósito: criados lá dentro,
+// as 28 palmeiras nasciam com 28 materiais idênticos (e 84 para os cocos), o que
+// impede tanto o agrupamento estático quanto o reaproveitamento de shader.
+const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5a4228, roughness: 0.9 });
+const leafMat = new THREE.MeshStandardMaterial({ color: 0x1f5c22, roughness: 0.7, side: THREE.DoubleSide });
+const coconutMat = new THREE.MeshStandardMaterial({ color: 0x3d2b18, roughness: 0.85 });
+const coconutGeo = new THREE.SphereGeometry(0.22, 6, 6);
+
 function buildCoqueiro(x, y, z, scale = 1.0, rot = 0){
   const tree = new THREE.Group();
   tree.position.set(x, y, z);
   tree.rotation.y = rot;
   tree.scale.set(scale, scale, scale);
-
-  const trunkMat = new THREE.MeshStandardMaterial({ color: 0x5a4228, roughness: 0.9 });
-  const leafMat = new THREE.MeshStandardMaterial({ color: 0x1f5c22, roughness: 0.7, side: THREE.DoubleSide });
 
   const segs = 6, hSeg = 1.2;
   let currY = 0, currX = 0;
@@ -4816,14 +5031,14 @@ function buildCoqueiro(x, y, z, scale = 1.0, rot = 0){
     leafGroup.add(leaf);
 
     if(i < 3){
-      const coconut = new THREE.Mesh(new THREE.SphereGeometry(0.22, 6, 6), new THREE.MeshStandardMaterial({ color: 0x3d2b18 }));
+      const coconut = new THREE.Mesh(coconutGeo, coconutMat);
       coconut.position.set(Math.sin(ang)*0.3, currY - 0.2, Math.cos(ang)*0.3);
       tree.add(coconut);
     }
     tree.add(leafGroup);
   }
 
-  scene.add(tree);
+  staticBatch.add(tree);
   return tree;
 }
 
@@ -4898,7 +5113,7 @@ function createFavelaHouse(x, y, z, w, h, d, colorMat){
 
   // 8. Varal de roupas na laje (em algumas casas)
   if(Math.random() > 0.65){
-    const clothesline = new THREE.Mesh(new THREE.BoxGeometry(w * 0.7, 0.4, 0.08), new THREE.MeshBasicMaterial({ color: Math.random() > 0.5 ? 0xff4444 : 0xffee33 }));
+    const clothesline = new THREE.Mesh(new THREE.BoxGeometry(w * 0.7, 0.4, 0.08), Math.random() > 0.5 ? varalVermelhoMat : varalAmareloMat);
     clothesline.position.set(0, h + 0.7, (Math.random() - 0.5) * (d * 0.4));
     group.add(clothesline);
   }
@@ -4910,7 +5125,7 @@ function createFavelaHouse(x, y, z, w, h, d, colorMat){
     group.add(door);
   }
 
-  scene.add(group);
+  staticBatch.add(group);
   return group;
 }
 
@@ -4962,22 +5177,33 @@ function buildFavelaNeighborhood(){
     {x: (HW+2.0), z: (HH+2.0), tx:  HW/2, tz:  HH/2}
   ];
 
-  corners.forEach(c => {
-    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.38, 15, 8), metalMat);
+  const PRIORIDADE_HOLOFOTE = [0, 3, 1, 2];
+  const bulbMat = new THREE.MeshStandardMaterial({color:0xfff0cc, emissive:0xffeedd, emissiveIntensity:2.5});
+  const poleGeo = new THREE.CylinderGeometry(0.3, 0.38, 15, 8);
+  const headGeo = new THREE.BoxGeometry(1.4, 0.8, 0.8);
+  const bulbGeo = new THREE.SphereGeometry(0.55, 10, 8);
+
+  corners.forEach((c, i) => {
+    const pole = new THREE.Mesh(poleGeo, metalMat);
     pole.position.set(c.x, 7.5, c.z);
     pole.castShadow = true;
-    scene.add(pole);
+    staticBatch.add(pole);
 
-    const head = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.8, 0.8), metalMat);
+    const head = new THREE.Mesh(headGeo, metalMat);
     head.position.set(c.x, 14.8, c.z);
-    scene.add(head);
+    staticBatch.add(head);
 
-    const bulbMat = new THREE.MeshStandardMaterial({color:0xfff0cc, emissive:0xffeedd, emissiveIntensity:2.5});
-    const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.55, 10, 8), bulbMat);
+    const bulb = new THREE.Mesh(bulbGeo, bulbMat);
     bulb.position.set(c.x, 14.5, c.z);
-    scene.add(bulb);
+    staticBatch.add(bulb);
 
-    addFloodlight(c.x, 14.5, c.z, c.tx, c.tz, 0xffeedd);
+    // Cada holofote é uma luz dinâmica a mais no shader de TODOS os materiais
+    // da cena. O preset decide quantos cabem: em "baixo" o campo fica só com o
+    // sol e a hemisférica, que é o que faz um PC de entrada respirar.
+    //
+    // A ordem [0,3,1,2] é diagonal de propósito: cortando pela metade, os dois
+    // que sobram ficam em cantos opostos e a quadra continua iluminada inteira.
+    if(PRIORIDADE_HOLOFOTE.indexOf(i) < GFX.floods) addFloodlight(c.x, 14.5, c.z, c.tx, c.tz, 0xffeedd);
   });
 
   // 4. Fiação Aérea Típica da Favela
@@ -4994,28 +5220,30 @@ function buildFavelaNeighborhood(){
   }
 
   // 5. Alambrado de Proteção da Quadra
+  // Uma geometria só para os ~60 mourões: eram 60 buffers idênticos na GPU.
+  const mouraoGeo = new THREE.CylinderGeometry(0.09, 0.09, 4.8, 6);
   for(let x=-HW; x<=HW; x+=4.2){
     for(const zSign of [-1, 1]){
-      const f = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 4.8, 6), metalMat);
+      const f = new THREE.Mesh(mouraoGeo, metalMat);
       f.position.set(x, 2.4, zSign*(HH+0.8));
-      scene.add(f);
+      staticBatch.add(f);
     }
   }
   for(let z=-HH; z<=HH; z+=4.2){
     for(const xSign of [-1, 1]){
-      const f = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 4.8, 6), metalMat);
+      const f = new THREE.Mesh(mouraoGeo, metalMat);
       f.position.set(xSign*(HW+0.8), 2.4, z);
-      scene.add(f);
+      staticBatch.add(f);
     }
   }
 
   const gWall1 = new THREE.Mesh(new THREE.BoxGeometry(16, 3.4, 0.6), new THREE.MeshStandardMaterial({map:makeGraffitiWallTexture("FÉ EM DEUS ★ RJ")}));
   gWall1.position.set(0, 1.7, -(HH+3.8));
-  scene.add(gWall1);
+  staticBatch.add(gWall1);
 
   const gWall2 = new THREE.Mesh(new THREE.BoxGeometry(16, 3.4, 0.6), new THREE.MeshStandardMaterial({map:makeGraffitiWallTexture("TROPA DO CRIA 021")}));
   gWall2.position.set(0, 1.7, (HH+3.8));
-  scene.add(gWall2);
+  staticBatch.add(gWall2);
 }
 buildFavelaNeighborhood();
 
@@ -5031,19 +5259,19 @@ function buildGoal(sign){
     const p = new THREE.Mesh(postGeo, postMat);
     p.position.set(sx*GHW, Hg/2, zL);
     p.castShadow = true;
-    scene.add(p);
+    staticBatch.add(p);
 
     const back = new THREE.Mesh(postGeo, postMat);
     back.position.set(sx*GHW, Hg/2*0.86, zL + sign*D);
     back.scale.y = 0.86;
-    scene.add(back);
+    staticBatch.add(back);
   }
 
   const crossbar = new THREE.Mesh(new THREE.CylinderGeometry(r, r, CFG.GOAL_W + r*2, 10), postMat);
   crossbar.rotation.z = Math.PI/2;
   crossbar.position.set(0, Hg, zL);
   crossbar.castShadow = true;
-  scene.add(crossbar);
+  staticBatch.add(crossbar);
 
   const v = [];
   const push = (a,b,c,d,e,f)=>v.push(a,b,c,d,e,f);
@@ -5059,6 +5287,11 @@ function buildGoal(sign){
   scene.add(new THREE.LineSegments(geo, netMat));
 }
 buildGoal(-1); buildGoal(1);
+
+// Todo o cenário estático (casas, coqueiros, alambrado, postes, traves) vira
+// um punhado de meshes fundidos. A partir daqui a cena tem dezenas de objetos
+// em vez de milhares — é a diferença entre 25fps e 60+ num PC comum.
+staticBatchFlush();
 
 /* ═══════════════ MODELAGEM HUMANOIDE SÊNIOR HIPER-ORGÂNICA ═══════════════ */
 function makeCleatTexture(colorHex="#ef4444", secColorHex="#ffffff", style="mercurial"){
@@ -6474,137 +6707,174 @@ const VFX = {
   })()
 };
 
+// ════════════ POOL DE PARTÍCULAS ════════════
+// Antes cada faísca nascia com um THREE.SpriteMaterial e (às vezes) uma
+// geometria novos, e morria com dispose() nos dois. Um chute forte criava 25
+// materiais de uma vez; o rastro de bola criava UM POR QUADRO enquanto ela
+// voava. Cada material novo é uma consulta de programa de shader no renderer e
+// cada dispose é liberação de buffer na GPU — é exatamente o tipo de coisa que
+// vira engasgo bem na hora do gol, que é quando mais partícula tem na tela.
+//
+// Agora tudo sai de piscinas: os objetos são criados uma vez, escondidos quando
+// morrem e reaproveitados no próximo efeito. Zero alocação e zero dispose
+// durante a partida.
+// Tetos lidos na hora, não fixados no carregamento: trocar de preset com F4
+// precisa valer na mesma partida, sem recarregar.
+const vfxTeto = () => Math.round(260 * GFX.vfx);
+const vfxTetoDecal = () => Math.max(2, Math.round(14 * GFX.vfx));
+
+// Geometrias compartilhadas: uma de cada, para sempre.
+const vfxGeoDust    = new THREE.SphereGeometry(0.10, 5, 4);
+const vfxGeoRing    = new THREE.RingGeometry(0.1, 0.35, 16);
+const vfxGeoPebble  = new THREE.BoxGeometry(0.045, 0.045, 0.045);
+const vfxGeoCrack   = new THREE.PlaneGeometry(1.3, 0.7);
+const vfxMatPebble  = new THREE.MeshStandardMaterial({ color: 0x4a4453, roughness: 0.9, flatShading: true });
+
+// Cria um objeto de piscina já fora de cena. `criar` só roda quando a piscina
+// está vazia; daí para frente é sempre reaproveitamento.
+function vfxPool(criar){
+  return { livres: [], criar };
+}
+function vfxPegar(pool){
+  const o = pool.livres.pop() || pool.criar();
+  o.visible = true;
+  return o;
+}
+function vfxDevolver(pool, o){
+  o.visible = false;
+  if(o.parent) o.parent.remove(o);
+  pool.livres.push(o);
+}
+
+const poolSprite = vfxPool(() => {
+  // Cada sprite carrega o SEU material (cor e opacidade são por partícula), mas
+  // ele nasce uma vez só e volta para a piscina em vez de ser destruído.
+  const m = new THREE.SpriteMaterial({ transparent: true, depthWrite: false, blending: THREE.AdditiveBlending });
+  return new THREE.Sprite(m);
+});
+const poolDust = vfxPool(() => new THREE.Mesh(vfxGeoDust,
+  new THREE.MeshBasicMaterial({ color: 0xded8cb, transparent: true, opacity: 0.55, depthWrite: false })));
+const poolRing = vfxPool(() => new THREE.Mesh(vfxGeoRing,
+  new THREE.MeshBasicMaterial({ transparent: true, side: THREE.DoubleSide, depthWrite: false })));
+const poolPebble = vfxPool(() => new THREE.Mesh(vfxGeoPebble, vfxMatPebble));
+const poolCrack = vfxPool(() => new THREE.Mesh(vfxGeoCrack,
+  new THREE.MeshBasicMaterial({ map: VFX.crackTex, transparent: true, opacity: 0.85, depthWrite: false,
+                                polygonOffset: true, polygonOffsetFactor: -1 })));
+
+// Os registros de partícula também são reciclados: centenas de objetos por
+// segundo entrando no coletor de lixo davam uma pausa visível a cada poucos
+// segundos de jogo.
+const vfxRegLivres = [];
+function vfxEmitir(pool, mesh, vx, vy, vz, life, extra){
+  if(VFX.particles.length >= vfxTeto()){ vfxDevolver(pool, mesh); return null; }
+  scene.add(mesh);
+  const p = vfxRegLivres.pop() || { vel: new THREE.Vector3(), rotVel: null };
+  p.pool = pool;
+  p.mesh = mesh;
+  p.vel.set(vx, vy, vz);
+  p.rotVel = null;
+  p.life = life;
+  p.maxLife = life;
+  p.expandSpeed = 0;
+  p.scaleSpeed = 0;
+  p.fade = 0.80;
+  p.gravidade = false;
+  if(extra) Object.assign(p, extra);
+  VFX.particles.push(p);
+  return p;
+}
+
 // ════════════ 1. EFEITO DE VENTO NA CORRIDA / SPRINT (SOMENTE NOS PÉS) ════════════
 function vfxSpawnWindLine(pos, vel){
-  if(!scene) return;
+  if(!scene || GFX.vfx <= 0) return;
   const speed = vel.length();
   if(speed < 5.0) return;
-  
-  const mat = new THREE.SpriteMaterial({
-    map: VFX.windTex,
-    color: 0xffffff,
-    transparent: true,
-    opacity: 0.55,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false
-  });
-  const sprite = new THREE.Sprite(mat);
-  // Rastros aerodinâmicos rentes ao chão, saindo exclusivamente dos pés/chuteiras
+
+  const sprite = vfxPegar(poolSprite);
+  const mat = sprite.material;
+  mat.map = VFX.windTex;
+  mat.color.setHex(0xffffff);
+  mat.opacity = 0.55;
+  mat.needsUpdate = true;
+
   const sideOffset = (Math.random() - 0.5) * 0.35;
   const footHeight = 0.08 + Math.random() * 0.10; // Altura exclusiva dos pés
   sprite.position.set(pos.x + sideOffset, footHeight, pos.z);
   sprite.scale.set(0.95 + Math.random() * 0.45, 0.14, 1);
-  scene.add(sprite);
 
-  VFX.particles.push({
-    mesh: sprite,
-    vel: new THREE.Vector3(-vel.x * 0.20, 0.04, -vel.z * 0.20),
-    life: 0.22 + Math.random() * 0.10,
-    maxLife: 0.32,
-    type: "wind"
-  });
+  vfxEmitir(poolSprite, sprite, -vel.x * 0.20, 0.04, -vel.z * 0.20,
+            0.22 + Math.random() * 0.10, { fade: 0.80 });
 }
 
 function vfxSpawnFootDust(pos, isSprint = false){
-  if(!scene) return;
+  if(!scene || GFX.vfx <= 0) return;
   const count = isSprint ? 2 : 1;
   for(let i = 0; i < count; i++){
-    const geo = new THREE.SphereGeometry(0.08 + Math.random() * 0.06, 5, 4);
-    const mat = new THREE.MeshBasicMaterial({
-      color: 0xded8cb,
-      transparent: true,
-      opacity: 0.55,
-      depthWrite: false
-    });
-    const m = new THREE.Mesh(geo, mat);
+    const m = vfxPegar(poolDust);
+    m.material.opacity = 0.55;
+    const s = 0.8 + Math.random() * 0.6;
+    m.scale.set(s, s, s);
     m.position.set(pos.x + (Math.random()-0.5)*0.2, 0.06, pos.z + (Math.random()-0.5)*0.2);
-    scene.add(m);
-
-    VFX.particles.push({
-      mesh: m,
-      vel: new THREE.Vector3((Math.random()-0.5)*1.2, 0.6 + Math.random()*0.8, (Math.random()-0.5)*1.2),
-      life: 0.35 + Math.random() * 0.15,
-      maxLife: 0.50,
-      scaleSpeed: 2.2,
-      type: "dust"
-    });
+    vfxEmitir(poolDust, m,
+      (Math.random()-0.5)*1.2, 0.6 + Math.random()*0.8, (Math.random()-0.5)*1.2,
+      0.35 + Math.random() * 0.15, { scaleSpeed: 2.2, gravidade: true, fade: 0.80 });
   }
 }
 
 // ════════════ 2. EFEITO DE FOGO NO CHUTE / FINALIZAÇÃO ════════════
 function vfxSpawnKickFire(pos, dir, intensity = 1.0){
-  if(!scene) return;
+  if(!scene || GFX.vfx <= 0) return;
   // 1. Explosão central de chamas e brasas
-  const sparkCount = Math.floor(10 + intensity * 14);
+  const sparkCount = Math.max(2, Math.floor((10 + intensity * 14) * GFX.vfx));
+  const spread = 2.4 * intensity;
   for(let i = 0; i < sparkCount; i++){
-    const mat = new THREE.SpriteMaterial({
-      map: VFX.sparkTex,
-      color: Math.random() > 0.3 ? 0xff6600 : 0xffdd33,
-      transparent: true,
-      opacity: 0.95,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false
-    });
-    const s = new THREE.Sprite(mat);
+    const s = vfxPegar(poolSprite);
+    const mat = s.material;
+    mat.map = VFX.sparkTex;
+    mat.color.setHex(Math.random() > 0.3 ? 0xff6600 : 0xffdd33);
+    mat.opacity = 0.95;
+    mat.needsUpdate = true;
     s.position.copy(pos);
     const sz = (0.28 + Math.random() * 0.35) * intensity;
     s.scale.set(sz, sz, sz);
-    scene.add(s);
 
-    const spread = 2.4 * intensity;
-    const v = new THREE.Vector3(
+    vfxEmitir(poolSprite, s,
       dir.x * (6.0 + Math.random()*10.0) + (Math.random()-0.5)*spread,
       1.5 + Math.random() * 4.5,
-      dir.z * (6.0 + Math.random()*10.0) + (Math.random()-0.5)*spread
-    );
-
-    VFX.particles.push({
-      mesh: s,
-      vel: v,
-      life: 0.32 + Math.random() * 0.22,
-      maxLife: 0.54,
-      type: "fire"
-    });
+      dir.z * (6.0 + Math.random()*10.0) + (Math.random()-0.5)*spread,
+      0.32 + Math.random() * 0.22, { fade: 0.95 });
   }
 
   // 2. Anel de onda de choque térmico no solo
-  const ringGeo = new THREE.RingGeometry(0.1, 0.35, 16);
-  const ringMat = new THREE.MeshBasicMaterial({
-    color: 0xff7700,
-    transparent: true,
-    opacity: 0.85,
-    side: THREE.DoubleSide,
-    depthWrite: false
-  });
-  const ring = new THREE.Mesh(ringGeo, ringMat);
-  ring.rotation.x = -Math.PI / 2;
+  const ring = vfxPegar(poolRing);
+  ring.material.color.setHex(0xff7700);
+  ring.material.opacity = 0.85;
+  ring.material.blending = THREE.NormalBlending;
+  ring.material.needsUpdate = true;
+  ring.rotation.set(-Math.PI / 2, 0, 0);
+  ring.scale.set(1, 1, 1);
   ring.position.set(pos.x, 0.05, pos.z);
-  scene.add(ring);
-
-  VFX.particles.push({
-    mesh: ring,
-    vel: new THREE.Vector3(0, 0, 0),
-    life: 0.25,
-    maxLife: 0.25,
-    expandSpeed: 7.5 * intensity,
-    type: "shockwave"
-  });
+  vfxEmitir(poolRing, ring, 0, 0, 0, 0.25, { expandSpeed: 7.5 * intensity, fade: 0.80 });
 }
 
+// Rastro da bola. A bola voa por mais de um segundo num chute forte: emitir a
+// cada quadro enchia a piscina à toa. Um intervalo mínimo entrega o mesmo
+// rastro na tela com um terço das partículas, e independe da taxa de quadros.
+let vfxUltimoRastro = 0;
 function vfxSpawnBallFireTrail(ballPos, ballVel){
-  if(!scene) return;
+  if(!scene || GFX.vfx <= 0) return;
   const speed = ballVel.length();
   if(speed < 18.0) return;
+  const agora = performance.now();
+  if(agora - vfxUltimoRastro < 26) return;
+  vfxUltimoRastro = agora;
 
-  const mat = new THREE.SpriteMaterial({
-    map: VFX.sparkTex,
-    color: speed > 30 ? 0xff3b30 : 0xffa500,
-    transparent: true,
-    opacity: 0.85,
-    blending: THREE.AdditiveBlending,
-    depthWrite: false
-  });
-  const s = new THREE.Sprite(mat);
+  const s = vfxPegar(poolSprite);
+  const mat = s.material;
+  mat.map = VFX.sparkTex;
+  mat.color.setHex(speed > 30 ? 0xff3b30 : 0xffa500);
+  mat.opacity = 0.85;
+  mat.needsUpdate = true;
   s.position.set(
     ballPos.x + (Math.random()-0.5)*0.15,
     ballPos.y + (Math.random()-0.5)*0.15,
@@ -6612,34 +6882,28 @@ function vfxSpawnBallFireTrail(ballPos, ballVel){
   );
   const sz = 0.25 + (speed / 45) * 0.22;
   s.scale.set(sz, sz, sz);
-  scene.add(s);
 
-  VFX.particles.push({
-    mesh: s,
-    vel: new THREE.Vector3(-ballVel.x * 0.08 + (Math.random()-0.5), -ballVel.y * 0.08 + 0.3, -ballVel.z * 0.08 + (Math.random()-0.5)),
-    life: 0.20 + Math.random() * 0.12,
-    maxLife: 0.32,
-    type: "fire_trail"
-  });
+  vfxEmitir(poolSprite, s,
+    -ballVel.x * 0.08 + (Math.random()-0.5),
+    -ballVel.y * 0.08 + 0.3,
+    -ballVel.z * 0.08 + (Math.random()-0.5),
+    0.20 + Math.random() * 0.12, { fade: 0.95 });
 }
 
 // ════════════ 2.1 EFEITO SUPREMO: SUPER CHUTE EM CHAMAS ════════════
+const VFX_CORES_PLASMA = [0xff2200, 0xff7700, 0xffd700, 0xffffff];
+const vfxAlvoAnel = new THREE.Vector3();
 function vfxSpawnSuperShotFire(ballPos, ballVel){
-  if(!scene) return;
-  const speed = ballVel.length();
+  if(!scene || GFX.vfx <= 0) return;
 
   // 1. Bola de fogo densa (múltiplas camadas de fogo e plasma)
-  const colors = [0xff2200, 0xff7700, 0xffd700, 0xffffff];
   for(let i = 0; i < 4; i++){
-    const mat = new THREE.SpriteMaterial({
-      map: VFX.sparkTex,
-      color: colors[i],
-      transparent: true,
-      opacity: 0.95,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false
-    });
-    const s = new THREE.Sprite(mat);
+    const s = vfxPegar(poolSprite);
+    const mat = s.material;
+    mat.map = VFX.sparkTex;
+    mat.color.setHex(VFX_CORES_PLASMA[i]);
+    mat.opacity = 0.95;
+    mat.needsUpdate = true;
     s.position.set(
       ballPos.x + (Math.random()-0.5)*0.25,
       ballPos.y + (Math.random()-0.5)*0.25,
@@ -6647,172 +6911,123 @@ function vfxSpawnSuperShotFire(ballPos, ballVel){
     );
     const sz = 0.55 + Math.random() * 0.45;
     s.scale.set(sz, sz, sz);
-    scene.add(s);
 
-    VFX.particles.push({
-      mesh: s,
-      vel: new THREE.Vector3(
-        -ballVel.x * 0.12 + (Math.random()-0.5)*1.8,
-        -ballVel.y * 0.12 + 0.8 + (Math.random()-0.5)*1.2,
-        -ballVel.z * 0.12 + (Math.random()-0.5)*1.8
-      ),
-      life: 0.35 + Math.random() * 0.20,
-      maxLife: 0.55,
-      type: "fire_trail"
-    });
+    vfxEmitir(poolSprite, s,
+      -ballVel.x * 0.12 + (Math.random()-0.5)*1.8,
+      -ballVel.y * 0.12 + 0.8 + (Math.random()-0.5)*1.2,
+      -ballVel.z * 0.12 + (Math.random()-0.5)*1.8,
+      0.35 + Math.random() * 0.20, { fade: 0.95 });
   }
 
   // 2. Anéis de plasma e calor a cada poucos frames
   if(Math.random() < 0.45){
-    const ringGeo = new THREE.RingGeometry(0.12, 0.45, 16);
-    const ringMat = new THREE.MeshBasicMaterial({
-      color: 0xffaa00,
-      transparent: true,
-      opacity: 0.85,
-      side: THREE.DoubleSide,
-      depthWrite: false,
-      blending: THREE.AdditiveBlending
-    });
-    const ring = new THREE.Mesh(ringGeo, ringMat);
+    const ring = vfxPegar(poolRing);
+    ring.material.color.setHex(0xffaa00);
+    ring.material.opacity = 0.85;
+    ring.material.blending = THREE.AdditiveBlending;
+    ring.material.needsUpdate = true;
+    ring.scale.set(1, 1, 1);
     ring.position.copy(ballPos);
-    ring.lookAt(ballPos.clone().add(ballVel));
-    scene.add(ring);
-
-    VFX.particles.push({
-      mesh: ring,
-      vel: new THREE.Vector3(0, 0, 0),
-      life: 0.22,
-      maxLife: 0.22,
-      expandSpeed: 8.0,
-      type: "shockwave"
-    });
+    vfxAlvoAnel.copy(ballPos).add(ballVel);
+    ring.lookAt(vfxAlvoAnel);
+    vfxEmitir(poolRing, ring, 0, 0, 0, 0.22, { expandSpeed: 8.0, fade: 0.80 });
   }
 }
 
 // ════════════ 3. EFEITO DE CARRINHO: RACHADURA NO CHÃO, FAÍSCAS E CASCALHO ════════════
 function vfxSpawnTackleTrail(char, footSign){
-  if(!scene) return;
+  if(!scene || GFX.vfx <= 0) return;
   const p = char.root.position;
   const vel = char.vel;
   const speed = vel.length();
   if(speed < 2.0) return;
 
   // 1. Spawna Decal de Rachadura no Asfalto da Quadra
-  if(!char._lastCrackPos || flat(char._lastCrackPos, p) > 0.85){
-    char._lastCrackPos = p.clone();
-    
-    const crackGeo = new THREE.PlaneGeometry(1.3, 0.7);
-    const crackMat = new THREE.MeshBasicMaterial({
-      map: VFX.crackTex,
-      transparent: true,
-      opacity: 0.85,
-      depthWrite: false,
-      polygonOffset: true,
-      polygonOffsetFactor: -1
-    });
-    const crack = new THREE.Mesh(crackGeo, crackMat);
-    crack.rotation.x = -Math.PI / 2;
-    crack.rotation.z = Math.atan2(vel.x, vel.z) + (Math.random() - 0.5) * 0.4;
+  if(!char._lastCrackPos) char._lastCrackPos = new THREE.Vector3(1e9, 0, 1e9);
+  if(flat(char._lastCrackPos, p) > 0.85 && VFX.decals.length < vfxTetoDecal()){
+    char._lastCrackPos.copy(p);
+
+    const crack = vfxPegar(poolCrack);
+    crack.material.opacity = 0.85;
+    crack.rotation.set(-Math.PI / 2, 0, Math.atan2(vel.x, vel.z) + (Math.random() - 0.5) * 0.4);
     crack.position.set(p.x, 0.025, p.z);
     scene.add(crack);
 
-    VFX.decals.push({
-      mesh: crack,
-      life: 1.8,
-      maxLife: 1.8
-    });
+    VFX.decals.push({ mesh: crack, life: 1.8, maxLife: 1.8 });
   }
 
   // 2. Faíscas de atrito metálico/concreto
-  for(let i = 0; i < 3; i++){
-    const mat = new THREE.SpriteMaterial({
-      map: VFX.sparkTex,
-      color: 0xffaa00,
-      transparent: true,
-      opacity: 0.95,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false
-    });
-    const sp = new THREE.Sprite(mat);
+  const nFaiscas = Math.max(1, Math.round(3 * GFX.vfx));
+  for(let i = 0; i < nFaiscas; i++){
+    const sp = vfxPegar(poolSprite);
+    const mat = sp.material;
+    mat.map = VFX.sparkTex;
+    mat.color.setHex(0xffaa00);
+    mat.opacity = 0.95;
+    mat.needsUpdate = true;
     sp.position.set(p.x + (Math.random()-0.5)*0.3, 0.08, p.z + (Math.random()-0.5)*0.3);
     sp.scale.set(0.18, 0.18, 0.18);
-    scene.add(sp);
 
-    VFX.particles.push({
-      mesh: sp,
-      vel: new THREE.Vector3(
-        -vel.x * 0.4 + (Math.random()-0.5)*3.0,
-        1.2 + Math.random()*2.2,
-        -vel.z * 0.4 + (Math.random()-0.5)*3.0
-      ),
-      life: 0.22 + Math.random() * 0.14,
-      maxLife: 0.36,
-      type: "friction_spark"
-    });
+    vfxEmitir(poolSprite, sp,
+      -vel.x * 0.4 + (Math.random()-0.5)*3.0,
+      1.2 + Math.random()*2.2,
+      -vel.z * 0.4 + (Math.random()-0.5)*3.0,
+      0.22 + Math.random() * 0.14, { gravidade: true, fade: 0.95 });
   }
 
   // 3. Pedregulhos / cascalho de concreto voando do chão
-  for(let i = 0; i < 2; i++){
-    const pebbleGeo = new THREE.BoxGeometry(0.045, 0.045, 0.045);
-    const pebbleMat = new THREE.MeshStandardMaterial({
-      color: 0x4a4453,
-      roughness: 0.9,
-      flatShading: true
-    });
-    const pebble = new THREE.Mesh(pebbleGeo, pebbleMat);
+  const nPedras = Math.max(1, Math.round(2 * GFX.vfx));
+  for(let i = 0; i < nPedras; i++){
+    const pebble = vfxPegar(poolPebble);
     pebble.position.set(p.x + (Math.random()-0.5)*0.2, 0.08, p.z + (Math.random()-0.5)*0.2);
-    scene.add(pebble);
+    pebble.rotation.set(0, 0, 0);
 
-    VFX.particles.push({
-      mesh: pebble,
-      vel: new THREE.Vector3(
-        -vel.x * 0.3 + (Math.random()-0.5)*2.4,
-        1.6 + Math.random()*1.8,
-        -vel.z * 0.3 + (Math.random()-0.5)*2.4
-      ),
-      rotVel: new THREE.Vector3(Math.random()*10, Math.random()*10, Math.random()*10),
-      life: 0.40 + Math.random() * 0.20,
-      maxLife: 0.60,
-      type: "pebble"
-    });
+    const reg = vfxEmitir(poolPebble, pebble,
+      -vel.x * 0.3 + (Math.random()-0.5)*2.4,
+      1.6 + Math.random()*1.8,
+      -vel.z * 0.3 + (Math.random()-0.5)*2.4,
+      0.40 + Math.random() * 0.20, { gravidade: true, fade: 0 });
+    if(reg){
+      reg.rotVel = reg.rotVel || new THREE.Vector3();
+      reg.rotVel.set(Math.random()*10, Math.random()*10, Math.random()*10);
+    }
   }
 }
 
 // ════════════ UPDATE E FADE SUAVE DOS EFEITOS ════════════
 function updateVFX(dt){
   if(!scene) return;
-  
+
   // Atualiza partículas ativas
   for(let i = VFX.particles.length - 1; i >= 0; i--){
     const p = VFX.particles[i];
     p.life -= dt;
     if(p.life <= 0){
-      scene.remove(p.mesh);
-      if(p.mesh.geometry) p.mesh.geometry.dispose();
-      if(p.mesh.material) p.mesh.material.dispose();
-      VFX.particles.splice(i, 1);
+      vfxDevolver(p.pool, p.mesh);
+      const ultimo = VFX.particles.pop();
+      if(i < VFX.particles.length) VFX.particles[i] = ultimo;
+      p.mesh = null; p.pool = null;
+      vfxRegLivres.push(p);         // o registro volta para o reaproveitamento
       continue;
     }
 
-    const t = Math.max(0, p.life / p.maxLife);
-    if(p.mesh.material){
-      p.mesh.material.opacity = t * (p.type === "fire" ? 0.95 : 0.80);
-    }
+    const t = p.life / p.maxLife;
+    // O pedregulho é opaco de propósito (fade 0): mexer na opacidade dele
+    // mudaria o material compartilhado de TODOS os outros pedregulhos.
+    if(p.fade) p.mesh.material.opacity = t * p.fade;
 
-    if(p.vel){
-      p.mesh.position.addScaledVector(p.vel, dt);
-      if(p.type === "pebble" || p.type === "dust" || p.type === "friction_spark"){
-        p.vel.y -= 9.8 * dt; // gravidade
-        if(p.mesh.position.y < 0.03){
-          p.mesh.position.y = 0.03;
-          p.vel.y = -p.vel.y * 0.35;
-          p.vel.x *= 0.85;
-          p.vel.z *= 0.85;
-        }
+    p.mesh.position.addScaledVector(p.vel, dt);
+    if(p.gravidade){
+      p.vel.y -= 9.8 * dt;
+      if(p.mesh.position.y < 0.03){
+        p.mesh.position.y = 0.03;
+        p.vel.y = -p.vel.y * 0.35;
+        p.vel.x *= 0.85;
+        p.vel.z *= 0.85;
       }
     }
 
-    if(p.rotVel && p.mesh.rotation){
+    if(p.rotVel){
       p.mesh.rotation.x += p.rotVel.x * dt;
       p.mesh.rotation.y += p.rotVel.y * dt;
     }
@@ -6833,14 +7048,11 @@ function updateVFX(dt){
     const d = VFX.decals[i];
     d.life -= dt;
     if(d.life <= 0){
-      scene.remove(d.mesh);
-      if(d.mesh.geometry) d.mesh.geometry.dispose();
-      if(d.mesh.material) d.mesh.material.dispose();
+      vfxDevolver(poolCrack, d.mesh);
       VFX.decals.splice(i, 1);
       continue;
     }
-    const t = Math.max(0, d.life / d.maxLife);
-    d.mesh.material.opacity = t * 0.85;
+    d.mesh.material.opacity = (d.life / d.maxLife) * 0.85;
   }
 }
 
@@ -7767,7 +7979,12 @@ function animateHumanoid(char, dt, isMoving){
     char.headGroup.rotation.x = (-0.05 - sprintFactor * 0.07) * b;
 
     // Spawna linhas de vento e poeira dinâmica nos pés (EXCLUSIVAMENTE no personagem do jogador local)
-    const isLocalPlayer = (char === player) || (char.role === "player") || (gameMode === "multiplayer" && typeof mp !== "undefined" && mp.myEntId && char === mp.chars?.[mp.myEntId]);
+    //
+    // O teste do online estava quebrado em dois pontos: `mp.myEntId` não existe
+    // (o campo é `mp.entId`) e `mp.chars` é um Map, então `mp.chars?.[id]` dava
+    // sempre undefined. Resultado: nas partidas online ninguém levantava poeira
+    // nem rastro de vento. `char.isMe` é o que mpBuildRoster já marca.
+    const isLocalPlayer = (char === player) || (char.role === "player") || char.isMe === true;
     if(isLocalPlayer){
       if(typeof vfxSpawnWindLine === "function" && speed > 5.8 && Math.random() < (0.28 + sprintFactor * 0.35)){
         vfxSpawnWindLine(char.root.position, char.vel);
@@ -9083,7 +9300,23 @@ function performHeaderContact(){
 }
 
 /* ═══════════════ SISTEMA DE ESTAMINA / FÔLEGO DOS JOGADORES ═══════════════ */
+// Elementos do HUD de fôlego, achados uma vez. Esta função roda todo quadro:
+// cinco document.querySelector por chamada davam ~300 buscas no DOM por segundo
+// para escrever cinco valores que quase nunca mudam.
+const staminaEls = { pronto: false };
+function acharStaminaEls(){
+  staminaEls.bar = $("#staminaBar");
+  staminaEls.text = $("#staminaText");
+  staminaEls.hud = $("#staminaHud");
+  staminaEls.fill = $("#sprintStaminaFill");
+  staminaEls.sprintBtn = $("#sprintBtn");
+  staminaEls.pronto = true;
+}
+let staminaUltimoPct = -1, staminaUltimoExh = null, staminaUltimoAtivo = null;
+
 function updateStaminaHUD(dt){
+  if(!staminaEls.pronto) acharStaminaEls();
+
   const curStamina = (gameMode === "multiplayer")
     ? (mp && mp.stamina !== undefined ? mp.stamina : 100)
     : (player && player.stamina !== undefined ? player.stamina : 100);
@@ -9091,13 +9324,15 @@ function updateStaminaHUD(dt){
     ? !!(mp && mp.isExhausted)
     : !!(player && player.isExhausted);
 
-  const barEl = $("#staminaBar");
-  const textEl = $("#staminaText");
-  const hudEl = $("#staminaHud");
-  const fillEl = $("#sprintStaminaFill");
-  const sprintBtnEl = $("#sprintBtn");
-
   const pct = Math.max(0, Math.min(100, Math.round(curStamina)));
+  const inActiveMatch = (gameMode === "match" || gameMode === "training" || gameMode === "multiplayer") && (running || (mp && mp.running));
+
+  // Nada mudou desde o quadro anterior: escrever de novo só forçaria o
+  // navegador a recalcular estilo à toa.
+  if(pct === staminaUltimoPct && isExh === staminaUltimoExh && inActiveMatch === staminaUltimoAtivo) return;
+  staminaUltimoPct = pct; staminaUltimoExh = isExh; staminaUltimoAtivo = inActiveMatch;
+
+  const barEl = staminaEls.bar, textEl = staminaEls.text, hudEl = staminaEls.hud;
 
   if(barEl){
     barEl.style.width = `${pct}%`;
@@ -9120,16 +9355,15 @@ function updateStaminaHUD(dt){
 
   if(hudEl){
     hudEl.classList.toggle("exhausted", isExh);
-    const inActiveMatch = (gameMode === "match" || gameMode === "training" || gameMode === "multiplayer") && (running || (mp && mp.running));
     hudEl.classList.toggle("show", inActiveMatch);
     hudEl.style.opacity = (pct < 98 || isExh) ? "1" : "0.75";
   }
 
-  if(fillEl){
-    fillEl.style.height = `${pct}%`;
+  if(staminaEls.fill){
+    staminaEls.fill.style.height = `${pct}%`;
   }
-  if(sprintBtnEl){
-    sprintBtnEl.classList.toggle("exhausted", isExh);
+  if(staminaEls.sprintBtn){
+    staminaEls.sprintBtn.classList.toggle("exhausted", isExh);
   }
 }
 
@@ -10507,7 +10741,7 @@ function drawMini(){
   mg.fillStyle = "#ff3b4e"; mg.fillRect(gLeft,h-5,gWidth,5);
 
   if(gameMode === "multiplayer"){
-    for(const [id, c] of mp.chars){
+    for(const c of mp.chars.values()){
       const isAlly = c.team === mp.team;
       const isMe = c.isMe;
       const color = isAlly ? (isMe ? "#00ffcc" : "#ffd700") : (c.role === "keeper" ? "#ff8800" : "#ff3b4e");
@@ -10537,6 +10771,69 @@ function drawMini(){
   const pz = (player.root.position.z + HH) / CFG.H * h;
   mg.strokeStyle = "#ffd700"; mg.lineWidth = 2;
   mg.beginPath(); mg.arc(px, pz, 8.5, 0, Math.PI*2); mg.stroke();
+}
+
+/* ═══════════════ PAINEL DE DESEMPENHO & TROCA DE QUALIDADE ═══════════════
+   F3 mostra o que está acontecendo por baixo (quadros, resolução interna,
+   draw calls, ping). F4 gira entre os presets. Sem isso não dá para saber se
+   uma travada é do PC, do desenho ou da rede — que é justamente a diferença
+   entre ajustar a coisa certa e ficar chutando. */
+let hudDebugAtivo = false;
+let perfHudEl = null;
+let perfUltimoTexto = "";
+
+function atualizarHudDebug(){
+  if(!perfHudEl) perfHudEl = $("#perfHud");
+  if(!perfHudEl) return;
+  const info = renderer.info.render;
+  const larg = Math.round(innerWidth * PR_BASE * gfxScale);
+  const alt  = Math.round(innerHeight * PR_BASE * gfxScale);
+  const linhaRede = (gameMode === "multiplayer" && mp.running)
+    ? `\nping   ${mp.ping || 0} ms   buffer ${mp.snaps.length}\ninterp ${Math.round(mpInterpAtual * 1000)} ms`
+    : "";
+  const txt =
+    `${fpsMedido.toFixed(0)} fps  (alvo ${GFX_FPS_ALVO || "?"})\n` +
+    `render ${larg}x${alt}  ${Math.round(gfxScale * 100)}%\n` +
+    `draws  ${info.calls}   tris ${(info.triangles / 1000).toFixed(0)}k\n` +
+    `gfx    ${GFX_NOME.toUpperCase()}  (F4 troca)` + linhaRede;
+  if(txt !== perfUltimoTexto){
+    perfUltimoTexto = txt;
+    perfHudEl.textContent = txt;
+  }
+}
+
+function alternarHudDebug(){
+  hudDebugAtivo = !hudDebugAtivo;
+  if(!perfHudEl) perfHudEl = $("#perfHud");
+  if(perfHudEl) perfHudEl.classList.toggle("show", hudDebugAtivo);
+}
+
+// Troca de preset em jogo. O que dá para aplicar na hora é aplicado; o que
+// depende da criação do contexto (antialias, tamanho do mapa de sombra) só vale
+// no próximo carregamento, e o painel avisa em vez de mentir que já valeu.
+const GFX_ORDEM = ["baixo", "medio", "alto", "ultra"];
+function ciclarPresetGrafico(){
+  const i = (GFX_ORDEM.indexOf(GFX_NOME) + 1) % GFX_ORDEM.length;
+  GFX_NOME = GFX_ORDEM[i];
+  GFX = GFX_PRESETS[GFX_NOME];
+  try { localStorage.setItem("fut_cria_gfx", GFX_NOME); } catch(e){}
+
+  PR_BASE = Math.min(devicePixelRatio || 1, GFX.maxPR);
+  gfxScale = 1;
+  renderer.setPixelRatio(PR_BASE);
+  renderer.setSize(innerWidth, innerHeight);
+  renderer.shadowMap.enabled = GFX.shadow > 0;
+  sun.castShadow = GFX.shadow > 0;
+  fpsHist.soma = 0; fpsHist.n = 0; fpsHist.ultimoAjuste = 0;
+
+  if(!hudDebugAtivo) alternarHudDebug();      // mostra o resultado da troca
+  perfUltimoTexto = "";
+  // Valem na hora: resolução, sombra ligada/desligada e densidade de efeitos.
+  // Ficam para o próximo carregamento: antialias e tamanho do mapa de sombra
+  // (nascem com o contexto WebGL), anisotropia das texturas já enviadas e o
+  // número de holofotes (mexer neles em jogo recompila os shaders da cena
+  // inteira, e a travadinha apareceria bem no meio da partida).
+  console.log(`[gfx] preset: ${GFX_NOME} — antialias, resolução da sombra, anisotropia e holofotes aplicam ao recarregar (F5)`);
 }
 
 function updateScore(){ $("#score").textContent = `${score[0]} — ${score[1]}` }
@@ -11751,8 +12048,73 @@ function endMatch(){
 
 /* ═══════════════ LOOP PRINCIPAL ═══════════════ */
 let erroDeQuadroAvisado = false;
+
+/* ── GOVERNADOR DE QUADRO ──────────────────────────────────────────────────
+   Mede o tempo real de quadro e mexe SÓ na resolução interna para segurar a
+   taxa alvo. É a única alavanca que não muda a jogabilidade nem o visual da
+   cena: quando aperta, o jogo renderiza um pouco menor e continua fluido, em
+   vez de continuar nítido e engasgar bem na hora do chute.
+
+   A janela é longa (30 quadros) e o passo é pequeno de propósito — resolução
+   pulando a cada quadro é mais incômoda do que 3fps a menos. */
+const fpsHist = { soma: 0, n: 0, ultimoAjuste: 0 };
+let fpsMedido = 60;
+
+// requestAnimationFrame já é limitado pelo monitor: num painel de 144Hz o quadro
+// mais curto possível é ~6,9ms. Contando quantos quadros couberam em cada
+// intervalo, dá para descobrir o refresh sem API nenhuma.
+//
+// A contagem (em vez do menor intervalo já visto) existe porque o navegador
+// entrega, de vez em quando, um par de quadros colado depois de uma travada.
+// Um único quadro de 5ms não pode convencer o jogo de que a tela é 240Hz e
+// derrubar a resolução para sempre; oito quadros, sim.
+const TAXAS = [60, 90, 120, 144, 165, 240];
+const quadrosRapidos = new Array(TAXAS.length).fill(0);
+const CONFIRMA_TAXA = 8;
+function alvoPeloRefresh(){
+  let alvo = 60;
+  for(let i = 0; i < TAXAS.length; i++){
+    if(quadrosRapidos[i] >= CONFIRMA_TAXA) alvo = TAXAS[i];
+  }
+  return alvo;
+}
+
+function governadorDeQuadro(now, realDt){
+  if(realDt <= 0 || realDt > 0.5) return;
+  if(realDt > 0.0035){
+    for(let i = 0; i < TAXAS.length; i++){
+      if(realDt <= 1 / (TAXAS[i] * 0.95)) quadrosRapidos[i]++;
+    }
+  }
+
+  fpsHist.soma += realDt;
+  fpsHist.n++;
+  if(fpsHist.n < 30) return;
+
+  const dtMedio = fpsHist.soma / fpsHist.n;
+  fpsMedido = 1 / dtMedio;
+  fpsHist.soma = 0; fpsHist.n = 0;
+
+  if(now < 1500) return;              // ignora o quadro do carregamento
+  GFX_FPS_ALVO = alvoPeloRefresh();
+
+  // Só desce quando falta fôlego de verdade (abaixo de 92% do alvo) e só sobe
+  // quando sobra (acima de 99%), com 1,2s de espera entre ajustes. Essa folga é
+  // o que impede a resolução de ficar pulando na cara do jogador.
+  if(now - fpsHist.ultimoAjuste < 1200) return;
+  const razao = fpsMedido / GFX_FPS_ALVO;
+  if(razao < 0.92 && gfxScale > GFX.minScale){
+    fpsHist.ultimoAjuste = now;
+    gfxAplicarEscala(gfxScale - 0.08);
+  } else if(razao > 0.99 && gfxScale < 1){
+    fpsHist.ultimoAjuste = now;
+    gfxAplicarEscala(gfxScale + 0.05);
+  }
+}
+
 function loop(now){
   requestAnimationFrame(loop);
+  const realDt = (now - last) / 1000;
   try {
     atualizarQuadro(now);
   } catch(e){
@@ -11762,6 +12124,8 @@ function loop(now){
     }
   }
   renderer.render(scene, camera);
+  governadorDeQuadro(now, realDt);
+  if(hudDebugAtivo) atualizarHudDebug();
 }
 
 function atualizarQuadro(now){
@@ -12534,6 +12898,20 @@ addEventListener("keydown", e=>{
     return;
   }
 
+  // F3: painel de desempenho · F4: gira entre os presets gráficos.
+  // Valem em qualquer tela (lobby, vestiário, partida) — é aí que o jogador
+  // testa se o PC dele aguenta antes de entrar numa sala.
+  if(e.key === "F3"){
+    e.preventDefault();
+    alternarHudDebug();
+    return;
+  }
+  if(e.key === "F4"){
+    e.preventDefault();
+    ciclarPresetGrafico();
+    return;
+  }
+
   // Previne ações nativas do Chrome que fecham a aba, recarregam ou rolam a página
   if(
     k === " " || k === "space" ||
@@ -12961,8 +13339,12 @@ function souGoleiro(){
 // esvaziava e os outros jogadores CONGELAVAM por um quadro. Agora o atraso
 // acompanha o espaçamento real medido dos pacotes: rede boa continua nos 100ms
 // (resposta máxima), rede ruim ganha folga e a imagem para de travar.
-const MP_INTERP_MIN = 0.09, MP_INTERP_MAX = 0.26;
-let mpInterpAtual = 0.10;
+//
+// Com o servidor mandando 30 snapshots/s (era 20), o espaçamento típico caiu de
+// 50ms para 33ms — o piso de 75ms ainda guarda 2,2 pacotes de folga, que é o
+// mesmo colchão de antes por bem menos atraso.
+const MP_INTERP_MIN = 0.075, MP_INTERP_MAX = 0.26;
+let mpInterpAtual = 0.085;
 const MP_MAX_SNAP = 24, MP_ACC_NUM = 1/30;
 const MP_MAX_RETRIES = 12;   // ~48s de tentativas: cobre o cold start do Render free
 
@@ -13066,6 +13448,19 @@ function mpConnect(){
     const wasConnected = mp.connected;
     mp.connected = false;
     if(ws !== mp.ws) return;                       // socket antigo, ignora
+
+    // Caiu NO MEIO da partida. Sem este bloco o jogo ficava num limbo: a cena
+    // continuava em modo multiplayer, os outros jogadores congelados no último
+    // snapshot e o mouse preso na mira, sem nenhum caminho de volta a não ser
+    // recarregar a página. Agora a partida encerra e o lobby volta explicando
+    // o que houve.
+    if(wasConnected && mp.running){
+      mpSetStatus("Conexão perdida com o servidor.", "error");
+      const el = $("#startText");
+      if(el) el.textContent = "CONEXÃO PERDIDA — a partida online foi encerrada. Tente entrar de novo.";
+      mpEndMatch();
+      return;
+    }
     if(wasConnected){ mpSetStatus("Conexão encerrada.", "error"); return; }
     // Nunca chegou a abrir: provavelmente cold start. Tenta de novo.
     if((mp.retries = (mp.retries || 0) + 1) <= MP_MAX_RETRIES){
@@ -13269,15 +13664,71 @@ function mpLeave(){
   mp.running = false;
 }
 
+// Libera de verdade os recursos dos bonecos do online.
+//
+// scene.remove() só tira o objeto da lista — as geometrias, materiais e
+// texturas continuam na GPU até o contexto morrer. Cada partida online monta 10
+// humanoides do zero, cada um com dezenas de materiais e umas quantas texturas
+// de canvas (camisa 256², chuteira 512², plaquinha de nome 256×64). Jogando
+// várias partidas seguidas isso ia acumulando: primeiro a memória de vídeo,
+// depois os engasgos. Agora sai tudo junto com o elenco.
+//
+// O que fica na cena (o cenário fundido, os bonecos do modo rápido, a bola)
+// muitas vezes divide material com alguém — então a regra é: remove primeiro,
+// vê o que sobrou em uso, e só descarta o que ninguém mais aponta.
+function mpDescartarRecursos(raizes){
+  for(const r of raizes) scene.remove(r);
+
+  const emUso = new Set();
+  scene.traverse((o) => {
+    if(o.geometry) emUso.add(o.geometry);
+    const m = o.material;
+    if(!m) return;
+    if(Array.isArray(m)) for(const x of m) emUso.add(x);
+    else emUso.add(m);
+  });
+
+  const jaVisto = new Set();
+  for(const r of raizes){
+    r.traverse((o) => {
+      if(o.geometry && !emUso.has(o.geometry) && !jaVisto.has(o.geometry)){
+        jaVisto.add(o.geometry);
+        o.geometry.dispose();
+      }
+      const mats = Array.isArray(o.material) ? o.material : (o.material ? [o.material] : []);
+      for(const m of mats){
+        if(emUso.has(m) || jaVisto.has(m)) continue;
+        jaVisto.add(m);
+        // As texturas vivem dentro do material; soltar o material sem soltar o
+        // mapa deixaria o canvas de 512² pendurado na memória de vídeo.
+        for(const k of ["map", "normalMap", "roughnessMap", "emissiveMap", "alphaMap"]){
+          const t = m[k];
+          if(t && !jaVisto.has(t)){ jaVisto.add(t); t.dispose(); }
+        }
+        m.dispose();
+      }
+    });
+  }
+}
+
 function mpClearRoster(){
-  for(const c of mp.chars.values()) scene.remove(c.root);
+  if(mp.chars.size){
+    const raizes = [];
+    for(const c of mp.chars.values()) raizes.push(c.root);
+    mpDescartarRecursos(raizes);
+  }
+  // Devolve os bonecos do modo rápido. Fica AQUI e não no fim de partida porque
+  // nem todo caminho de saída passa por lá — cair a conexão no meio do jogo,
+  // por exemplo. Se ficasse só no mpEndMatch(), uma queda deixava o lobby sem
+  // o seu atleta na tela até recarregar a página.
+  for(const c of chars) c.root.visible = true;
   mp.chars.clear();
   mp.roster = [];
   mp.snaps.length = 0; mp.history.length = 0; mp.ready = false;
   mp.hudScore = null; mp.hudClock = null;
   mp.localState = "idle"; mp.localAct = 0;
   mp.dribbleSlot = 0; mp.localDribCd = 0; mp.localGkCd = 0;
-  mp.ultimoSnapT = 0; mp.piorGap = 0; mpInterpAtual = 0.10;
+  mp.ultimoSnapT = 0; mp.piorGap = 0; mpInterpAtual = 0.085;
   mpSegurando.steal = false;
   lastHasBallUI = null; lastGkUI = null;   // força os rótulos a se refazerem no novo modo
   for(let i = 0; i < MP_TOQUES.length; i++) mpToque[MP_TOQUES[i]] = false;
@@ -13356,8 +13807,17 @@ function mpBuildRoster(d){
   gameMode = "multiplayer";
   running = true; over = false; shake = 0; celebration = null; setPiece = null;
   sfx.init(); sfx.setBgmMode("match"); sfx.playWhistle(false);
-  // Parqueia os personagens do single-player para fora da visão da câmera
-  for(const c of chars){ c.root.position.set(-90, -30, 0); c.vel.set(0,0,0); }
+  // Parqueia os personagens do single-player para fora da visão da câmera.
+  //
+  // `visible = false` é o que realmente importa: só mudar de posição deixava os
+  // 8 bonecos do modo rápido (uns 500 objetos, com sprites e tudo) sendo
+  // percorridos e testados contra o frustum a cada quadro do online. Desligando
+  // a raiz, o three.js corta a subárvore inteira de uma vez.
+  for(const c of chars){
+    c.root.position.set(-90, -30, 0);
+    c.vel.set(0,0,0);
+    c.root.visible = false;
+  }
   $("#start").style.display = "none";
   $("#multiplayerLobby").classList.remove("show");
   $("#trainingHud").style.display = "none";
@@ -13390,6 +13850,7 @@ function mpEndMatch(){
   if(pw){ pw.style.display = "none"; pw.classList.remove("over"); }
   if(crosshairWrap) crosshairWrap.classList.remove("charging");
   mpClearRoster();
+  mp.running = false;      // mpClearRoster não mexe nisto, e mpLeave() também zera
   running = false; over = true; gameMode = "menu"; shake = 0;
   stopMouseControl();
   $("#start").style.display = "flex";
@@ -13425,7 +13886,11 @@ function mpOnSnapshot(d){
   mp.ownerId = d.o || 0;
   mp.frozen = !!d.f;
   mp.lastAck = d.ack || 0;
-  mp.history = mp.history.filter(h => h.seq > mp.lastAck);
+  // O histórico está em ordem crescente de seq: basta cortar o começo. O filter
+  // criava um array novo (e descartava o antigo) 20 vezes por segundo.
+  let confirmados = 0;
+  while(confirmados < mp.history.length && mp.history[confirmados].seq <= mp.lastAck) confirmados++;
+  if(confirmados) mp.history.splice(0, confirmados);
 
   // Reconciliacao: estado autoritativo do proprio jogador
   const mineEl = mpSnapEnt(d, mp.entId);
@@ -13554,17 +14019,26 @@ function mpApplyLocalInput(input, dt, hasBall){
 
   const wantsSprint = !!input.sprint && isMoving;
 
-  if(wantsSprint && !mp.isExhausted){
-    mp.stamina = Math.max(0, mp.stamina - dt * 22);
-    if(mp.stamina <= 0){
-      mp.stamina = 0;
-      mp.isExhausted = true;
-    }
-  } else {
-    const recRate = isMoving ? 24 : 36;
-    mp.stamina = Math.min(100, mp.stamina + dt * recRate);
-    if(mp.stamina >= 28){
-      mp.isExhausted = false;
+  // O fôlego só corre no caminho AO VIVO. Esta função também é reexecutada em
+  // mpReconcile, uma vez por input ainda não confirmado, ~20 vezes por segundo:
+  // com o fôlego aqui dentro, cada snapshot cobrava de novo os mesmos segundos
+  // de sprint e a barra esvaziava umas três vezes mais rápido do que devia —
+  // o jogador cansava em ~7s de corrida em vez de 4,5s de sprint puro. E cada
+  // repetição ainda arrastava updateStaminaHUD junto, com cinco consultas ao
+  // DOM por chamada.
+  if(!mpRefazendo){
+    if(wantsSprint && !mp.isExhausted){
+      mp.stamina = Math.max(0, mp.stamina - dt * 22);
+      if(mp.stamina <= 0){
+        mp.stamina = 0;
+        mp.isExhausted = true;
+      }
+    } else {
+      const recRate = isMoving ? 24 : 36;
+      mp.stamina = Math.min(100, mp.stamina + dt * recRate);
+      if(mp.stamina >= 28){
+        mp.isExhausted = false;
+      }
     }
   }
 
@@ -13583,9 +14057,14 @@ function mpApplyLocalInput(input, dt, hasBall){
     mp.localVz = mpDamp(mp.localVz, 0, 13, dt);
     if(mp.serverYaw != null) mp.localYaw = angleLerp(mp.localYaw, mp.serverYaw, 1 - Math.exp(-6*dt));
   }
-  updateStaminaHUD(dt);
   mpIntegrarLocal(dt);
 }
+
+// Ligado enquanto mpReconcile repete os inputs pendentes. Nada com efeito
+// colateral (fôlego, HUD, som) pode rodar com ele ligado: é o mesmo instante de
+// jogo sendo recalculado, não tempo novo passando.
+let mpRefazendo = false;
+
 function mpReconcile(serverEnt){
   const sx = serverEnt[1], sy = serverEnt[2], sz = serverEnt[3];
   const svx = serverEnt[6], svz = serverEnt[7];
@@ -13604,7 +14083,12 @@ function mpReconcile(serverEnt){
   // antes de o servidor confirmar: são ~20 reconciliações por segundo, cada uma
   // repetindo os inputs ainda não confirmados.
   const actAntes = mp.localAct;
-  for(const h of mp.history) mpApplyLocalInput(h.input, h.dt, hasBall);
+  mpRefazendo = true;
+  for(let i = 0; i < mp.history.length; i++){
+    const h = mp.history[i];
+    mpApplyLocalInput(h.input, h.dt, hasBall);
+  }
+  mpRefazendo = false;
   mp.localAct = actAntes;
   const err = Math.hypot(mp.localX - startX, mp.localZ - startZ);
   if(err < 1.2){
@@ -14012,10 +14496,25 @@ function mpCamera(dt, target){
   }
 }
 
+// Direção do chute de um jogador remoto, para as chamas saírem PARA FRENTE.
+// O que era passado antes como direção era a POSIÇÃO do jogador no campo: em
+// x=-20 as brasas saíam a 300 m/s para o canto do mapa em vez de acompanhar a
+// bola. `vfxSpawnKickFire` multiplica a direção por até 16, então ela precisa
+// mesmo vir normalizada.
+const mpDirChuteVec = new THREE.Vector3();
+function mpDirChute(c){
+  mpDirChuteVec.set(Math.sin(c.yaw || 0), 0, Math.cos(c.yaw || 0));
+  return mpDirChuteVec;
+}
+
 function mpUpdate(dt){
   if(!mp.running) return;
   mpGatherInput();
   mpUpdateCharge(dt);
+  // Uma atualização de HUD por quadro, com tempo real. Antes ela saía de dentro
+  // da predição de movimento, que roda 30x/s ao vivo MAIS uma repetição inteira
+  // a cada snapshot.
+  updateStaminaHUD(dt);
 
   mpAccum = Math.min(0.1, mpAccum + dt);
   const step = MP_ACC_NUM;
@@ -14039,8 +14538,11 @@ function mpUpdate(dt){
   const myChar = mp.chars.get(mp.entId);
 
   // 1. Atualização dos Personagens
-  for(const [id, c] of mp.chars){
-    const s = world.ents.get(id);
+  // Iterar por .values() em vez de desestruturar [id, c]: a desestruturação de
+  // um Map aloca um array por entrada, o que aqui davam ~600 arrays por segundo
+  // só para ler um id que o próprio personagem já carrega.
+  for(const c of mp.chars.values()){
+    const s = world.ents.get(c.entId);
     if(!s) continue;
     if(c.isMe){
       c.root.position.set(mp.localX, mp.localY != null ? mp.localY : s.y, mp.localZ);
@@ -14103,11 +14605,11 @@ function mpUpdate(dt){
           if(newSt === "shot_power"){
             sfx.playKick(1.0);
             shake = Math.max(shake, 0.22);
-            if(typeof vfxSpawnKickFire === "function") vfxSpawnKickFire(ball.position, c.root.position, 1.4);
+            vfxSpawnKickFire(ball.position, mpDirChute(c), 1.4);
           }
           if(newSt === "shot_technique"){
             sfx.playKick(0.70);
-            if(typeof vfxSpawnKickFire === "function") vfxSpawnKickFire(ball.position, c.root.position, 0.85);
+            vfxSpawnKickFire(ball.position, mpDirChute(c), 0.85);
           }
           if(newSt === "pass"){ sfx.playKick(0.60); }
           if(newSt.startsWith("dive_") || newSt.startsWith("catch_")){ sfx.playPostClank(); }

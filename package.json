@@ -8,6 +8,6 @@
     "dev": "node tools/dev.js",
     "dev:server": "node --watch server/server.js",
     "dev:web": "node tools/serve-static.js",
-    "postinstall": "npm --prefix server install"
+    "postinstall": "cd server && npm install"
   }
 }

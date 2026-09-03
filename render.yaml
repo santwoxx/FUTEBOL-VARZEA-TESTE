@@ -9,10 +9,37 @@ services:
     runtime: node
     plan: free
     region: oregon                 # veja a nota sobre latencia no README
-    rootDir: server
-    buildCommand: npm install
-    startCommand: npm start
+    # SEM rootDir de proposito.
+    #
+    # Com `rootDir: server`, o Render nao entrega a instancia nada que esteja
+    # fora dessa pasta — a documentacao e literal: "Files outside your service's
+    # root directory are not available to the service at build time or at
+    # runtime". E a lista da beta mora em firestore.rules, na RAIZ.
+    #
+    # Ou seja: em producao o server/auth.js tentava ler ../firestore.rules, o
+    # arquivo nao existia, o catch devolvia lista vazia e ninguem ficava
+    # sabendo. Todo e-mail acrescentado as regras era ignorado, e so
+    # MP_ALLOWED_EMAILS mantinha a beta de pe.
+    #
+    # Sem rootDir o repositorio inteiro vai junto, e a lista volta a ser uma so.
+    #
+    # O build usa `cd server` e nao `npm --prefix server install`: rodando na
+    # raiz, o --prefix ainda dispara o postinstall do package.json da raiz, que
+    # por sua vez chama `npm --prefix server install` de novo — recursao
+    # infinita, build reprovado. Entrar na pasta antes evita o assunto.
+    buildCommand: cd server && npm install
+    startCommand: node server/server.js
     healthCheckPath: /health
+    # Sem rootDir, qualquer push dispararia deploy — inclusive mudanca so no
+    # frontend, que vive na Vercel. O filtro devolve esse comportamento, e agora
+    # inclui explicitamente o firestore.rules: mudar a lista da beta TEM que
+    # reimplantar o backend. (Os caminhos do buildFilter sao relativos a raiz do
+    # repositorio, mesmo quando ha rootDir.)
+    buildFilter:
+      paths:
+        - server/**
+        - firestore.rules
+        - render.yaml
     envVars:
       - key: NODE_VERSION
         value: "20"

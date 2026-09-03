@@ -151,7 +151,7 @@ captura teclado/mouse
 prediz seu movimento                      controla os bots
 na hora (sem esperar)                        │
                                              ▼
-desenha o resultado ◄───── 20x/s ────────  manda o estado do mundo
+desenha o resultado ◄───── 30x/s ────────  manda o estado do mundo
   └─ corrige a predição
      quando o estado chega
 ```
@@ -311,22 +311,36 @@ Ela serve aos dois lados:
 
 | Lado | O que faz com a lista |
 |---|---|
-| Navegador | Só quem está nela consegue ler `betaAccess/{uid}` (regra do Firestore). É o que faz o jogo abrir o lobby ou a tela de "beta fechada". |
-| Servidor | `server/auth.js` lê o **mesmo arquivo** no boot e recusa criar/entrar em sala de quem não está nela. Esta é a trava real. |
+| Navegador | Só quem está nela consegue ler `betaAccess/{uid}` (regra do Firestore). |
+| Servidor | `server/auth.js` lê o **mesmo arquivo** e recusa criar/entrar em sala de quem não está nele. Esta é a trava real. |
 
-**Convidar alguém:** põe o e-mail (minúsculo) no `firestore.rules`, dá push — o
-Render reconstrói e o backend recarrega a lista — e publica as regras no console
-do Firebase. Uma edição, os dois lados atualizados.
+**Convidar alguém:** põe o e-mail (minúsculo) no `firestore.rules` e dá push. O
+Render reconstrói o backend, que relê o arquivo do disco assim que ele muda —
+não precisa reiniciar nada à mão.
+
+> **Duas armadilhas que já custaram convites em silêncio** (as duas corrigidas,
+> ficam registradas para não voltarem):
+>
+> 1. **`rootDir: server` no `render.yaml`.** O Render não entrega à instância
+>    nada que esteja fora do root directory — nem em build nem em runtime. Como
+>    o `firestore.rules` mora na raiz, o servidor tentava lê-lo, não achava, e o
+>    `catch` devolvia lista vazia sem reclamar. Hoje não há `rootDir`, e um
+>    `buildFilter` garante que mexer no `firestore.rules` dispare o deploy.
+> 2. **`MP_ALLOWED_EMAILS` substituía o arquivo.** Bastava a variável existir no
+>    painel do Render para a lista inteira do `firestore.rules` ser ignorada.
+>    Hoje as duas **somam**: a variável só acrescenta, nunca tranca ninguém.
 
 Duas variáveis de ambiente ajustam isso quando precisa:
 
 | Variável | Para quê |
 |---|---|
-| `MP_ALLOWED_EMAILS` | Atalho: liberar alguém no painel do Render sem esperar deploy. Se preenchida, manda no lugar do arquivo. |
+| `MP_ALLOWED_EMAILS` | **Acrescenta** e-mails à lista do arquivo (nunca substitui). Serve para liberar alguém no painel do Render sem esperar deploy. |
 | `MP_OPEN=1` | Abre o online para qualquer um logado. É o que destrava **testar sozinho em duas abas** — duas abas são a mesma conta Google, e a sala derruba o uid duplicado. |
 
-O boot do servidor diz de onde leu a lista, e `/health` devolve
-`betaClosed` + `betaList` (a origem, nunca os e-mails).
+**Como conferir se o convite chegou:** `GET /health` no backend devolve
+`betaList` (a origem — ex.: `firestore.rules (4) + MP_ALLOWED_EMAILS (1)`) e
+`betaAllowed` (quantos e-mails o servidor aceita agora). Se o número não subiu
+depois do deploy, o convite não chegou — e o log de boot diz por quê.
 
 ### Por que o servidor confere o login sozinho
 

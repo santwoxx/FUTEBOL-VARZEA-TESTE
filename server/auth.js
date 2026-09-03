@@ -14,11 +14,15 @@
 // recarrega no deploy) e publicar as regras no console do Firebase. Sem
 // segunda lista para esquecer de atualizar.
 //
-// MP_ALLOWED_EMAILS continua existindo como atalho: se estiver definida, ela
-// manda no lugar do arquivo — util para liberar alguem no painel do Render sem
-// esperar deploy. E MP_OPEN=1 abre o multiplayer para qualquer um logado, que
-// e como se testa duas abas na mesma maquina (duas abas = mesma conta Google =
-// mesmo uid, e a sala derruba o duplicado).
+// MP_ALLOWED_EMAILS ACRESCENTA nomes a lista do arquivo — nunca a substitui.
+// Serve para liberar alguem pelo painel do Render sem esperar deploy. Ela ja
+// substituiu o arquivo inteiro, e isso tinha um efeito colateral cruel: com a
+// variavel preenchida, todo e-mail posto no firestore.rules era ignorado em
+// silencio. Agora quem esta nas regras entra, ponto.
+//
+// MP_OPEN=1 abre o multiplayer para qualquer um logado, que e como se testa
+// duas abas na mesma maquina (duas abas = mesma conta Google = mesmo uid, e a
+// sala derruba o duplicado).
 //
 // A conferencia do token e feita contra as chaves publicas do Google, sem
 // firebase-admin: o backend continua rodando com um pacote so (ws).
@@ -52,6 +56,12 @@ function emailsFromRules() {
   try {
     src = fs.readFileSync(RULES_FILE, "utf8");
   } catch (e) {
+    // Falha ALTA de proposito. Este catch ja engoliu o problema por muito tempo:
+    // no Render, com `rootDir: server`, o arquivo nem chegava na instancia, a
+    // lista vinha vazia e a unica pista era um numero zero que ninguem olhava.
+    // Se voce ver isto no log, o deploy nao esta levando o firestore.rules.
+    console.error(`[beta] NAO consegui ler ${RULES_FILE}: ${e.code || e.message}`);
+    console.error("[beta] a lista da beta vai sair vazia — confira o deploy (o firestore.rules precisa ir junto).");
     return { list: [], found: false };
   }
   const block = /function\s+betaEmails\s*\(\s*\)\s*\{[^{}]*?return\s*\[([^\]]*)\]/.exec(src);
@@ -69,24 +79,60 @@ function emailsFromRules() {
 // fica desligado, e ai vale a lista.
 const OPEN = process.env.MP_OPEN === "1";
 
-// A lista sai do firestore.rules — o MESMO arquivo que o navegador usa. Assim
-// convidar alguem e uma edicao so, e nao ha como as duas pontas divergirem.
-// MP_ALLOWED_EMAILS continua como atalho para liberar alguem pelo painel do
-// Render sem esperar deploy; se estiver preenchida, manda no lugar do arquivo.
+// AS DUAS LISTAS SOMAM. Antes, MP_ALLOWED_EMAILS SUBSTITUIA o arquivo: bastava
+// a variavel existir no painel do Render para o firestore.rules parar de valer
+// inteiro. Era o que estava acontecendo em producao — o /health respondia
+// "MP_ALLOWED_EMAILS (painel do Render)", e todo e-mail acrescentado as regras
+// era silenciosamente ignorado, sem erro nenhum em lugar nenhum.
+//
+// Agora o firestore.rules SEMPRE vale, e a variavel de ambiente so acrescenta:
+// ela serve para liberar alguem na hora, sem esperar deploy, e nao tem mais
+// como trancar quem ja esta na lista do arquivo.
 const fromEnv = (process.env.MP_ALLOWED_EMAILS || "")
   .split(",").map(s => s.trim().toLowerCase()).filter(Boolean);
-const fromRules = fromEnv.length ? { list: [], found: false } : emailsFromRules();
 
-const ALLOWED = new Set(fromEnv.length ? fromEnv : fromRules.list);
-const SOURCE = fromEnv.length
-  ? "MP_ALLOWED_EMAILS (painel do Render)"
-  : (fromRules.found ? "firestore.rules" : "NENHUMA lista encontrada");
+// A lista do arquivo e relida quando ele muda no disco. O servidor so a lia no
+// boot: convidar alguem exigia derrubar o processo, e nao havia como saber se a
+// instancia no ar ja tinha visto a edicao. Com mtime + cache curto, o custo e
+// um fs.statSync a cada 5s no maximo — e um convite passa a valer assim que o
+// arquivo chega na maquina.
+const RULES_TTL = 5000;
+let rulesCache = { list: [], found: false, mtime: 0, checkedAt: 0 };
+
+function rulesEmails() {
+  const agora = Date.now();
+  if (agora - rulesCache.checkedAt < RULES_TTL) return rulesCache;
+  rulesCache.checkedAt = agora;
+
+  let mtime = 0;
+  try { mtime = fs.statSync(RULES_FILE).mtimeMs; } catch (e) { mtime = 0; }
+  if (mtime && mtime === rulesCache.mtime) return rulesCache;
+
+  const lido = emailsFromRules();
+  rulesCache = { ...lido, mtime, checkedAt: agora };
+  console.log(`[beta] firestore.rules relido: ${lido.list.length} e-mail(s)`);
+  return rulesCache;
+}
+
+// Quem pode jogar online agora: uniao do arquivo com a variavel de ambiente.
+function allowedNow() {
+  const s = new Set(rulesEmails().list);
+  for (const e of fromEnv) s.add(e);
+  return s;
+}
 
 export function accessConfig() {
+  const regras = rulesEmails();
+  const total = allowedNow().size;
+  const fontes = [];
+  if (regras.found) fontes.push(`firestore.rules (${regras.list.length})`);
+  if (fromEnv.length) fontes.push(`MP_ALLOWED_EMAILS (${fromEnv.length})`);
   return {
     enforced: !OPEN,
-    allowed: ALLOWED.size,
-    source: OPEN ? "MP_OPEN=1 (online aberto a qualquer conta)" : SOURCE,
+    allowed: total,
+    source: OPEN
+      ? "MP_OPEN=1 (online aberto a qualquer conta)"
+      : (fontes.length ? fontes.join(" + ") : "NENHUMA lista encontrada"),
     projectId: PROJECT_ID
   };
 }
@@ -185,7 +231,7 @@ export async function checkMultiplayerAccess(idToken) {
   }
 
   if (OPEN) return { ok: true, reason: "open", email: claims.email, uid: claims.uid };
-  if (ALLOWED.has(claims.email)) {
+  if (allowedNow().has(claims.email)) {
     return { ok: true, reason: "allowed", email: claims.email, uid: claims.uid };
   }
   return { ok: false, reason: "beta", email: claims.email, uid: claims.uid };

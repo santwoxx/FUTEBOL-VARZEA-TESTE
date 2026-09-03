@@ -13,7 +13,16 @@ export const CFG = {
   MATCH: 180,
   BALL_R: 0.28,
   TICK_HZ: 30,      // passos de simulacao por segundo no servidor
-  SNAP_HZ: 20,      // snapshots enviados por segundo para cada cliente
+  // Um snapshot por tick. A 20 Hz o cliente media 50ms de espacamento e, para
+  // nao esvaziar o buffer no primeiro engasgo da rede, segurava ~110ms de
+  // atraso de interpolacao — atraso que o jogador sente como "o adversario
+  // aparece depois". A 30 Hz o espacamento cai para 33ms e o mesmo buffer de
+  // seguranca custa ~75ms: 35ms a menos de atraso, de graca.
+  //
+  // O custo e banda: um snapshot de 4v4 tem ~460 bytes, entao sao ~14 KB/s por
+  // jogador em vez de 9 KB/s. Nada perto do que qualquer conexao aguenta, e a
+  // serializacao continua sendo UMA por sala (o texto e o mesmo para todos).
+  SNAP_HZ: 30,      // snapshots enviados por segundo para cada cliente
   MAX_TEAM: 4
 };
 

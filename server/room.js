@@ -156,9 +156,43 @@ export class Room {
 
     this.broadcastMatchState(true);
 
-    const dt = 1 / CFG.TICK_HZ;
+    // Relogio com acumulador em vez de um passo por disparo do timer.
+    //
+    // setInterval NAO garante 33,3ms: sob carga (varias salas, GC, o plano free
+    // do Render) ele dispara com 40, 50, as vezes 90ms. Rodando um passo fixo
+    // por disparo, a partida simplesmente ANDAVA MAIS DEVAGAR do que o relogio
+    // de parede — a bola ficava lenta, o cronometro atrasava e todo mundo
+    // sentia "lag" sem perder um pacote sequer.
+    //
+    // Agora o passo continua fixo (a fisica precisa disso para ser
+    // determinista), mas o numero de passos vem do tempo que passou de verdade.
+    // O teto de 5 passos evita a espiral da morte: se o processo ficou parado
+    // meio segundo, ele perde esse tempo em vez de tentar recuperar tudo de uma
+    // vez e travar de novo.
+    this.accum = 0;
     this.lastTime = Date.now();
-    this.timer = setInterval(() => this.tick(dt), 1000 / CFG.TICK_HZ);
+    this.timer = setInterval(() => this.avancar(), 1000 / CFG.TICK_HZ);
+  }
+
+  avancar() {
+    const dt = 1 / CFG.TICK_HZ;
+    const agora = Date.now();
+    let passado = (agora - this.lastTime) / 1000;
+    this.lastTime = agora;
+    if (!(passado > 0)) passado = dt;
+    if (passado > 0.5) passado = 0.5;   // pausa longa: descarta em vez de acumular
+
+    this.accum += passado;
+    let passos = 0;
+    while (this.accum >= dt && passos < 5) {
+      this.accum -= dt;
+      passos++;
+      if (this.tick(dt) === false) return;   // partida acabou: para o relogio
+    }
+    // Sobrou muito no acumulador depois do teto: o servidor nao esta dando
+    // conta. Zerar mantem o jogo no presente (e melhor pular do que ficar
+    // devendo tempo para sempre).
+    if (this.accum > dt * 5) this.accum = 0;
   }
 
   stop() {
@@ -194,17 +228,18 @@ export class Room {
           this.start();
         }
       }, 8000);
-      return;
+      return false;    // avisa o acumulador para nao dar mais passos neste ciclo
     }
 
-    // Snapshots a SNAP_HZ (nao a cada tick, para economizar banda)
+    // Snapshots a SNAP_HZ. Com SNAP_HZ == TICK_HZ sai um por tick; o contador
+    // continua aqui para que baixar SNAP_HZ volte a funcionar sem mexer no resto.
     this.snapCounter += CFG.SNAP_HZ;
     if (this.snapCounter >= CFG.TICK_HZ) {
       this.snapCounter -= CFG.TICK_HZ;
       // O estado e o mesmo para todo mundo; so o ack (ultimo input processado)
       // muda por cliente. Serializar uma vez e concatenar o ack evita repetir
       // o JSON.stringify do mundo inteiro por jogador — num 4v4 eram 8
-      // serializacoes identicas 20x/s.
+      // serializacoes identicas a cada snapshot.
       const body = JSON.stringify(serialize(this.world));
       const head = SNAP_HEAD + body.slice(0, -1) + SNAP_ACK;
       for (const c of this.clients.values()) {
